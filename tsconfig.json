@@ -4,10 +4,64 @@
   "files": [],
   "references": [
     {
-      "path": "./apps/starcoex-main-e2e"
+      "path": "./apps/starcoex-main"
     },
     {
-      "path": "./apps/starcoex-main"
+      "path": "./libs/ui"
+    },
+    {
+      "path": "./apps/admin-dashboard"
+    },
+    {
+      "path": "./libs/api-client"
+    },
+    {
+      "path": "./libs/graphql"
+    },
+    {
+      "path": "./libs/utils"
+    },
+    {
+      "path": "./libs/features/auth"
+    },
+    {
+      "path": "./libs/features/common"
+    },
+    {
+      "path": "./libs/features/notifications"
+    },
+    {
+      "path": "./libs/features/media"
+    },
+    {
+      "path": "./apps/gas-station"
+    },
+    {
+      "path": "./apps/fuel-delivery"
+    },
+    {
+      "path": "./apps/car-wash"
+    },
+    {
+      "path": "./libs/features/vehicles"
+    },
+    {
+      "path": "./libs/features/reservations"
+    },
+    {
+      "path": "./libs/features/products"
+    },
+    {
+      "path": "./libs/features/categories"
+    },
+    {
+      "path": "./libs/features/address"
+    },
+    {
+      "path": "./libs/features/analytics"
+    },
+    {
+      "path": "./libs/features/loyalty"
     }
   ]
 }

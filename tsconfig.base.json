@@ -5,7 +5,7 @@
     "emitDeclarationOnly": true,
     "importHelpers": true,
     "isolatedModules": true,
-    "lib": ["es2022"],
+    "lib": ["es2020"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "noEmitOnError": true,
@@ -16,6 +16,15 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@starcoex-frontend/source"]
+    "customConditions": ["@starcoex-frontend/source"],
+    "baseUrl": ".",
+    "paths": {
+      "@starcoex-frontend/graphql": ["libs/graphql/src/index.ts"],
+      "@starcoex-frontend/graphql/*": ["libs/graphql/src/*"],
+      "@starcoex-frontend/vehicles": ["libs/features/vehicles/src/index.ts"],
+      "@starcoex-frontend/vehicles/*": ["libs/features/vehicles/src/*"],
+      "@starcoex-frontend/common": ["libs/features/common/src/index.ts"],
+      "@starcoex-frontend/common/*": ["libs/features/common/src/*"]
+    }
   }
 }

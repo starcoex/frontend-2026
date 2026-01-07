@@ -3,11 +3,27 @@
   "include": [],
   "references": [
     {
+      "path": "../../libs/graphql"
+    },
+    {
+      "path": "../../libs/features/auth"
+    },
+    {
+      "path": "../../libs/features/common"
+    },
+    {
       "path": "./tsconfig.app.json"
     },
     {
       "path": "./tsconfig.spec.json"
     }
   ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@starcoex-frontend/graphql": ["../../libs/graphql/src/index.ts"]
+    }
+  },
   "extends": "../../tsconfig.base.json"
 }
