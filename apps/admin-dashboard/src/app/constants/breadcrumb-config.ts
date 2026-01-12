@@ -42,6 +42,13 @@ export const BREADCRUMB_CONFIGS: Record<string, BreadcrumbConfig> = {
     showActions: true,
     showStats: false,
   },
+  INVITATIONS: {
+    label: 'Invitations',
+    title: 'User Invitations',
+    showInBreadcrumb: true,
+    showActions: true, // ✅ 초대 보내기 버튼 표시
+    showStats: false,
+  },
 } as const;
 
 export const DEFAULT_BREADCRUMB_CONFIG: BreadcrumbConfig = {

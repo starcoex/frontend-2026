@@ -298,9 +298,8 @@ export const createApolloClient = (
         fetchPolicy: 'network-only',
       },
       watchQuery: {
-        errorPolicy: 'all',
-        fetchPolicy: 'cache-and-network', // ⚠️ 이 부분이 문제!
-        nextFetchPolicy: 'cache-first', // ✅ 첫 실행 후엔 캐시 우선으로 변경
+        errorPolicy: 'all', // ✅ 에러를 컴포넌트에 전달
+        fetchPolicy: 'network-only', // ✅ 캐시를 무시하고 항상 네트워크 요청
       },
     },
     devtools: {

@@ -155,6 +155,13 @@ import {
   ResendInvitationMutation,
   ResendInvitationMutationVariables,
   RESEND_INVITATION,
+  VerifyInvitationTokenQuery,
+  VerifyInvitationTokenQueryVariables,
+  VERIFY_INVITATION_TOKEN,
+  AcceptInvitationInput,
+  AcceptInvitationMutation,
+  AcceptInvitationMutationVariables,
+  ACCEPT_INVITATION,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -702,6 +709,27 @@ export class AuthService implements IAuthService {
       ResendInvitationMutation,
       ResendInvitationMutationVariables
     >(RESEND_INVITATION, { invitationId });
+  }
+
+  // ✅ 초대 토큰 검증 (공개 API)
+  async verifyInvitationToken(
+    token: string
+  ): Promise<ApiResponse<VerifyInvitationTokenQuery>> {
+    return this.query<
+      VerifyInvitationTokenQuery,
+      VerifyInvitationTokenQueryVariables
+    >(VERIFY_INVITATION_TOKEN, { token }, { fetchPolicy: 'network-only' });
+  }
+
+  // ✅ 초대 수락 (공개 API)
+  async acceptInvitation(
+    token: string,
+    input: AcceptInvitationInput
+  ): Promise<ApiResponse<AcceptInvitationMutation>> {
+    return this.mutate<
+      AcceptInvitationMutation,
+      AcceptInvitationMutationVariables
+    >(ACCEPT_INVITATION, { token, input });
   }
 
   clearAuthCache(): void {

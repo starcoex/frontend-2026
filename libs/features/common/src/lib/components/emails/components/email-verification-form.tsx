@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,6 +64,7 @@ export interface EmailVerificationFormProps {
   callbacks: EmailVerificationCallbacks;
   state: EmailVerificationState;
   className?: string;
+  initialCode?: string; // ✅ 추가
   // 스타일 오버라이드 추가
   styles?: {
     card?: string;
@@ -78,6 +79,7 @@ export function EmailVerificationForm({
   callbacks,
   state,
   className,
+  initialCode,
   styles,
 }: EmailVerificationFormProps) {
   const {
@@ -95,13 +97,120 @@ export function EmailVerificationForm({
 
   const [timerKey, setTimerKey] = useState(0);
   const [timeLeft, setTimeLeft] = useState<number>(totalDurationMs);
+  const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
+
+  // ✅ 자동 제출 중복 방지
+  const hasAutoSubmitted = useRef(false);
 
   const form = useForm<VerifyEmailFormData>({
     resolver: zodResolver(verifyEmailSchema),
     defaultValues: {
-      activation_code: '',
+      activation_code: initialCode || '',
     },
   });
+
+  // ✅ handleSubmit을 먼저 정의
+  const handleSubmit = async (data: VerifyEmailFormData) => {
+    console.log('📤 handleSubmit called', {
+      email,
+      code: data.activation_code,
+      isLoading,
+      isAutoSubmitting,
+    });
+
+    try {
+      clearError();
+      setIsAutoSubmitting(true);
+
+      console.log('🔄 Calling onVerifyCode...');
+      const response = await onVerifyCode({
+        email,
+        code: data.activation_code,
+      });
+
+      console.log('📥 onVerifyCode response:', response);
+
+      if (response?.success) {
+        localStorage.removeItem(storageKey);
+        toast.success(response.message || '이메일 인증이 완료되었습니다.');
+        onSuccess?.({ email, code: data.activation_code });
+      } else {
+        const errorMessage =
+          response?.graphQLErrors?.[0]?.message ||
+          response?.error?.message ||
+          '인증 코드 검증에 실패했습니다.';
+        console.error('❌ Verification failed:', errorMessage);
+        toast.error(errorMessage);
+        onError?.(errorMessage);
+      }
+    } catch (error) {
+      console.error('💥 Exception in handleSubmit:', error);
+      const errorMessage = '인증 코드 검증 중 오류가 발생했습니다.';
+      toast.error(errorMessage);
+      onError?.(errorMessage);
+    } finally {
+      setIsAutoSubmitting(false);
+    }
+  };
+
+  // ✅ URL에서 code가 들어오면 자동 제출 (강화 버전)
+  useEffect(() => {
+    console.log('🔄 Auto-submit effect triggered', {
+      initialCode,
+      codeLength: initialCode?.length,
+      hasAutoSubmitted: hasAutoSubmitted.current,
+      email,
+      isLoading,
+    });
+
+    if (!initialCode || initialCode.length !== 6) {
+      console.log('⏭️ Skipping: invalid code');
+      return;
+    }
+
+    if (hasAutoSubmitted.current) {
+      console.log('⏭️ Skipping: already submitted');
+      return;
+    }
+
+    if (!email) {
+      console.log('⏭️ Skipping: no email');
+      return;
+    }
+
+    if (isLoading || isAutoSubmitting) {
+      console.log('⏭️ Skipping: already loading');
+      return;
+    }
+
+    hasAutoSubmitted.current = true;
+    console.log('✅ Starting auto-submit process');
+
+    // ✅ form 값 설정
+    form.setValue('activation_code', initialCode);
+    console.log('📝 Form value set to:', initialCode);
+
+    // ✅ 직접 handleSubmit 호출 (여러 방법 시도)
+    const submitCode = async () => {
+      console.log('🚀 Executing auto-submit');
+
+      // 방법 1: 직접 호출
+      await handleSubmit({ activation_code: initialCode });
+
+      // 방법 2가 필요하면 주석 해제
+      // const formElement = document.querySelector('form');
+      // if (formElement) {
+      //   formElement.requestSubmit();
+      // }
+    };
+
+    // ✅ 약간의 딜레이 후 실행
+    const timer = setTimeout(() => {
+      submitCode();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [initialCode, email, isLoading, isAutoSubmitting]);
 
   // 타이머 관리
   useEffect(() => {
@@ -156,34 +265,6 @@ export function EmailVerificationForm({
     return () => clearInterval(interval);
   }, [totalDurationMs, timerKey, storageKey]);
 
-  const handleSubmit = async (data: VerifyEmailFormData) => {
-    try {
-      clearError();
-
-      const response = await onVerifyCode({
-        email,
-        code: data.activation_code,
-      });
-
-      if (response?.success) {
-        localStorage.removeItem(storageKey);
-        toast.success(response.message || '이메일 인증이 완료되었습니다.');
-        onSuccess?.({ email, code: data.activation_code });
-      } else {
-        const errorMessage =
-          response?.graphQLErrors?.[0]?.message ||
-          response?.error?.message ||
-          '인증 코드 검증에 실패했습니다.';
-        toast.error(errorMessage);
-        onError?.(errorMessage);
-      }
-    } catch (error) {
-      const errorMessage = '인증 코드 검증 중 오류가 발생했습니다.';
-      toast.error(errorMessage);
-      onError?.(errorMessage);
-    }
-  };
-
   const handleResendCode = async () => {
     try {
       clearError();
@@ -229,6 +310,15 @@ export function EmailVerificationForm({
         <span className="font-semibold">{email}</span>
       </CardDescription>
 
+      {/* ✅ 자동 인증 중 표시 */}
+      {isAutoSubmitting && (
+        <Alert className="mb-4">
+          <AlertDescription className="text-center">
+            🔄 자동으로 인증을 진행하고 있습니다...
+          </AlertDescription>
+        </Alert>
+      )}
+
       {timeLeft > 0 && (
         <SmartTimer
           timeLeft={timeLeft}
@@ -256,7 +346,9 @@ export function EmailVerificationForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="mt-6">
           <fieldset
-            disabled={form.formState.isSubmitting || timeLeft <= 0}
+            disabled={
+              form.formState.isSubmitting || timeLeft <= 0 || isAutoSubmitting
+            }
             className="space-y-6"
           >
             <FormField
@@ -290,9 +382,11 @@ export function EmailVerificationForm({
             <Button
               type="submit"
               className={`mt-6 w-full ${styles?.primaryButton || ''}`}
-              disabled={isLoading || timeLeft <= 0}
+              disabled={isLoading || timeLeft <= 0 || isAutoSubmitting}
             >
-              {isLoading
+              {isAutoSubmitting
+                ? '자동 인증 중...'
+                : isLoading
                 ? '인증 중...'
                 : timeLeft <= 0
                 ? '시간이 만료되었습니다'
@@ -322,7 +416,7 @@ export function EmailVerificationForm({
               type="button"
               onClick={handleResendCode}
               variant="ghost"
-              disabled={isLoading}
+              disabled={isLoading || isAutoSubmitting}
               className="font-semibold text-gray-950 underline decoration-gray-950/25 underline-offset-2 hover:decoration-gray-950/50 dark:text-white dark:decoration-white/25 dark:hover:decoration-white/50 m-0 p-0"
             >
               <span className="text-sm/6 font-semibold">

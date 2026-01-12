@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAppConfig } from '../../context';
 import { PageHead } from '../../seo';
@@ -33,30 +33,59 @@ export function EmailVerificationPage({
 }: EmailVerificationPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams(); // ✅ 추가
   const { getSeoTitle, siteName, routes, PageWrapper, styles } = useAppConfig();
 
   // routes에서 기본값 사용 (props로 오버라이드 가능)
   const missingEmailRedirect = redirectToOnMissingEmail || routes.register;
   const successRedirect = redirectToOnSuccess || routes.login;
 
+  // ✅ URL query parameter에서 code와 email 가져오기
+  const codeFromQuery = searchParams.get('code');
+  const emailFromQuery = searchParams.get('email');
+
   const locationState = location.state || {};
-  const { email } = locationState;
+  const { email: emailFromState, fromInvitation } = locationState;
+
+  // ✅ state 또는 query parameter에서 email 가져오기
+  const email = emailFromState || emailFromQuery || '';
+
+  // ✅ code가 URL에 있으면 자동 인증 중임을 표시
+  const isAutoVerifying = Boolean(codeFromQuery && email);
 
   // 필수 데이터가 없으면 리다이렉트
   useEffect(() => {
-    if (!email) {
+    // ✅ 자동 인증 중이면 리다이렉트하지 않음
+    if (!email && !isAutoVerifying) {
       toast.error(missingEmailMessage);
       navigate(missingEmailRedirect);
       return;
     }
-  }, [email, navigate, missingEmailRedirect, missingEmailMessage]);
+  }, [
+    email,
+    isAutoVerifying,
+    navigate,
+    missingEmailRedirect,
+    missingEmailMessage,
+  ]);
 
   // 성공 시 리다이렉트 처리
   const handleSuccess = (data: { email: string; code: string }) => {
     callbacks.onSuccess?.(data);
+
+    const targetRoute = fromInvitation ? '/admin' : successRedirect;
+
+    if (fromInvitation) {
+      toast.success('초대를 통한 회원가입이 완료되었습니다!');
+    } else if (isAutoVerifying) {
+      toast.success(
+        '이메일 인증이 완료되었습니다! 로그인 페이지로 이동합니다.'
+      );
+    }
+
     setTimeout(() => {
-      navigate(successRedirect);
-    }, 100);
+      navigate(targetRoute, { replace: true });
+    }, 1000);
   };
 
   const Wrapper = PageWrapper || React.Fragment;
@@ -96,6 +125,25 @@ export function EmailVerificationPage({
       <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-xs">
           <h1 className="sr-only">Enter one-time password</h1>
+
+          {/* ✅ 자동 인증 중일 때 로딩 표시 */}
+          {isAutoVerifying && state.isLoading && (
+            <Alert className="mb-4">
+              <AlertDescription className="text-center">
+                이메일 인증을 진행하고 있습니다...
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* ✅ 초대 알림 추가 */}
+          {fromInvitation && !isAutoVerifying && (
+            <Alert className="mb-4">
+              <AlertDescription>
+                초대를 통한 회원가입입니다. 인증 완료 후 바로 로그인됩니다.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <EmailVerificationForm
             config={{ email }}
             callbacks={{
@@ -105,6 +153,7 @@ export function EmailVerificationPage({
             state={state}
             className={className}
             styles={styles}
+            initialCode={codeFromQuery || undefined} // ✅ URL의 code를 초기값으로 전달
           />
         </div>
       </div>

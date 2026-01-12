@@ -143,6 +143,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '관리자', url: '/admin/users/admins' }, // ✅ /admin 추가
               { title: '일반 회원', url: '/admin/users/members' }, // ✅ /admin 추가
               { title: '배달원', url: '/admin/users/drivers' }, // ✅ /admin 추가
+              { title: '초대 관리', url: '/admin/users/invitations' }, // ✅ 아이콘 없이 서브메뉴로만
             ],
           },
           {

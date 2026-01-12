@@ -29,6 +29,8 @@ import RecentFilesPage from '@/app/pages/dashboard/board/file-manager/pages/rece
 import StorageAnalysisPage from '@/app/pages/dashboard/board/file-manager/pages/storage-analysis-page';
 import { FileUploadDialog } from '@/app/pages/dashboard/board/file-manager/components';
 import { UsersWithProvider } from '@/app/pages/dashboard/users/users-with-provider';
+import { InvitationsPage } from '@/app/pages/dashboard/users/Invitations.page';
+import { AcceptInvitationPage } from '@/app/pages/auth/accept-invitations.page';
 
 const router = createBrowserRouter([
   // 🔐 관리자 로그인 (비인증 사용자만)
@@ -69,6 +71,11 @@ const router = createBrowserRouter([
       {
         path: 'verify-email',
         element: <VerifyEmailPage />,
+      },
+      // ✅ 초대 수락 페이지 추가
+      {
+        path: 'accept-invitation',
+        element: <AcceptInvitationPage />,
       },
     ],
   },
@@ -141,13 +148,13 @@ const router = createBrowserRouter([
             element: <UsersPage />, // 또는 별도 컴포넌트
           },
           {
+            path: 'invitations', // ✅ 초대 목록 페이지 추가
+            element: <InvitationsPage />,
+          },
+          {
             path: ':id',
             element: <UserDetailPage />,
           },
-          // {
-          //   path: ':id/edit',
-          //   element: <UserEditPage />,
-          // },
         ],
       },
 

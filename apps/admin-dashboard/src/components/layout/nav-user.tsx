@@ -32,7 +32,7 @@ import {
   getRoleDisplayText,
 } from '@/app/utils/common-header';
 import { useTeamContext } from '@/components/team-provider';
-import { APP_ROUTES } from '@/app/constants/app-router';
+import { APP_ROUTES } from '@/app/constants/app-routes';
 
 interface NavUserProps {
   user: {

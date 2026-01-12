@@ -68,6 +68,9 @@ import {
   InviteUserMutation,
   CancelInvitationMutation,
   ResendInvitationMutation,
+  VerifyInvitationTokenQuery,
+  AcceptInvitationInput,
+  AcceptInvitationMutation,
 } from '@starcoex-frontend/graphql';
 import { ApiResponse } from './common.types';
 
@@ -209,6 +212,13 @@ export interface IAuthService {
   resendInvitation(
     invitationId: number
   ): Promise<ApiResponse<ResendInvitationMutation>>;
+  verifyInvitationToken(
+    token: string
+  ): Promise<ApiResponse<VerifyInvitationTokenQuery>>;
+  acceptInvitation(
+    token: string,
+    input: AcceptInvitationInput
+  ): Promise<ApiResponse<AcceptInvitationMutation>>;
 
   // 유틸리티 메서드들 (추가)
   clearAuthCache(): void;

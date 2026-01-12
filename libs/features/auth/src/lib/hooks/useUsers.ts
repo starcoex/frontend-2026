@@ -1,6 +1,11 @@
 import { useAuth } from './useAuth';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { User } from '@starcoex-frontend/graphql';
+import { toast } from 'sonner';
+import {
+  InvitationStatus,
+  User,
+  UserInvitation,
+} from '@starcoex-frontend/graphql';
 
 interface UseUsersOptions {
   initialPage?: number;
@@ -11,8 +16,16 @@ interface UseUsersOptions {
 export const useUsers = (options: UseUsersOptions = {}) => {
   const { initialPage = 1, initialLimit = 20, autoFetch = true } = options;
 
-  // ✅ useAuth에서 함수들 가져오기
-  const { getAllUsers, getUsersStats } = useAuth();
+  const {
+    getAllUsers,
+    getUsersStats,
+    getInvitations,
+    inviteUser,
+    cancelInvitation,
+    resendInvitation,
+    verifyInvitationToken,
+    acceptInvitation,
+  } = useAuth();
 
   const [page, setPage] = useState(initialPage);
   const [limit, setLimit] = useState(initialLimit);
@@ -34,12 +47,25 @@ export const useUsers = (options: UseUsersOptions = {}) => {
   });
   const [statsLoading, setStatsLoading] = useState(false);
 
-  // ✅ 중복 실행 방지
+  // 초대 관련 상태
+  const [invitations, setInvitations] = useState<UserInvitation[]>([]);
+  const [invitationsPage, setInvitationsPage] = useState(1);
+  const [invitationsLimit, setInvitationsLimit] = useState(20);
+  const [invitationsTotal, setInvitationsTotal] = useState(0);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  const [invitationsError, setInvitationsError] = useState<string | null>(null);
+  const [invitationStatusFilter, setInvitationStatusFilter] = useState<
+    InvitationStatus | undefined
+  >(undefined);
+
+  // ✅ 중복 실행 방지 + 초기 fetch 완료 여부
   const isFetchingUsers = useRef(false);
   const isFetchingStats = useRef(false);
-  const hasFetchedStats = useRef(false); // ✅ 통계는 한번만 fetch
+  const hasFetchedStats = useRef(false);
+  const isFetchingInvitations = useRef(false);
+  const hasFetchedInvitations = useRef(false); // ✅ 추가
 
-  // ✅ 사용자 목록 조회
+  // 사용자 목록 조회
   const fetchUsers = useCallback(async () => {
     if (isFetchingUsers.current) return;
 
@@ -76,7 +102,7 @@ export const useUsers = (options: UseUsersOptions = {}) => {
     }
   }, [getAllUsers, page, limit, search, statusFilter, roleFilter]);
 
-  // ✅ 통계 조회 (한번만 실행)
+  // 통계 조회
   const fetchStats = useCallback(async () => {
     if (isFetchingStats.current || hasFetchedStats.current) return;
 
@@ -95,7 +121,7 @@ export const useUsers = (options: UseUsersOptions = {}) => {
           emailUnverifiedUsers:
             statsData.verification?.emailUnverifiedUsers || 0,
         });
-        hasFetchedStats.current = true; // ✅ 한번 성공하면 다시 fetch 안함
+        hasFetchedStats.current = true;
       }
     } catch (err) {
       console.error('통계 조회 실패:', err);
@@ -105,45 +131,208 @@ export const useUsers = (options: UseUsersOptions = {}) => {
     }
   }, [getUsersStats]);
 
-  // ✅ 초기 로드 및 필터 변경시 자동 조회
+  // ✅ 초대 목록 조회 (의존성 최소화)
+  const fetchInvitations = useCallback(async () => {
+    if (isFetchingInvitations.current) {
+      console.log('⏭️ Already fetching invitations, skipping...');
+      return;
+    }
+
+    isFetchingInvitations.current = true;
+    setInvitationsLoading(true);
+    setInvitationsError(null);
+
+    try {
+      const response = await getInvitations({
+        page: invitationsPage,
+        limit: invitationsLimit,
+        status: invitationStatusFilter,
+      });
+
+      if (response.success && response.data?.getInvitations) {
+        const { invitations: fetchedInvitations, pagination } =
+          response.data.getInvitations;
+
+        setInvitations(fetchedInvitations || []);
+        setInvitationsTotal(pagination?.total || 0);
+        setInvitationsError(null);
+        hasFetchedInvitations.current = true; // ✅ 초기 fetch 완료
+      } else {
+        const errorMsg =
+          response.error?.message ||
+          response.graphQLErrors?.[0]?.message ||
+          '초대 목록을 불러오는데 실패했습니다';
+
+        console.error('❌ getInvitations error:', errorMsg);
+        setInvitationsError(errorMsg);
+
+        if (errorMsg.includes('Forbidden') || errorMsg.includes('권한')) {
+          toast.error('초대 목록을 볼 권한이 없습니다.');
+        } else {
+          toast.error(errorMsg);
+        }
+      }
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다';
+
+      console.error('💥 fetchInvitations exception:', err);
+      setInvitationsError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setInvitationsLoading(false);
+      isFetchingInvitations.current = false;
+    }
+  }, [
+    getInvitations,
+    invitationsPage,
+    invitationsLimit,
+    invitationStatusFilter,
+  ]);
+
+  // 초대 보내기
+  const handleInviteUser = useCallback(
+    async (input: {
+      email: string;
+      role?: string;
+      userType?: string;
+      adminMessage?: string;
+    }) => {
+      try {
+        const response = await inviteUser(input as any);
+
+        if (response.success) {
+          toast.success(
+            response.message ||
+              `${input.email}에게 초대 이메일이 발송되었습니다.`
+          );
+          await fetchInvitations();
+        } else {
+          const errorMsg =
+            response.error?.message ||
+            response.graphQLErrors?.[0]?.message ||
+            '초대 발송에 실패했습니다.';
+
+          console.error('❌ Invitation failed:', errorMsg);
+          toast.error(errorMsg);
+        }
+
+        return response;
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error
+            ? err.message
+            : '초대 발송 중 오류가 발생했습니다.';
+
+        console.error('💥 Invitation exception:', err);
+        toast.error(errorMsg);
+
+        return {
+          success: false,
+          error: { message: errorMsg },
+        };
+      }
+    },
+    [inviteUser, fetchInvitations]
+  );
+
+  // 초대 취소
+  const handleCancelInvitation = useCallback(
+    async (invitationId: number) => {
+      const response = await cancelInvitation(invitationId);
+      if (response.success) {
+        toast.success('초대가 취소되었습니다.');
+        await fetchInvitations();
+      } else {
+        toast.error(response.error?.message || '초대 취소에 실패했습니다.');
+      }
+      return response;
+    },
+    [cancelInvitation, fetchInvitations]
+  );
+
+  // 초대 재발송
+  const handleResendInvitation = useCallback(
+    async (invitationId: number) => {
+      const response = await resendInvitation(invitationId);
+      if (response.success) {
+        toast.success('초대 이메일이 재발송되었습니다.');
+        await fetchInvitations();
+      } else {
+        toast.error(response.error?.message || '초대 재발송에 실패했습니다.');
+      }
+      return response;
+    },
+    [resendInvitation, fetchInvitations]
+  );
+
+  // 초대 토큰 검증
+  const handleVerifyInvitation = useCallback(
+    async (token: string) => {
+      const response = await verifyInvitationToken(token);
+      return response;
+    },
+    [verifyInvitationToken]
+  );
+
+  // 초대 수락
+  const handleAcceptInvitation = useCallback(
+    async (token: string, input: any) => {
+      const response = await acceptInvitation(token, input);
+      if (response.success) {
+        await fetchInvitations();
+      }
+      return response;
+    },
+    [acceptInvitation, fetchInvitations]
+  );
+
+  // ✅ 초기 로드 (한 번만 실행)
   useEffect(() => {
     if (autoFetch) {
       fetchUsers();
     }
   }, [autoFetch, fetchUsers]);
 
-  // ✅ 통계는 마운트시 한번만 조회
   useEffect(() => {
     if (autoFetch && !hasFetchedStats.current) {
       fetchStats();
     }
   }, [autoFetch, fetchStats]);
 
-  // ✅ 리프레시 함수 (통계도 다시 가져옴)
+  // ✅ 초대 목록: 한 번만 fetch (의존성에서 fetchInvitations 제거)
+  useEffect(() => {
+    if (autoFetch && !hasFetchedInvitations.current) {
+      fetchInvitations();
+    }
+  }, [autoFetch]); // ✅ fetchInvitations를 의존성에서 제거!
+
+  // ✅ 페이지/필터 변경 시에만 재조회
+  useEffect(() => {
+    if (autoFetch && hasFetchedInvitations.current) {
+      fetchInvitations();
+    }
+  }, [invitationsPage, invitationsLimit, invitationStatusFilter]); // ✅ 필터 변경만 감지
+
+  // 리프레시
   const refetch = useCallback(async () => {
-    hasFetchedStats.current = false; // ✅ 통계 refetch 허용
-    await Promise.all([fetchUsers(), fetchStats()]);
-  }, [fetchUsers, fetchStats]);
+    hasFetchedStats.current = false;
+    hasFetchedInvitations.current = false; // ✅ 리셋
+    await Promise.all([fetchUsers(), fetchStats(), fetchInvitations()]);
+  }, [fetchUsers, fetchStats, fetchInvitations]);
 
   return {
-    // 데이터
     users,
     total,
     hasMore,
     stats,
-
-    // 로딩/에러
     loading,
     statsLoading,
     error,
-
-    // 페이지네이션
     page,
     limit,
     setPage,
     setLimit,
-
-    // 검색/필터
     search,
     setSearch,
     statusFilter,
@@ -151,8 +340,25 @@ export const useUsers = (options: UseUsersOptions = {}) => {
     roleFilter,
     setRoleFilter,
 
-    // 리프레시
+    invitations,
+    invitationsPage,
+    invitationsLimit,
+    invitationsTotal,
+    invitationsLoading,
+    invitationsError,
+    invitationStatusFilter,
+    setInvitationsPage,
+    setInvitationsLimit,
+    setInvitationStatusFilter,
+
     refetch,
     fetchUsers,
+    fetchInvitations,
+
+    handleInviteUser,
+    handleCancelInvitation,
+    handleResendInvitation,
+    handleVerifyInvitation,
+    handleAcceptInvitation,
   };
 };

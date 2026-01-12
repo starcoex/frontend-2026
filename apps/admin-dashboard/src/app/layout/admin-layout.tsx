@@ -10,13 +10,8 @@ import { CommandMenu } from '@/components/command-menu';
 
 export const AdminLayout: React.FC = () => {
   const location = useLocation();
-  const {
-    isAuthenticated,
-    currentUser,
-    initialized,
-    isLoading,
-    checkAuthStatus,
-  } = useAuth();
+  const { isAuthenticated, currentUser, initialized, checkAuthStatus } =
+    useAuth();
   const sidebarState = Cookies.get('sidebar_state');
   const defaultOpen = sidebarState === 'true' || sidebarState === undefined;
 
@@ -29,7 +24,7 @@ export const AdminLayout: React.FC = () => {
   }, [initialized, checkAuthStatus]);
 
   // 1) 인증 초기화/로딩 중에는 무조건 리다이렉트하지 말고 로딩 UI 표시
-  if (!initialized || isLoading) {
+  if (!initialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">

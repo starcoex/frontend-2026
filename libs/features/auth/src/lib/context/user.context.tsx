@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useUsers } from '../hooks';
-import { User } from '@starcoex-frontend/graphql';
+import { User, UserInvitation } from '@starcoex-frontend/graphql';
 
 interface UsersContextType {
   users: User[];
@@ -27,6 +27,19 @@ interface UsersContextType {
   roleFilter: string[];
   setRoleFilter: (filter: string[]) => void;
   fetchUsers: () => Promise<void>;
+
+  // ✅ 초대 관련 필드 추가
+  invitations: UserInvitation[];
+  invitationsPage: number;
+  invitationsLimit: number;
+  invitationsTotal: number;
+  invitationsLoading: boolean;
+  invitationsError: string | null;
+  setInvitationsPage: (page: number) => void;
+  setInvitationsLimit: (limit: number) => void;
+  fetchInvitations: () => Promise<void>;
+  handleResendInvitation: (invitationId: number) => Promise<any>;
+  handleCancelInvitation: (invitationId: number) => Promise<any>;
 }
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
@@ -59,6 +72,18 @@ export const UsersProvider: React.FC<{ children: ReactNode }> = ({
       usersData.setSearch,
       usersData.setStatusFilter,
       usersData.setRoleFilter,
+      // ✅ 초대 필드 추가
+      usersData.invitations,
+      usersData.invitationsPage,
+      usersData.invitationsLimit,
+      usersData.invitationsTotal,
+      usersData.invitationsLoading,
+      usersData.invitationsError,
+      usersData.setInvitationsPage,
+      usersData.setInvitationsLimit,
+      usersData.fetchInvitations,
+      usersData.handleResendInvitation,
+      usersData.handleCancelInvitation,
     ]
   );
 

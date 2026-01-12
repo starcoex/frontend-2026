@@ -445,6 +445,19 @@ export const GET_INVITATIONS = gql`
   }
 `;
 
+// ✅ 초대 토큰 검증 (공개 API)
+export const VERIFY_INVITATION_TOKEN = gql`
+  query VerifyInvitationToken($token: String!) {
+    verifyInvitationToken(token: $token) {
+      valid
+      email
+      role
+      userType
+      adminMessage
+    }
+  }
+`;
+
 /**
  * Mutations
  */
@@ -971,6 +984,18 @@ export const RESEND_INVITATION = gql`
       error {
         ...ErrorInfoFields
       }
+    }
+  }
+`;
+
+// ✅ 초대 수락 (공개 API)
+export const ACCEPT_INVITATION = gql`
+  mutation AcceptInvitation($token: String!, $input: AcceptInvitationInput!) {
+    acceptInvitation(token: $token, input: $input) {
+      success
+      message
+      email
+      verificationMessage
     }
   }
 `;

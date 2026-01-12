@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
-import { IconMailPlus, IconSend } from '@tabler/icons-react';
+import { IconMailPlus, IconSend, IconLoader2 } from '@tabler/icons-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userTypes } from '../data/data';
 import { userToasts } from '@/components/ui/toast.helpers';
@@ -27,6 +27,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@starcoex-frontend/auth'; // ✅ useAuth만 사용
 import { Role } from '@starcoex-frontend/graphql';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Props {
   open: boolean;
@@ -48,12 +51,20 @@ type UserInviteForm = z.infer<typeof formSchema>;
 export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
   const { inviteUser } = useAuth(); // ✅ useAuth에서 직접 가져오기
 
+  // ✅ 상태 추가
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const form = useForm<UserInviteForm>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', role: '', userType: 'INDIVIDUAL', desc: '' }, // ✅ 기본값 설정
   });
 
   const onSubmit = async (values: UserInviteForm) => {
+    // ✅ 에러 초기화
+    setError(null);
+    setIsSubmitting(true);
+
     try {
       // ✅ 실제 GraphQL mutation 호출
       const response = await inviteUser({
@@ -68,9 +79,27 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
         form.reset();
         onOpenChange(false);
         onSuccess?.(); // ✅ 성공 시 콜백 호출
+      } else {
+        // ✅ 실패 - 에러 메시지 추출
+        const errorMsg =
+          response.error?.message ||
+          response.graphQLErrors?.[0]?.message ||
+          '초대 발송에 실패했습니다.';
+
+        setError(errorMsg);
+        toast.error(errorMsg);
       }
-    } catch (error) {
-      console.error('User invitation failed:', error);
+    } catch (err) {
+      // ✅ 예외 처리
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : '초대 발송 중 알 수 없는 오류가 발생했습니다.';
+
+      setError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -79,6 +108,7 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
       open={open}
       onOpenChange={(state) => {
         form.reset();
+        setError(null); // ✅ 다이얼로그 닫을 때 에러 초기화
         onOpenChange(state);
       }}
     >
@@ -92,6 +122,22 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
             invitation. Assign a role to define their access level.
           </DialogDescription>
         </DialogHeader>
+
+        {/* ✅ 에러 표시 */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="text-lg hover:opacity-70"
+              >
+                ✕
+              </button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form
             id="user-invite-form"
@@ -176,8 +222,17 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>
           </DialogClose>
-          <Button type="submit" form="user-invite-form">
-            Invite <IconSend />
+          <Button type="submit" form="user-invite-form" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <IconLoader2 />
+                Sending...
+              </>
+            ) : (
+              <>
+                Invite <IconSend />
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
