@@ -44,7 +44,7 @@ export class MediaService implements IMediaService {
 
   constructor(private client: ApolloClient) {}
 
-  // 공통 mutation helper (AuthService 참조)
+  // 공통 mutation helper (AddressService 참조)
   private async mutate<
     TData = any,
     TVars extends OperationVariables = OperationVariables
@@ -79,7 +79,7 @@ export class MediaService implements IMediaService {
     }
   }
 
-  // 공통 query helper (AuthService 참조)
+  // 공통 query helper (AddressService 참조)
   private async query<
     TData = any,
     TVars extends OperationVariables = OperationVariables

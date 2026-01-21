@@ -6,7 +6,7 @@ interface OpenGraphProps {
   description?: string;
   image?: string;
   url?: string;
-  type?: 'website' | 'article' | 'video' | 'music';
+  type?: 'website' | 'article' | 'video' | 'music' | 'product';
   siteName?: string;
 }
 

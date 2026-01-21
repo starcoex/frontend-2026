@@ -73,7 +73,7 @@ export function TableRecentFiles({
   isLoading: propIsLoading,
   filterType = null, // ✅
 }: TableRecentFilesProps) {
-  // useLoyalty 훅 사용 (deleteFile 등 액션은 항상 필요하므로 호출)
+  // useProduct 훅 사용 (deleteFile 등 액션은 항상 필요하므로 호출)
   const {
     files: contextFiles,
     deleteFile,

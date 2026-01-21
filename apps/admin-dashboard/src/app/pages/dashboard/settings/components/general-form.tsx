@@ -36,6 +36,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as PortOne from '@portone/browser-sdk/v2';
+import { Link } from 'react-router-dom';
 
 // 스키마: 핸드폰 번호와 2FA 설정만 유지
 const formSchema = z.object({
@@ -184,7 +185,6 @@ export default function GeneralForm() {
         phoneNumber: currentUser.phoneNumber || '',
       });
       const url = AvatarUtils.getAvatarUrl(currentUser?.avatar?.url);
-      console.log('avatar', url);
       setAvatarPreview(url);
     }
   }, [currentUser, form]);
@@ -537,7 +537,7 @@ export default function GeneralForm() {
           description:
             '계정이 성공적으로 삭제되었습니다. 이용해 주셔서 감사합니다.',
         });
-        // useAuth 내부 로직에 의해 자동으로 로그아웃 상태로 전환되고 로그인 페이지로 이동됨
+        // useAddress 내부 로직에 의해 자동으로 로그아웃 상태로 전환되고 로그인 페이지로 이동됨
       } else {
         toasts.error({
           title: '삭제 실패',
@@ -737,6 +737,31 @@ export default function GeneralForm() {
               </div>
             </CardContent>
           </Card>
+
+          {/* ✅ SUPER_ADMIN만 보이는 링크 */}
+          {currentUser?.role === 'SUPER_ADMIN' && (
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle>🔧 시스템 관리</CardTitle>
+                <CardDescription>고급 시스템 설정 및 관리 기능</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">마스터 키 관리</p>
+                    <p className="text-sm text-muted-foreground">
+                      첫 SUPER_ADMIN 생성 또는 권한 관리
+                    </p>
+                  </div>
+                  <Button asChild variant="outline">
+                    <Link to="/admin/settings/master-key">
+                      관리 페이지로 이동 →
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* 저장 버튼 */}
           <div className="flex justify-end">

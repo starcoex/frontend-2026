@@ -67,7 +67,7 @@ export function HeaderUser() {
         >
           <Avatar className="h-8 w-8 rounded-lg">
             <AvatarImage
-              src={currentUser.avatarUrl || undefined}
+              src={currentUser.avatar?.url || undefined}
               alt={currentUser.name || currentUser.email}
             />
             <AvatarFallback className="rounded-lg">
@@ -85,7 +85,7 @@ export function HeaderUser() {
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
             <Avatar className="h-8 w-8 rounded-lg">
               <AvatarImage
-                src={currentUser.avatarUrl || undefined}
+                src={currentUser.avatar?.url || undefined}
                 alt={currentUser.name || currentUser.email}
               />
               <AvatarFallback className="rounded-lg">

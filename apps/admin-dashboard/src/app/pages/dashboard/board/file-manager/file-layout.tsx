@@ -102,7 +102,7 @@ export const FileManagerLayout = () => {
           {config.showStats && <SummaryCards />}
         </div>
 
-        {/* 4. 하위 페이지 컨텐츠 (File Manager Page 등) */}
+        {/* 4. 하위 페이지 컨텐츠 (File Manager SalesPage 등) */}
         <div className="flex-1">
           <Outlet />
         </div>

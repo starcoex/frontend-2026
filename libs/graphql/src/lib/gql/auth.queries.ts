@@ -999,3 +999,36 @@ export const ACCEPT_INVITATION = gql`
     }
   }
 `;
+
+// ✅ 마스터 키 승격 관련 추가
+export const PROMOTE_TO_SUPER_ADMIN_WITH_MASTER_KEY = gql`
+  mutation PromoteToSuperAdminWithMasterKey($input: AdminMasterKeyInput!) {
+    promoteToSuperAdminWithMasterKey(input: $input) {
+      success
+      message
+      user {
+        id
+        email
+        name
+        role
+        userType
+      }
+    }
+  }
+`;
+
+export const CHANGE_USER_ROLE = gql`
+  mutation ChangeUserRole($input: ChangeRoleInput!) {
+    changeUserRole(input: $input) {
+      success
+      message
+      user {
+        id
+        email
+        name
+        role
+        userType
+      }
+    }
+  }
+`;

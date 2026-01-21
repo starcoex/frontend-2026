@@ -71,6 +71,10 @@ import {
   VerifyInvitationTokenQuery,
   AcceptInvitationInput,
   AcceptInvitationMutation,
+  AdminMasterKeyInput,
+  PromoteToSuperAdminWithMasterKeyMutation,
+  ChangeRoleInput,
+  ChangeUserRoleMutation,
 } from '@starcoex-frontend/graphql';
 import { ApiResponse } from './common.types';
 
@@ -219,6 +223,12 @@ export interface IAuthService {
     token: string,
     input: AcceptInvitationInput
   ): Promise<ApiResponse<AcceptInvitationMutation>>;
+  promoteToSuperAdminWithMasterKey(
+    input: AdminMasterKeyInput
+  ): Promise<ApiResponse<PromoteToSuperAdminWithMasterKeyMutation>>;
+  changeUserRole(
+    input: ChangeRoleInput
+  ): Promise<ApiResponse<ChangeUserRoleMutation>>;
 
   // 유틸리티 메서드들 (추가)
   clearAuthCache(): void;

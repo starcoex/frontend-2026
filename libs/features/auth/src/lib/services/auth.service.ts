@@ -162,6 +162,14 @@ import {
   AcceptInvitationMutation,
   AcceptInvitationMutationVariables,
   ACCEPT_INVITATION,
+  AdminMasterKeyInput,
+  PromoteToSuperAdminWithMasterKeyMutation,
+  PromoteToSuperAdminWithMasterKeyMutationVariables,
+  PROMOTE_TO_SUPER_ADMIN_WITH_MASTER_KEY,
+  ChangeRoleInput,
+  ChangeUserRoleMutation,
+  ChangeUserRoleMutationVariables,
+  CHANGE_USER_ROLE,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -732,10 +740,32 @@ export class AuthService implements IAuthService {
     >(ACCEPT_INVITATION, { token, input });
   }
 
+  // ✅ 마스터 키로 SUPER_ADMIN 승격 (일회성, 인증 불필요)
+  async promoteToSuperAdminWithMasterKey(
+    input: AdminMasterKeyInput
+  ): Promise<ApiResponse<PromoteToSuperAdminWithMasterKeyMutation>> {
+    return this.mutate<
+      PromoteToSuperAdminWithMasterKeyMutation,
+      PromoteToSuperAdminWithMasterKeyMutationVariables
+    >(PROMOTE_TO_SUPER_ADMIN_WITH_MASTER_KEY, { input });
+  }
+
+  // ✅ 사용자 권한 변경 (SUPER_ADMIN 전용)
+  async changeUserRole(
+    input: ChangeRoleInput
+  ): Promise<ApiResponse<ChangeUserRoleMutation>> {
+    return this.mutate<ChangeUserRoleMutation, ChangeUserRoleMutationVariables>(
+      CHANGE_USER_ROLE,
+      { input }
+    );
+  }
+
   clearAuthCache(): void {
     // 캐시 초기화는 fire-and-forget 로 처리
     this.client
       .clearStore()
-      .catch((err) => console.error('[AuthService] clearAuthCache error', err));
+      .catch((err) =>
+        console.error('[AddressService] clearAuthCache error', err)
+      );
   }
 }

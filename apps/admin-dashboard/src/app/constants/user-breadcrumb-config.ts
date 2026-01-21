@@ -1,4 +1,4 @@
-export interface BreadcrumbConfig {
+export interface UserBreadcrumbConfig {
   label: string;
   title: string;
   showInBreadcrumb?: boolean;
@@ -6,7 +6,7 @@ export interface BreadcrumbConfig {
   showStats?: boolean;
 }
 
-export const BREADCRUMB_CONFIGS: Record<string, BreadcrumbConfig> = {
+export const BREADCRUMB_CONFIGS: Record<string, UserBreadcrumbConfig> = {
   LIST: {
     label: 'Users',
     title: 'User List',
@@ -51,7 +51,7 @@ export const BREADCRUMB_CONFIGS: Record<string, BreadcrumbConfig> = {
   },
 } as const;
 
-export const DEFAULT_BREADCRUMB_CONFIG: BreadcrumbConfig = {
+export const DEFAULT_BREADCRUMB_CONFIG: UserBreadcrumbConfig = {
   label: 'Users',
   title: 'User Management',
   showInBreadcrumb: true,

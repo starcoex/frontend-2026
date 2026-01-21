@@ -5,9 +5,11 @@ import {
   IconCar,
   IconCarCrane,
   IconCategory,
+  IconChartLine,
   IconChecklist,
   IconCoin,
   IconCreditCard,
+  IconFileInvoice,
   IconGasStation,
   IconGift,
   IconLayoutDashboard,
@@ -107,6 +109,12 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           icon: IconLayoutDashboard,
           items: [{ title: '요약 분석', url: '/admin' }],
         },
+        // ✅ Sales 대시보드 추가
+        {
+          title: '매출 현황',
+          url: '/admin/sales',
+          icon: IconChartLine,
+        },
       ],
     },
   ];
@@ -164,37 +172,65 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
-      // ✅ 제품/카테고리 관리 추가
+      // ✅ 상품/주문 관리 그룹 추가
       {
-        title: '상품 관리',
+        title: '커머스 관리',
         items: [
           {
-            title: '카테고리 관리',
-            url: '/categories',
-            icon: IconCategory,
+            title: '제품 관리',
+            url: '/admin/products',
+            icon: IconPackage,
             items: [
-              { title: '카테고리 목록', url: '/categories' },
-              { title: '카테고리 추가', url: '/categories/create' },
-              { title: '카테고리 계층', url: '/categories/hierarchy' },
+              { title: '제품 목록', url: '/admin/products' },
+              { title: '제품 상세', url: '/admin/products/:id' }, // 동적 라우트
+              { title: '제품 추가', url: '/admin/products/create' },
+              { title: '재고 현황', url: '/admin/products/inventory' },
             ],
           },
           {
-            title: '제품 관리',
-            url: '/products',
-            icon: IconPackage,
+            title: '주문 관리',
+            url: '/admin/orders',
+            icon: IconFileInvoice,
             items: [
-              { title: '제품 목록', url: '/products' },
-              { title: '제품 추가', url: '/products/create' },
-              { title: '재고 현황', url: '/products/inventory' },
-              { title: '제품 승인', url: '/products/approval' },
+              { title: '주문 목록', url: '/admin/orders' },
+              { title: '주문 상세', url: '/admin/orders/detail' },
+              { title: '주문 통계', url: '/admin/orders/stats' },
             ],
           },
+          {
+            title: '카테고리 관리',
+            url: '/admin/categories',
+            icon: IconCategory,
+            items: [
+              { title: '카테고리 목록', url: '/admin/categories' },
+              { title: '카테고리 추가', url: '/admin/categories/create' },
+              { title: '카테고리 계층', url: '/admin/categories/hierarchy' },
+            ],
+          },
+          // ✅ 매장 관리 추가
+          {
+            title: '매장 관리',
+            url: '/admin/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '매장 목록', url: '/admin/stores' },
+              { title: '매장 추가', url: '/admin/stores/create' },
+              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
+              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
+            ],
+          },
+        ],
+      },
+      {
+        title: '미디어 & 자산',
+        items: [
           {
             title: '미디어 관리',
             url: '/admin/media',
             icon: IconPhoto,
             items: [
               { title: '파일 관리자', url: '/admin/media' },
+              { title: '최근 파일', url: '/admin/media/recent' },
               { title: '저장소 분석', url: '/admin/media/analysis' },
             ],
           },
@@ -205,18 +241,149 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         items: [
           {
             title: '주유소 현황',
-            url: '/services/gas-stations',
+            url: '/admin/services/gas-stations',
             icon: IconGasStation,
           },
           {
             title: '카케어 현황',
-            url: '/services/car-care',
+            url: '/admin/services/car-care',
             icon: IconCarCrane,
           },
           {
             title: '배달 현황',
-            url: '/services/delivery',
+            url: '/admin/services/delivery',
             icon: IconTruck,
+          },
+        ],
+      },
+      // ✅ 통합 관리용 팀별 메뉴 추가
+      {
+        title: '주유소 관리',
+        items: [
+          {
+            title: '매장 관리',
+            url: '/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '매장 목록', url: '/admin/stores' },
+              { title: '매장 추가', url: '/admin/stores/create' },
+              { title: '브랜드 관리', url: '/admin/stores/brands' },
+            ],
+          },
+          {
+            title: '유류 상품',
+            url: '/fuel-products',
+            icon: IconBoxSeam,
+            items: [
+              { title: '유류 종류', url: '/fuel-products/types' },
+              { title: '유류 재고', url: '/fuel-products/inventory' },
+              { title: '가격 관리', url: '/fuel-products/pricing' },
+            ],
+          },
+          {
+            title: '차량 관리',
+            url: '/vehicles',
+            icon: IconCar,
+            items: [
+              { title: '등록 차량', url: '/vehicles' },
+              { title: '차량 히스토리', url: '/vehicles/history' },
+            ],
+          },
+        ],
+      },
+      {
+        title: '카케어 관리',
+        items: [
+          {
+            title: '서비스 상품',
+            url: '/service-products',
+            icon: IconTags,
+            items: [
+              { title: '세차 서비스', url: '/service-products/wash' },
+              { title: '정비 서비스', url: '/service-products/maintenance' },
+              { title: '서비스 패키지', url: '/service-products/packages' },
+            ],
+          },
+          {
+            title: '예약 관리',
+            url: '/reservations',
+            icon: IconChecklist,
+            items: [
+              { title: '예약 현황', url: '/reservations' },
+              { title: '예약 일정', url: '/reservations/schedule' },
+              { title: '대기 관리', url: '/reservations/queue' },
+            ],
+          },
+          {
+            title: '리뷰 관리',
+            url: '/reviews',
+            icon: IconStar,
+          },
+          {
+            title: '프로모션',
+            url: '/promotions',
+            icon: IconGift,
+            items: [
+              { title: '이벤트 관리', url: '/promotions/events' },
+              { title: '쿠폰 관리', url: '/promotions/coupons' },
+            ],
+          },
+          // ✅ 매장 관리 추가
+          {
+            title: '매장 관리',
+            url: '/admin/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '매장 목록', url: '/admin/stores' },
+              { title: '매장 추가', url: '/admin/stores/create' },
+              { title: '브랜드 관리', url: '/admin/stores/brands' },
+            ],
+          },
+        ],
+      },
+      {
+        title: '배달 관리',
+        items: [
+          {
+            title: '배달 상품',
+            url: '/delivery-products',
+            icon: IconShoppingCart,
+            items: [
+              { title: '난방유 상품', url: '/delivery-products/heating-oil' },
+              { title: '배달 지역', url: '/delivery-products/areas' },
+              { title: '배달료 관리', url: '/delivery-products/fees' },
+            ],
+          },
+          {
+            title: '배달원 관리',
+            url: '/drivers',
+            icon: IconUser,
+            items: [
+              { title: '배달원 목록', url: '/drivers' },
+              { title: '배달원 등록', url: '/drivers/register' },
+              { title: '성과 관리', url: '/drivers/performance' },
+            ],
+          },
+          {
+            title: '배달 현황',
+            url: '/delivery-status',
+            icon: IconTruck,
+            items: [
+              { title: '실시간 추적', url: '/delivery-status/tracking' },
+              { title: '배달 완료', url: '/delivery-status/completed' },
+              { title: '배달 지연', url: '/delivery-status/delayed' },
+            ],
+          },
+          // ✅ 매장/거점 관리 추가
+          {
+            title: '거점 관리',
+            url: '/admin/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '거점 목록', url: '/admin/stores' },
+              { title: '거점 추가', url: '/admin/stores/create' },
+              { title: '브랜드 관리', url: '/admin/stores/brands' },
+            ],
           },
         ],
       },
@@ -249,9 +416,10 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             url: '/stores',
             icon: IconBuildingStore,
             items: [
-              { title: '매장 목록', url: '/stores' },
-              { title: '매장 등록', url: '/stores/create' },
-              { title: '매장 설정', url: '/stores/settings' },
+              { title: '매장 목록', url: '/admin/stores' },
+              { title: '매장 추가', url: '/admin/stores/create' },
+              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
+              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
             ],
           },
           {
@@ -340,6 +508,17 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             ],
           },
           {
+            title: '매장 관리',
+            url: '/admin/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '매장 목록', url: '/admin/stores' },
+              { title: '매장 추가', url: '/admin/stores/create' },
+              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
+              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
+            ],
+          },
+          {
             title: '예약 관리',
             url: '/reservations',
             icon: IconChecklist,
@@ -408,6 +587,17 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '실시간 주문', url: '/orders/live' },
               { title: '주문 히스토리', url: '/orders/history' },
               { title: '주문 통계', url: '/orders/stats' },
+            ],
+          },
+          {
+            title: '거점 관리',
+            url: '/admin/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '거점 목록', url: '/admin/stores' },
+              { title: '거점 추가', url: '/admin/stores/create' },
+              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
+              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
             ],
           },
           {

@@ -62,6 +62,12 @@
     },
     {
       "path": "./libs/features/loyalty"
+    },
+    {
+      "path": "./apps/admin-dashboard/libs/features/stores"
+    },
+    {
+      "path": "./libs/features/stores"
     }
   ]
 }

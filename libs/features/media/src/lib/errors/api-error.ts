@@ -1,5 +1,5 @@
 import type { GraphQLFormattedError } from 'graphql/error';
-import { ApiResponse } from '../types/common.types';
+import { ApiResponse } from '../types';
 
 /**
  * 공통 API 에러 코드

@@ -16,11 +16,12 @@ import { USER_ROUTES, USER_ROUTE_PATTERNS } from '@/app/constants/user-routes';
 import {
   BREADCRUMB_CONFIGS,
   DEFAULT_BREADCRUMB_CONFIG,
-  type BreadcrumbConfig,
-} from '@/app/constants/breadcrumb-config';
+  type UserBreadcrumbConfig,
+} from '@/app/constants/user-breadcrumb-config';
 import { useUsersContext } from '@starcoex-frontend/auth';
+import { Loader2 } from 'lucide-react';
 
-const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
+const PATH_TO_CONFIG_MAP: Record<string, UserBreadcrumbConfig> = {
   [USER_ROUTES.LIST]: BREADCRUMB_CONFIGS.LIST,
   [USER_ROUTES.CREATE]: BREADCRUMB_CONFIGS.CREATE,
   [USER_ROUTES.ADMINS]: BREADCRUMB_CONFIGS.ADMINS,
@@ -29,7 +30,9 @@ const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [USER_ROUTES.INVITATIONS]: BREADCRUMB_CONFIGS.INVITATIONS, // ✅ 추가
 };
 
-const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
+const getDynamicRouteConfig = (
+  pathname: string
+): UserBreadcrumbConfig | null => {
   const editMatch = pathname.match(USER_ROUTE_PATTERNS.EDIT);
   if (editMatch) {
     const userId = editMatch[1];
@@ -64,7 +67,7 @@ export const UsersLayout = () => {
   const { users, stats, loading, statsLoading, refetch } = useUsersContext();
 
   // ✅ config 계산
-  const config = useMemo((): BreadcrumbConfig => {
+  const config = useMemo((): UserBreadcrumbConfig => {
     const pathname = location.pathname;
     const staticConfig = PATH_TO_CONFIG_MAP[pathname];
     if (staticConfig) return staticConfig;
@@ -72,6 +75,9 @@ export const UsersLayout = () => {
     if (dynamicConfig) return dynamicConfig;
     return DEFAULT_BREADCRUMB_CONFIG;
   }, [location.pathname]);
+
+  // ✅ 초기 로딩 상태 (users가 빈 배열이고 loading이 true인 경우)
+  const isInitialLoading = loading && users.length === 0;
 
   return (
     <main className="flex h-full flex-1 flex-col p-4">
@@ -105,9 +111,20 @@ export const UsersLayout = () => {
       </div>
 
       <div className="flex-1">
-        <Outlet
-          context={{ users, loading, error: null, refreshUsers: refetch }}
-        />
+        {isInitialLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">
+                사용자 데이터를 불러오는 중...
+              </p>
+            </div>
+          </div>
+        ) : (
+          <Outlet
+            context={{ users, loading, error: null, refreshUsers: refetch }}
+          />
+        )}
       </div>
     </main>
   );

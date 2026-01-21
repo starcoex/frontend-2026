@@ -84,7 +84,7 @@ export const useAvatar = (options?: UseAvatarOptions) => {
     [getCurrentUser]
   );
 
-  // 🗑️ 아바타 삭제 (useAuth 함수 재사용)
+  // 🗑️ 아바타 삭제 (useAddress 함수 재사용)
   const deleteAvatar = useCallback(
     async (avatarId?: number) => {
       setIsDeleting(true); // 로딩 시작
@@ -105,7 +105,7 @@ export const useAvatar = (options?: UseAvatarOptions) => {
           );
         }
 
-        // 성공 시 useAuth 내부에서 이미 캐시 업데이트 등을 처리했을 수 있지만,
+        // 성공 시 useAddress 내부에서 이미 캐시 업데이트 등을 처리했을 수 있지만,
         // 확실하게 UI 갱신을 위해 한 번 더 호출 (선택 사항)
         await getCurrentUser();
 

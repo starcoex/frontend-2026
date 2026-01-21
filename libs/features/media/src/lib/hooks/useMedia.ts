@@ -24,11 +24,11 @@ export const useMedia = () => {
     isLoading: contextIsLoading,
   } = context;
 
-  // isLoading 상태를 ref로 관리 (useEffect 의존성 제거용 - useAuth 참조)
+  // isLoading 상태를 ref로 관리 (useEffect 의존성 제거용 - useAddress 참조)
   const isLoadingRef = useRef(contextIsLoading);
   isLoadingRef.current = contextIsLoading;
 
-  // 공통 로딩 래퍼 (useAuth 참조)
+  // 공통 로딩 래퍼 (useAddress 참조)
   const withLoading = useCallback(
     async <T>(
       operation: () => Promise<ApiResponse<T>>,

@@ -74,6 +74,10 @@ import {
   VerifyInvitationTokenQuery,
   AcceptInvitationInput,
   AcceptInvitationMutation,
+  AdminMasterKeyInput,
+  PromoteToSuperAdminWithMasterKeyMutation,
+  ChangeRoleInput,
+  ChangeUserRoleMutation,
 } from '@starcoex-frontend/graphql';
 import type { ApiResponse, IAuthService } from '../types';
 
@@ -232,6 +236,13 @@ interface UseAuthReturn {
     token: string,
     input: AcceptInvitationInput
   ): Promise<ApiResponse<AcceptInvitationMutation>>;
+  // ✅ 마스터 키 및 권한 관리 추가
+  promoteToSuperAdminWithMasterKey(
+    input: AdminMasterKeyInput
+  ): Promise<ApiResponse<PromoteToSuperAdminWithMasterKeyMutation>>;
+  changeUserRole(
+    input: ChangeRoleInput
+  ): Promise<ApiResponse<ChangeUserRoleMutation>>;
 
   clearError: () => void;
   clearAuthCache: () => void;
@@ -876,6 +887,38 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
   );
 
   // ============================================================================
+  // 마스터 키 및 권한 관리
+  // ============================================================================
+
+  const promoteToSuperAdminWithMasterKey = useCallback(
+    (input: AdminMasterKeyInput) =>
+      withLoading(
+        () => getAuthService().promoteToSuperAdminWithMasterKey(input),
+        'SUPER_ADMIN 승격에 실패했습니다',
+        false,
+        {
+          operationId: `promote-super-admin-${input.userId}`,
+          preventDuplicate: true, // ✅ 중복 방지 필요
+        }
+      ),
+    [withLoading]
+  );
+
+  const changeUserRole = useCallback(
+    (input: ChangeRoleInput) =>
+      withLoading(
+        () => getAuthService().changeUserRole(input),
+        '권한 변경에 실패했습니다',
+        false,
+        {
+          operationId: `change-role-${input.targetUserId}`,
+          preventDuplicate: true, // ✅ 중복 방지 필요
+        }
+      ),
+    [withLoading]
+  );
+
+  // ============================================================================
   // 유틸리티
   // ============================================================================
 
@@ -961,6 +1004,9 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     requestIdentityVerification,
     verifyIdentityVerification,
     validateBusinessNumber,
+
+    promoteToSuperAdminWithMasterKey,
+    changeUserRole,
 
     clearError: context.clearError,
     clearAuthCache,

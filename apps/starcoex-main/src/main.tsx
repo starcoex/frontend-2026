@@ -23,7 +23,7 @@ const apolloClient = initializeApolloClient({
   },
 });
 
-// 2) AuthService 초기화 (ApolloClient 주입)
+// 2) AddressService 초기화 (ApolloClient 주입)
 
 initAuthService(apolloClient as any);
 
