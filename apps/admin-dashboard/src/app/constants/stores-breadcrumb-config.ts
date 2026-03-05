@@ -8,29 +8,29 @@ export interface BreadcrumbConfig {
 
 export const STORE_BREADCRUMB_CONFIGS = {
   LIST: {
-    label: 'Stores',
-    title: 'Store Management',
+    label: '매장 목록',
+    title: '매장 관리',
     showInBreadcrumb: true,
     showActions: true,
     showStats: true,
   },
   CREATE: {
-    label: 'Create Store',
-    title: 'Add New Store',
+    label: '매장 추가',
+    title: '새 매장 등록',
     showInBreadcrumb: true,
     showActions: false,
     showStats: false,
   },
   BRANDS: {
-    label: 'Brands',
-    title: 'Brand Management',
+    label: '브랜드 목록',
+    title: '브랜드 관리',
     showInBreadcrumb: true,
     showActions: true,
-    showStats: false,
+    showStats: true,
   },
   BRANDS_CREATE: {
-    label: 'Create Brand',
-    title: 'Add New Brand',
+    label: '브랜드 추가',
+    title: '새 브랜드 등록',
     showInBreadcrumb: true,
     showActions: false,
     showStats: false,
@@ -38,8 +38,8 @@ export const STORE_BREADCRUMB_CONFIGS = {
 } as const;
 
 export const DEFAULT_STORE_BREADCRUMB_CONFIG: BreadcrumbConfig = {
-  label: 'Stores',
-  title: 'Store Management',
+  label: '매장',
+  title: '매장 관리',
   showInBreadcrumb: true,
   showActions: false,
   showStats: false,

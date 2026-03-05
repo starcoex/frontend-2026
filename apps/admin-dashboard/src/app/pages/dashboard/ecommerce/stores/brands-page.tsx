@@ -2,31 +2,13 @@ import { Button } from '@/components/ui/button';
 import BrandList from './brand-list';
 import { PageHead } from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
-import { useEffect } from 'react';
-import { AlertCircle, Loader2, Tag } from 'lucide-react';
+import { AlertCircle, Tag } from 'lucide-react';
 import { useStores } from '@starcoex-frontend/stores';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
 
 export default function BrandsPage() {
-  const { brands, isLoading, error, fetchBrands } = useStores();
-
-  useEffect(() => {
-    fetchBrands();
-  }, [fetchBrands]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
-            브랜드 데이터를 불러오는 중...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const { brands, error, fetchBrands } = useStores();
 
   return (
     <>
@@ -75,8 +57,8 @@ export default function BrandsPage() {
         </div>
       )}
 
-      {/* ✅ 에러가 있어도 테이블 표시 */}
-      <BrandList data={brands} />
+      {/* ✅ 브랜드 목록 */}
+      {brands.length > 0 && <BrandList data={brands} />}
     </>
   );
 }

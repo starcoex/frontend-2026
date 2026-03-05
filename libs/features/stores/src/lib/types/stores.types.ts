@@ -7,6 +7,8 @@ import {
   CreateBrandInput,
   UpdateBrandInput,
   DeleteBrandInput,
+  StoreAddressInput, // ✅ 추가
+  StoreCoordinatesInput, // ✅ 추가
   // Outputs
   CreateStoreOutput,
   UpdateStoreOutput,
@@ -14,6 +16,7 @@ import {
   CreateBrandOutput,
   UpdateBrandOutput,
   DeleteBrandOutput,
+  StoreStatsOutput,
   // Types
   Store,
   Brand,
@@ -26,6 +29,7 @@ export interface IStoresService {
   // ===== Store Queries =====
   listStores(): Promise<ApiResponse<Store[]>>;
   getStoreById(id: number): Promise<ApiResponse<Store>>;
+  getStoreStatistics(): Promise<ApiResponse<StoreStatsOutput>>;
 
   // ===== Brand Queries =====
   listBrands(): Promise<ApiResponse<Brand[]>>;
@@ -57,6 +61,9 @@ export interface StoresState {
 
   // 현재 선택된 브랜드
   currentBrand: Brand | null;
+
+  // 매장 통계
+  statistics: StoreStatsOutput | null;
 
   // 필터/검색
   filters: StoreFilters;
@@ -100,6 +107,9 @@ export interface StoresContextActions {
   setCurrentBrand: (brand: Brand | null) => void;
   loadBrands: () => Promise<void>;
   loadBrandById: (id: number) => Promise<void>;
+  // 통계 관련
+  setStatistics: (statistics: StoreStatsOutput | null) => void;
+  loadStatistics: () => Promise<void>;
 
   // 필터 관련
   setFilters: (filters: Partial<StoreFilters>) => void;
@@ -128,7 +138,10 @@ export type {
   CreateStoreOutput,
   UpdateStoreOutput,
   DeleteStoreOutput,
+  StoreAddressInput, // ✅ 추가
+  StoreCoordinatesInput, // ✅ 추가
   CreateBrandOutput,
   UpdateBrandOutput,
   DeleteBrandOutput,
+  StoreStatsOutput,
 };

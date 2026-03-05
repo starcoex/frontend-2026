@@ -8,6 +8,7 @@ import {
   GET_USER_ADDRESS_BY_ID,
   GET_USER_ADDRESSES,
   GET_USER_ADDRESS_STATS,
+  GET_USER_SEARCH_LOGS, // ✅ 추가
   SAVE_ADDRESS,
   UPDATE_ADDRESS,
   REMOVE_ADDRESS,
@@ -16,6 +17,7 @@ import {
   ExternalAddressSearchInput,
   SearchAddressInput,
   FilterAddressInput,
+  SearchAddressLogInput, // ✅ 추가
   SaveAddressInput,
   UpdateAddressInput,
   CreateAddressPopupInput,
@@ -30,6 +32,8 @@ import {
   GetUserAddressesQuery,
   GetUserAddressesQueryVariables,
   GetUserAddressStatsQuery,
+  GetUserSearchLogsQuery, // ✅ 추가
+  GetUserSearchLogsQueryVariables, // ✅ 추가
   SaveAddressMutation,
   SaveAddressMutationVariables,
   UpdateAddressMutation,
@@ -148,11 +152,7 @@ export class AddressService implements IAddressService {
     return this.query<
       SmartSearchAddressesQuery,
       SmartSearchAddressesQueryVariables
-    >(
-      SMART_SEARCH_ADDRESSES,
-      { input },
-      { fetchPolicy: 'network-only' } // 실시간 검색
-    );
+    >(SMART_SEARCH_ADDRESSES, { input }, { fetchPolicy: 'network-only' });
   }
 
   async searchAddressesFromAPI(
@@ -161,11 +161,7 @@ export class AddressService implements IAddressService {
     return this.query<
       SearchAddressesFromApiQuery,
       SearchAddressesFromApiQueryVariables
-    >(
-      SEARCH_ADDRESSES_FROM_API,
-      { input },
-      { fetchPolicy: 'network-only' } // 외부 API는 항상 최신
-    );
+    >(SEARCH_ADDRESSES_FROM_API, { input }, { fetchPolicy: 'network-only' });
   }
 
   async searchUserAddresses(
@@ -210,6 +206,17 @@ export class AddressService implements IAddressService {
     return this.query<GetUserAddressStatsQuery>(
       GET_USER_ADDRESS_STATS,
       undefined,
+      { fetchPolicy: 'cache-first' }
+    );
+  }
+
+  // ✅ 새로운 메서드 추가
+  async getUserSearchLogs(
+    filter: SearchAddressLogInput
+  ): Promise<ApiResponse<GetUserSearchLogsQuery>> {
+    return this.query<GetUserSearchLogsQuery, GetUserSearchLogsQueryVariables>(
+      GET_USER_SEARCH_LOGS,
+      { filter },
       { fetchPolicy: 'cache-first' }
     );
   }

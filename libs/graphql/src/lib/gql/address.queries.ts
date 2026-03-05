@@ -4,8 +4,11 @@ import { gql } from '@apollo/client';
 // Fragments
 // ============================================================================
 
-export const ADDRESS_COMMON_FIELDS = gql`
-  fragment AddressCommonFields on JusoApiCommon {
+/**
+ * Juso API 공통 응답 정보
+ */
+export const JUSO_API_COMMON_FIELDS = gql`
+  fragment JusoApiCommonFields on JusoApiCommon {
     totalCount
     currentPage
     countPerPage
@@ -14,8 +17,11 @@ export const ADDRESS_COMMON_FIELDS = gql`
   }
 `;
 
-export const ADDRESS_JUSO_FIELDS = gql`
-  fragment AddressJusoFields on JusoApiAddress {
+/**
+ * Juso API 주소 정보
+ */
+export const JUSO_API_ADDRESS_FIELDS = gql`
+  fragment JusoApiAddressFields on JusoApiAddress {
     roadAddr
     jibunAddr
     zipNo
@@ -26,22 +32,32 @@ export const ADDRESS_JUSO_FIELDS = gql`
     buldMnnm
     buldSlno
     bdNm
+    admCd
+    bdMgtSn
+    rnMgtSn
+    engAddr
   }
 `;
 
-export const ADDRESS_RESULTS_FIELDS = gql`
-  ${ADDRESS_COMMON_FIELDS}
-  ${ADDRESS_JUSO_FIELDS}
-  fragment AddressResultsFields on JusoApiResults {
+/**
+ * Juso API 응답 결과
+ */
+export const JUSO_API_RESULTS_FIELDS = gql`
+  ${JUSO_API_COMMON_FIELDS}
+  ${JUSO_API_ADDRESS_FIELDS}
+  fragment JusoApiResultsFields on JusoApiResults {
     common {
-      ...AddressCommonFields
+      ...JusoApiCommonFields
     }
     juso {
-      ...AddressJusoFields
+      ...JusoApiAddressFields
     }
   }
 `;
 
+/**
+ * 검색 전략 정보
+ */
 export const SEARCH_STRATEGY_FIELDS = gql`
   fragment SearchStrategyFields on SearchStrategy {
     type
@@ -52,28 +68,47 @@ export const SEARCH_STRATEGY_FIELDS = gql`
   }
 `;
 
+/**
+ * 외부 API 주소 결과
+ */
+export const EXTERNAL_ADDRESS_RESULT_FIELDS = gql`
+  fragment ExternalAddressResultFields on ExternalAddressResult {
+    zipNo
+    siNm
+    sggNm
+    emdNm
+    roadAddr
+    jibunAddr
+    rn
+    bdNm
+    buldMnnm
+    buldSlno
+  }
+`;
+
+/**
+ * 지역별 그루핑 결과
+ */
 export const GROUPED_SEARCH_RESULT_FIELDS = gql`
+  ${EXTERNAL_ADDRESS_RESULT_FIELDS}
   fragment GroupedSearchResultFields on GroupedSearchResult {
     region
     count
     addresses {
-      zipNo
-      siNm
-      sggNm
-      emdNm
-      roadAddr
-      jibunAddr
-      rn
-      bdNm
-      buldMnnm
-      buldSlno
+      ...ExternalAddressResultFields
     }
   }
 `;
 
+/**
+ * 주소 정보 엔티티 (전체 필드)
+ */
 export const ADDRESS_FIELDS = gql`
   fragment AddressFields on Address {
     id
+    deletedAt
+    createdAt
+    updatedAt
     userId
     roadFullAddr
     roadAddrPart1
@@ -104,9 +139,31 @@ export const ADDRESS_FIELDS = gql`
     dataSource
     usageCount
     lastUsedAt
+  }
+`;
+
+/**
+ * 주소 검색 로그
+ */
+export const ADDRESS_SEARCH_LOG_FIELDS = gql`
+  fragment AddressSearchLogFields on AddressSearchLog {
+    id
+    deletedAt
     createdAt
     updatedAt
-    deletedAt
+    keyword
+    searchType
+    resultType
+    useDetailAddr
+    resultCount
+    executionTime
+    page
+    limit
+    userIp
+    userAgent
+    sessionId
+    userId
+    selectedAddressId
   }
 `;
 
@@ -115,18 +172,20 @@ export const ADDRESS_FIELDS = gql`
 // ============================================================================
 
 /**
- * 스마트 주소 검색 (추천)
- * 사용자 맞춤형 검색 결과 제공
+ * 스마트 주소 검색 (AI 최적화, 추천)
  */
 export const SMART_SEARCH_ADDRESSES = gql`
-  ${ADDRESS_RESULTS_FIELDS}
+  ${JUSO_API_RESULTS_FIELDS}
   ${SEARCH_STRATEGY_FIELDS}
   ${GROUPED_SEARCH_RESULT_FIELDS}
   query SmartSearchAddresses($input: SmartSearchInput!) {
     smartSearchAddresses(input: $input) {
       results {
-        ...AddressResultsFields
+        ...JusoApiResultsFields
       }
+      searchKeyword
+      searchTime
+      searchedAt
       strategy {
         ...SearchStrategyFields
       }
@@ -136,22 +195,19 @@ export const SMART_SEARCH_ADDRESSES = gql`
       }
       isFiltered
       recommendedRegions
-      searchKeyword
-      searchTime
-      searchedAt
     }
   }
 `;
 
 /**
- * 외부 API 직접 검색
+ * 외부 API 직접 검색 (도로명주소 API)
  */
 export const SEARCH_ADDRESSES_FROM_API = gql`
-  ${ADDRESS_RESULTS_FIELDS}
+  ${JUSO_API_RESULTS_FIELDS}
   query SearchAddressesFromAPI($input: ExternalAddressSearchInput!) {
     searchAddressesFromAPI(input: $input) {
       results {
-        ...AddressResultsFields
+        ...JusoApiResultsFields
       }
       searchKeyword
       searchTime
@@ -161,10 +217,11 @@ export const SEARCH_ADDRESSES_FROM_API = gql`
 `;
 
 /**
- * 사용자의 저장된 주소 검색
+ * 사용자의 저장된 주소 검색 (내부 DB)
  */
 export const SEARCH_USER_ADDRESSES = gql`
   ${ADDRESS_FIELDS}
+  ${ADDRESS_SEARCH_LOG_FIELDS}
   query SearchUserAddresses($input: SearchAddressInput!) {
     searchUserAddresses(input: $input) {
       addresses {
@@ -176,6 +233,9 @@ export const SEARCH_USER_ADDRESSES = gql`
       keyword
       searchType
       searchTime
+      searchLog {
+        ...AddressSearchLogFields
+      }
     }
   }
 `;
@@ -197,6 +257,7 @@ export const GET_USER_ADDRESS_BY_ID = gql`
  */
 export const GET_USER_ADDRESSES = gql`
   ${ADDRESS_FIELDS}
+  ${ADDRESS_SEARCH_LOG_FIELDS}
   query GetUserAddresses($filter: FilterAddressInput!) {
     getUserAddresses(filter: $filter) {
       addresses {
@@ -208,6 +269,9 @@ export const GET_USER_ADDRESSES = gql`
       keyword
       searchType
       searchTime
+      searchLog {
+        ...AddressSearchLogFields
+      }
     }
   }
 `;
@@ -216,6 +280,7 @@ export const GET_USER_ADDRESSES = gql`
  * 사용자별 주소 통계
  */
 export const GET_USER_ADDRESS_STATS = gql`
+  ${ADDRESS_SEARCH_LOG_FIELDS}
   query GetUserAddressStats {
     getUserAddressStats {
       totalAddresses
@@ -223,7 +288,28 @@ export const GET_USER_ADDRESS_STATS = gql`
       frequentAddresses
       topRegions
       totalSearches
+      recentSearches {
+        ...AddressSearchLogFields
+      }
       generatedAt
+    }
+  }
+`;
+
+/**
+ * 사용자의 주소 검색 로그 조회
+ */
+export const GET_USER_SEARCH_LOGS = gql`
+  ${ADDRESS_SEARCH_LOG_FIELDS}
+  query GetUserSearchLogs($filter: SearchAddressLogInput!) {
+    getUserSearchLogs(filter: $filter) {
+      data {
+        ...AddressSearchLogFields
+      }
+      total
+      page
+      totalPages
+      limit
     }
   }
 `;
@@ -233,7 +319,7 @@ export const GET_USER_ADDRESS_STATS = gql`
 // ============================================================================
 
 /**
- * 주소 저장 (인증 필요)
+ * 주소 저장 (도로명주소 API 데이터)
  */
 export const SAVE_ADDRESS = gql`
   ${ADDRESS_FIELDS}

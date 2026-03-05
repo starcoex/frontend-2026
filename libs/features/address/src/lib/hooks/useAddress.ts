@@ -6,6 +6,7 @@ import {
   ExternalAddressSearchInput,
   SearchAddressInput,
   FilterAddressInput,
+  SearchAddressLogInput, // ✅ 추가
   SaveAddressInput,
   UpdateAddressInput,
   CreateAddressPopupInput,
@@ -21,6 +22,7 @@ import {
   CreateAddressPopupUrlMutation,
   JusoApiAddress,
   Address,
+  GetUserSearchLogsQuery,
 } from '@starcoex-frontend/graphql';
 import type { ApiResponse } from '../types';
 
@@ -49,6 +51,11 @@ interface UseAddressReturn {
     filter: FilterAddressInput
   ) => Promise<ApiResponse<GetUserAddressesQuery>>;
   getUserAddressStats: () => Promise<ApiResponse<GetUserAddressStatsQuery>>;
+
+  // ✅ 새로운 메서드 추가
+  getUserSearchLogs: (
+    filter: SearchAddressLogInput
+  ) => Promise<ApiResponse<GetUserSearchLogsQuery>>;
 
   // 주소 관리
   saveAddress: (
@@ -225,6 +232,16 @@ export const useAddress = (): UseAddressReturn => {
     [withLoading]
   );
 
+  // ✅ 새로운 메서드 구현
+  const getUserSearchLogs = useCallback(
+    (filter: SearchAddressLogInput) =>
+      withLoading(
+        () => getAddressService().getUserSearchLogs(filter),
+        '검색 로그 조회에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
   // ============================================================================
   // 주소 관리
   // ============================================================================
@@ -304,6 +321,7 @@ export const useAddress = (): UseAddressReturn => {
     getUserAddressById,
     getUserAddresses,
     getUserAddressStats,
+    getUserSearchLogs, // ✅ 추가
 
     saveAddress,
     updateAddress,

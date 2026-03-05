@@ -131,9 +131,11 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconChecklist, // 또는 새로운 아이콘
             items: [
               { title: '전체 건의사항', url: '/admin/suggestions' },
-              { title: '대기 중', url: '/admin/suggestions/pending' },
-              { title: '진행 중', url: '/admin/suggestions/in-progress' },
+              { title: '대기중', url: '/admin/suggestions/pending' },
+              { title: '검토중', url: '/admin/suggestions/reviewing' },
+              { title: '진행중', url: '/admin/suggestions/in-progress' },
               { title: '완료됨', url: '/admin/suggestions/completed' },
+              { title: '거부됨', url: '/admin/suggestions/rejected' },
               { title: '통계 분석', url: '/admin/suggestions/analytics' },
             ],
           },

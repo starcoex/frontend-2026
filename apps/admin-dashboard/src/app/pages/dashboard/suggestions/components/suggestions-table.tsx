@@ -13,8 +13,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Task } from '../data/schema';
-import { DataTableToolbar } from './data-table-toolbar';
+import type { Suggestion } from '@starcoex-frontend/suggestions';
+import { SuggestionsTableToolbar } from './suggestions-table-toolbar';
 import { DataTablePagination } from './data-table-pagination';
 import {
   Table,
@@ -26,11 +26,11 @@ import {
 } from '@/components/ui/table';
 
 interface Props {
-  columns: ColumnDef<Task>[];
-  data: Task[];
+  columns: ColumnDef<Suggestion>[];
+  data: Suggestion[];
 }
 
-export function TasksTable({ columns, data }: Props) {
+export function SuggestionsTable({ columns, data }: Props) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -39,12 +39,7 @@ export function TasksTable({ columns, data }: Props) {
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-    },
+    state: { sorting, columnVisibility, rowSelection, columnFilters },
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -60,24 +55,22 @@ export function TasksTable({ columns, data }: Props) {
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar table={table} />
+      <SuggestionsTableToolbar table={table} />
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} colSpan={header.colSpan}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -104,7 +97,7 @@ export function TasksTable({ columns, data }: Props) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  건의사항이 없습니다.
                 </TableCell>
               </TableRow>
             )}

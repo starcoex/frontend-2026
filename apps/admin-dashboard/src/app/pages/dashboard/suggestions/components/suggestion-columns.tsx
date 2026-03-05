@@ -1,13 +1,17 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { labels, priorities, statuses } from '../data/data';
-import { Task } from '../data/schema';
 import { Link } from 'react-router-dom';
-import { DataTableColumnHeader } from './data-table-column-header';
-import { DataTableRowActions } from './data-table-row-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { DataTableColumnHeader } from './data-table-column-header';
+import { SuggestionRowActions } from './suggestion-row-actions';
+import {
+  suggestionCategories,
+  suggestionPriorities,
+  suggestionStatuses,
+} from '../data/suggestion-data';
+import type { Suggestion } from '@starcoex-frontend/suggestions';
 
-export const columns: ColumnDef<Task>[] = [
+export const suggestionColumns: ColumnDef<Suggestion>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -17,7 +21,7 @@ export const columns: ColumnDef<Task>[] = [
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="전체 선택"
         className="translate-y-[2px]"
       />
     ),
@@ -25,7 +29,7 @@ export const columns: ColumnDef<Task>[] = [
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="행 선택"
         className="translate-y-[2px]"
       />
     ),
@@ -35,17 +39,15 @@ export const columns: ColumnDef<Task>[] = [
   {
     accessorKey: 'id',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Task" />
+      <DataTableColumnHeader column={column} title="번호" />
     ),
     cell: ({ row }) => (
-      <div className="flex items-center gap-1">
-        <Link
-          to={`/admin/suggestions/${row.getValue('id')}`}
-          className="hover:text-primary w-[80px] font-semibold underline"
-        >
-          {row.getValue('id')}
-        </Link>
-      </div>
+      <Link
+        to={`/admin/suggestions/${row.getValue('id')}`}
+        className="hover:text-primary w-[60px] font-semibold underline"
+      >
+        #{row.getValue('id')}
+      </Link>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -53,14 +55,15 @@ export const columns: ColumnDef<Task>[] = [
   {
     accessorKey: 'title',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Title" />
+      <DataTableColumnHeader column={column} title="제목" />
     ),
     cell: ({ row }) => {
-      const label = labels.find((label) => label.value === row.original.label);
-
+      const category = suggestionCategories.find(
+        (c) => c.value === row.original.category
+      );
       return (
         <div className="flex space-x-2">
-          {label && <Badge variant="outline">{label.label}</Badge>}
+          {category && <Badge variant="outline">{category.label}</Badge>}
           <span className="max-w-32 truncate font-medium sm:max-w-72 md:max-w-[31rem]">
             {row.getValue('title')}
           </span>
@@ -71,17 +74,13 @@ export const columns: ColumnDef<Task>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="상태" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue('status')
+      const status = suggestionStatuses.find(
+        (s) => s.value === row.getValue('status')
       );
-
-      if (!status) {
-        return null;
-      }
-
+      if (!status) return null;
       return (
         <div className="flex w-[100px] items-center">
           {status.icon && (
@@ -91,24 +90,18 @@ export const columns: ColumnDef<Task>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
   },
   {
     accessorKey: 'priority',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Priority" />
+      <DataTableColumnHeader column={column} title="우선순위" />
     ),
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue('priority')
+      const priority = suggestionPriorities.find(
+        (p) => p.value === row.getValue('priority')
       );
-
-      if (!priority) {
-        return null;
-      }
-
+      if (!priority) return null;
       return (
         <div className="flex items-center">
           {priority.icon && (
@@ -118,12 +111,24 @@ export const columns: ColumnDef<Task>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+    filterFn: (row, id, value) => value.includes(row.getValue(id)),
+  },
+  {
+    accessorKey: 'createdAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="등록일" />
+    ),
+    cell: ({ row }) => {
+      const date = new Date(row.getValue('createdAt'));
+      return (
+        <span className="text-muted-foreground text-sm">
+          {date.toLocaleDateString('ko-KR')}
+        </span>
+      );
     },
   },
   {
     id: 'actions',
-    cell: DataTableRowActions,
+    cell: SuggestionRowActions,
   },
 ];

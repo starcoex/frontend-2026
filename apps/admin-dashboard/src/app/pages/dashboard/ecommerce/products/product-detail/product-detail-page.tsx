@@ -98,7 +98,7 @@ export default function ProductDetailPage() {
   const productName = currentProduct.name;
   const productDescription = currentProduct.description || '제품 상세 정보';
   const productImage =
-    currentProduct.imageUrls[0] || '/images/og-product-detail.jpg';
+    currentProduct.imageUrls[0] || '/images/og-stores-detail.jpg';
   const categoryName = getCategoryName(currentProduct.category);
   const brandName = getBrandName(currentProduct.brand);
 

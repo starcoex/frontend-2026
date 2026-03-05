@@ -3,6 +3,7 @@ import {
   ExternalAddressSearchInput,
   SearchAddressInput,
   FilterAddressInput,
+  SearchAddressLogInput, // ✅ 추가
   SaveAddressInput,
   UpdateAddressInput,
   CreateAddressPopupInput,
@@ -12,6 +13,7 @@ import {
   GetUserAddressByIdQuery,
   GetUserAddressesQuery,
   GetUserAddressStatsQuery,
+  GetUserSearchLogsQuery, // ✅ 추가
   SaveAddressMutation,
   UpdateAddressMutation,
   RemoveAddressMutation,
@@ -35,6 +37,11 @@ export interface IAddressService {
     filter: FilterAddressInput
   ): Promise<ApiResponse<GetUserAddressesQuery>>;
   getUserAddressStats(): Promise<ApiResponse<GetUserAddressStatsQuery>>;
+
+  // ✅ 새로운 쿼리 추가
+  getUserSearchLogs(
+    filter: SearchAddressLogInput
+  ): Promise<ApiResponse<GetUserSearchLogsQuery>>;
 
   // 주소 관리
   saveAddress(

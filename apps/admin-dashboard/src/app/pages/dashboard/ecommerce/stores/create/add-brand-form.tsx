@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useStores } from '@starcoex-frontend/stores';
+import { slugify as transliterateSlugify } from 'transliteration';
 
 const FormSchema = z.object({
   name: z
@@ -52,10 +53,16 @@ export default function AddBrandForm() {
   });
 
   const handleNameChange = (name: string) => {
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9가-힣\s-]/g, '')
-      .replace(/\s+/g, '-');
+    if (!name.trim()) {
+      form.setValue('slug', '');
+      return;
+    }
+
+    // ✅ transliteration 라이브러리는 한글을 매우 정확하게 변환
+    const slug = transliterateSlugify(name, {
+      lowercase: true,
+      separator: '-',
+    });
     form.setValue('slug', slug);
   };
 

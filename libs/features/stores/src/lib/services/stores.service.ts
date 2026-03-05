@@ -43,6 +43,8 @@ import {
   CreateBrandOutput,
   UpdateBrandOutput,
   DeleteBrandOutput,
+  GetStoreStatisticsQuery,
+  GET_STORE_STATISTICS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -50,7 +52,7 @@ import {
   apiErrorFromUnknown,
   createErrorResponse,
 } from '../errors';
-import { ApiResponse, IStoresService } from '../types';
+import { ApiResponse, IStoresService, StoreStatsOutput } from '../types';
 
 export class StoresService implements IStoresService {
   constructor(private client: ApolloClient) {}
@@ -147,6 +149,17 @@ export class StoresService implements IStoresService {
       return { success: true, data: res.data.getStoreById as Store };
     }
     return res as unknown as ApiResponse<Store>;
+  }
+
+  async getStoreStatistics(): Promise<ApiResponse<StoreStatsOutput>> {
+    const res = await this.query<GetStoreStatisticsQuery>(GET_STORE_STATISTICS);
+    if (res.success && res.data?.getStoreStatistics) {
+      return {
+        success: true,
+        data: res.data.getStoreStatistics as StoreStatsOutput,
+      };
+    }
+    return res as unknown as ApiResponse<StoreStatsOutput>;
   }
 
   // ===== Brand Queries =====

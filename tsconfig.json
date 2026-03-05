@@ -64,10 +64,34 @@
       "path": "./libs/features/loyalty"
     },
     {
-      "path": "./apps/admin-dashboard/libs/features/stores"
+      "path": "./libs/features/stores"
     },
     {
-      "path": "./libs/features/stores"
+      "path": "./libs/features/suggestions"
+    },
+    {
+      "path": "./libs/features/cart"
+    },
+    {
+      "path": "./libs/features/chats"
+    },
+    {
+      "path": "./libs/features/delivery"
+    },
+    {
+      "path": "./libs/features/inventory"
+    },
+    {
+      "path": "./libs/features/orders"
+    },
+    {
+      "path": "./libs/features/payments"
+    },
+    {
+      "path": "./libs/features/promotions"
+    },
+    {
+      "path": "./libs/features/reviews"
     }
   ]
 }

@@ -31,6 +31,9 @@ export const useStores = () => {
     setCurrentBrand,
     brands,
     currentBrand,
+    // 통계 관련
+    statistics,
+    setStatistics,
     // 필터 관련
     filters,
     // 공통
@@ -108,6 +111,23 @@ export const useStores = () => {
         return res;
       }, '매장 정보를 불러오는데 실패했습니다.'),
     [withLoading, setCurrentStore]
+  );
+
+  /**
+   * 매장 통계 조회
+   */
+  const fetchStatistics = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.getStoreStatistics();
+
+        if (res.success && res.data) {
+          setStatistics(res.data);
+        }
+        return res;
+      }, '통계를 불러오는데 실패했습니다.'),
+    [withLoading, setStatistics]
   );
 
   // ===== Brand Queries =====
@@ -339,6 +359,9 @@ export const useStores = () => {
     totalBrands: brands.length,
     // 활성화된 브랜드 수
     activeBrands: brands.filter((b) => b.isActive).length,
+
+    // 통계 (명시적으로 포함)
+    statistics,
   };
 
   return {
@@ -348,6 +371,7 @@ export const useStores = () => {
     // Store Queries
     fetchStores,
     fetchStoreById,
+    fetchStatistics,
     filteredStores,
 
     // Brand Queries

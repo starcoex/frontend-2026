@@ -12,6 +12,7 @@ import {
   StoreFilters,
   Store,
   Brand,
+  StoreStatsOutput,
 } from '../types';
 import {
   getStoresService,
@@ -27,6 +28,7 @@ const initialState: StoresState = {
   brands: [],
   currentStore: null,
   currentBrand: null,
+  statistics: null,
   filters: {},
   isLoading: false,
   error: null,
@@ -42,10 +44,10 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
     if (!serviceRegistry.isServiceInitialized('stores')) {
       try {
         initStoresService(apolloClient);
-        console.log('✅ StoresService initialized');
+        console.log('✅ SuggestionsService initialized');
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ StoresService initialization failed:', error);
+        console.error('❌ SuggestionsService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);
@@ -184,6 +186,39 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // =========================================================================
+  // 매장 통계 불러오기
+  // =========================================================================
+
+  const loadStatistics = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const service = getStoresService();
+      const response = await service.getStoreStatistics();
+
+      if (response.success && response.data) {
+        setState((prev) => ({
+          ...prev,
+          statistics: response.data ?? null,
+          isLoading: false,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error: response.error?.message || '통계를 불러오지 못했습니다.',
+          isLoading: false,
+        }));
+      }
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        error: '통계를 불러오는 중 오류가 발생했습니다.',
+        isLoading: false,
+      }));
+    }
+  }, []);
+
+  // =========================================================================
   // 매장 관련 액션
   // =========================================================================
 
@@ -248,6 +283,14 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // =========================================================================
+  // 통계 관련 액션
+  // =========================================================================
+
+  const setStatistics = useCallback((statistics: StoreStatsOutput | null) => {
+    setState((prev) => ({ ...prev, statistics }));
+  }, []);
+
+  // =========================================================================
   // 필터 관련 액션
   // =========================================================================
 
@@ -305,6 +348,9 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
       setCurrentBrand,
       loadBrands,
       loadBrandById,
+      // 통계 관련
+      setStatistics,
+      loadStatistics,
       // 필터 관련
       setFilters,
       clearFilters,
@@ -330,6 +376,8 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
       setCurrentBrand,
       loadBrands,
       loadBrandById,
+      setStatistics,
+      loadStatistics,
       setFilters,
       clearFilters,
       setLoading,

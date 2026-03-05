@@ -13,11 +13,10 @@ import { LoginPage } from '@/app/pages/auth/login-page';
 import { BusinessRegisterPage } from '@/app/pages/auth/business-register-page';
 import VerifyEmailPage from '@/app/pages/auth/verify-email.page';
 import { DashboardPage } from '@/app/pages/dasbhboard-page';
-import SuggestionsLayout from '@/app/pages/dashboard/suggestions/suggestions-layout';
 import SuggestionsPage from '@/app/pages/dashboard/suggestions/suggestions-page';
 import UsersPage from '@/app/pages/dashboard/users/users-page';
 import { UserDetailPage } from '@/app/pages/dashboard/users/details/detail.page';
-import SuggestionDetailPage from '@/app/pages/dashboard/suggestions/details/detail';
+import SuggestionDetailPage from '@/app/pages/dashboard/suggestions/details/suggestion-detail-page';
 import SettingsLayout from '@/app/pages/dashboard/settings/settings-layout';
 import SettingsGeneralPage from '@/app/pages/dashboard/settings/settings-page';
 import SettingsBillingPage from '@/app/pages/dashboard/settings/billing/billing-page';
@@ -45,6 +44,7 @@ import StoresPage from '@/app/pages/dashboard/ecommerce/stores/stores-page';
 import StoreCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/store-create-page';
 import BrandsPage from '@/app/pages/dashboard/ecommerce/stores/brands-page';
 import BrandCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/brand-create-page';
+import { SuggestionsWithProvider } from '@/app/pages/dashboard/suggestions/suggestions-with-provider';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -113,12 +113,36 @@ const router = createBrowserRouter([
       // 💡 건의사항 관리
       {
         path: 'suggestions',
-        element: <SuggestionsLayout />,
+        element: <SuggestionsWithProvider />,
         children: [
           {
             index: true,
             element: <SuggestionsPage />,
           },
+          // ✅ 정적 경로 먼저 (순서 중요!)
+          {
+            path: 'pending',
+            element: <SuggestionsPage />,
+          },
+          { path: 'reviewing', element: <SuggestionsPage /> }, // ← Outlet에 렌더됨
+          {
+            path: 'in-progress',
+            element: <SuggestionsPage />,
+          },
+          {
+            path: 'completed',
+            element: <SuggestionsPage />,
+          },
+          { path: 'rejected', element: <SuggestionsPage /> }, // ✅ 추가
+          {
+            path: 'analytics',
+            element: <SuggestionsPage />,
+          },
+          {
+            path: 'create',
+            element: <div>건의사항 등록 (구현 예정)</div>,
+          },
+          // ✅ 동적 :id는 반드시 마지막
           {
             path: ':id',
             element: <SuggestionDetailPage />,
@@ -649,13 +673,10 @@ const router = createBrowserRouter([
   // 💬 건의사항 (팀별 공통)
   {
     path: '/suggestions',
-    element: <AdminLayout />,
+    element: <SuggestionsWithProvider />,
     errorElement: <ErrorBoundary />,
     children: [
-      {
-        index: true,
-        element: <div>전체 건의사항 (구현 예정)</div>,
-      },
+      { index: true, element: <SuggestionsPage /> },
       {
         path: 'create',
         element: <div>새 건의사항 (구현 예정)</div>,
@@ -664,44 +685,19 @@ const router = createBrowserRouter([
         path: 'my',
         element: <div>내 건의사항 (구현 예정)</div>,
       },
-      // StarOil 관련
+      { path: 'safety', element: <div>안전 관련 (구현 예정)</div> },
+      { path: 'service', element: <div>서비스 개선 (구현 예정)</div> },
+      { path: 'facility', element: <div>시설 개선 (구현 예정)</div> },
+      { path: 'wash-service', element: <div>세차 서비스 (구현 예정)</div> },
+      { path: 'equipment', element: <div>장비 개선 (구현 예정)</div> },
+      { path: 'customer-service', element: <div>고객 서비스 (구현 예정)</div> },
+      { path: 'routes', element: <div>배달 경로 (구현 예정)</div> },
+      { path: 'vehicle', element: <div>차량 관련 (구현 예정)</div> },
+      { path: 'customer', element: <div>고객 응대 (구현 예정)</div> },
+      // ✅ 동적 :id는 마지막
       {
-        path: 'safety',
-        element: <div>안전 관련 (구현 예정)</div>,
-      },
-      {
-        path: 'service',
-        element: <div>서비스 개선 (구현 예정)</div>,
-      },
-      {
-        path: 'facility',
-        element: <div>시설 개선 (구현 예정)</div>,
-      },
-      // Zeragae 관련
-      {
-        path: 'wash-service',
-        element: <div>세차 서비스 (구현 예정)</div>,
-      },
-      {
-        path: 'equipment',
-        element: <div>장비 개선 (구현 예정)</div>,
-      },
-      {
-        path: 'customer-service',
-        element: <div>고객 서비스 (구현 예정)</div>,
-      },
-      // Delivery 관련
-      {
-        path: 'routes',
-        element: <div>배달 경로 (구현 예정)</div>,
-      },
-      {
-        path: 'vehicle',
-        element: <div>차량 관련 (구현 예정)</div>,
-      },
-      {
-        path: 'customer',
-        element: <div>고객 응대 (구현 예정)</div>,
+        path: ':id',
+        element: <SuggestionDetailPage />,
       },
     ],
   },

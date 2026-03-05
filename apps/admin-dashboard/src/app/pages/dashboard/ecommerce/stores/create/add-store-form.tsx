@@ -31,7 +31,8 @@ import { useEffect, useState } from 'react';
 import { AddBrandDialog } from '@/app/pages/dashboard/ecommerce/stores/create/add-brand-dialog';
 import { JusoApiAddress } from '@starcoex-frontend/graphql';
 import { AddressSearchInput } from '@/components/address-search';
-import { slugify as transliterateSlugify } from 'transliteration'; // ✅ 추가
+import { slugify as transliterateSlugify } from 'transliteration';
+import { useAddress } from '@starcoex-frontend/address'; // ✅ 추가
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -55,6 +56,8 @@ const FormSchema = z.object({
     message: '우편번호를 입력해주세요.',
   }),
   addressDetail: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal('')),
   services: z.string().optional(),
@@ -69,11 +72,13 @@ export default function AddStoreForm() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { createStore, brands, fetchBrands } = useStores();
+  const { saveAddress } = useAddress();
 
   // ✅ 주소 선택 상태
   const [selectedAddress, setSelectedAddress] = useState<JusoApiAddress | null>(
     null
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<StoreFormData>({
     resolver: zodResolver(FormSchema),
@@ -110,9 +115,6 @@ export default function AddStoreForm() {
       lowercase: true,
       separator: '-',
     });
-
-    console.log('🔍 매장명:', name, '→ Slug:', slug);
-
     form.setValue('slug', slug);
   };
 
@@ -140,33 +142,78 @@ export default function AddStoreForm() {
       return;
     }
 
+    if (!selectedAddress) {
+      toast.error('주소를 선택해주세요.');
+      return;
+    }
+
     try {
       const brandId = parseInt(data.brandId);
       if (isNaN(brandId)) {
         toast.error('유효하지 않은 브랜드입니다.');
         return;
       }
+      // ========================================================================
+      // 1️⃣ Address Service에 주소 저장
+      // ========================================================================
+      const addressRes = await saveAddress({
+        roadFullAddr: selectedAddress.roadAddr,
+        roadAddrPart1: selectedAddress.roadAddr,
+        roadAddrPart2: '',
+        jibunAddr: selectedAddress.jibunAddr || '',
+        engAddr: selectedAddress.engAddr || '',
+        zipNo: selectedAddress.zipNo,
+        admCd: selectedAddress.admCd || '',
+        siNm: selectedAddress.siNm || '',
+        sggNm: selectedAddress.sggNm || '',
+        emdNm: selectedAddress.emdNm || '',
+        rn: selectedAddress.rn || '',
+        rnMgtSn: selectedAddress.rnMgtSn || '',
+        bdMgtSn: selectedAddress.bdMgtSn || '',
+        bdNm: selectedAddress.bdNm || '',
+        buildingType: 'SINGLE_HOUSE',
+        buldMnnm: parseInt(selectedAddress.buldMnnm || '0'),
+        buldSlno: parseInt(selectedAddress.buldSlno || '0'),
+        lnbrMnnm: 0,
+        lnbrSlno: 0,
+        emdNo: '01',
+        addrDetail: data.addressDetail || '',
+        status: 'ACTIVE',
+        dataSource: 'JUSO_API',
+      });
 
+      if (!addressRes.success || !addressRes.data) {
+        toast.error(addressRes.error?.message || '주소 저장에 실패했습니다.');
+        return;
+      }
+
+      const addressId = addressRes.data.saveAddress.id;
+
+      // ========================================================================
+      // 2️⃣ Store 생성 (GraphQL Input 직접 사용)
+      // ========================================================================
       const services = data.services
-        ? data.services.split(',').map((s) => s.trim())
+        ? data.services
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [];
-
-      // ✅ 구조화된 주소 객체
-      const address = {
-        street: data.roadAddress,
-        city: selectedAddress?.siNm || '',
-        district: selectedAddress?.sggNm || '',
-        zipCode: data.zipCode,
-        detail: data.addressDetail || '',
-        jibunAddress: data.jibunAddress || '',
-      };
 
       const response = await createStore({
         name: data.name,
         slug: data.slug,
         brandId,
         location: data.location,
-        address,
+        address: {
+          addressId: addressId, // ✅ Address Service ID만 전달
+        },
+        coordinates:
+          data.latitude && data.longitude
+            ? {
+                latitude: data.latitude,
+                longitude: data.longitude,
+              }
+            : undefined,
         phone: data.phone || undefined,
         email: data.email || undefined,
         services,
@@ -184,6 +231,8 @@ export default function AddStoreForm() {
     } catch (error) {
       console.error('Submit error:', error);
       toast.error('매장 등록 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -203,7 +252,9 @@ export default function AddStoreForm() {
             <Button type="button" variant="secondary" asChild>
               <Link to="/admin/stores">취소</Link>
             </Button>
-            <Button type="submit">등록하기</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? '등록 중...' : '등록하기'}
+            </Button>
           </div>
         </div>
 
