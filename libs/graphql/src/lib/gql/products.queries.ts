@@ -1,11 +1,15 @@
 import { gql } from '@apollo/client';
-import { ERROR_INFO_FIELDS } from './auth.queries.js';
 
-// ============================================================================
-// Fragments
-// ============================================================================
+// ─── Fragments ───────────────────────────────────────────────────────────────
 
-// ✅ 최소 필드만 가져오기 (타입 충돌 방지)
+export const PRODUCT_ERROR_INFO_FIELDS = gql`
+  fragment ProductErrorInfoFields on ErrorInfo {
+    code
+    message
+    details
+  }
+`;
+
 export const PRODUCT_INVENTORY_FIELDS = gql`
   fragment ProductInventoryFields on ProductInventory {
     id
@@ -59,42 +63,40 @@ export const PRODUCT_FIELDS = gql`
 `;
 
 export const CREATE_PRODUCT_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${PRODUCT_ERROR_INFO_FIELDS}
   ${PRODUCT_FIELDS}
   fragment CreateProductOutputFields on CreateProductOutput {
     success
-    creationMessage
-    notificationMessage
-    inventoryMessage
+    error {
+      ...ProductErrorInfoFields
+    }
     product {
       ...ProductFields
     }
-    error {
-      ...ErrorInfoFields
-    }
+    creationMessage
+    notificationMessage
+    inventoryMessage
   }
 `;
 
 export const UPDATE_PRODUCT_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${PRODUCT_ERROR_INFO_FIELDS}
   ${PRODUCT_FIELDS}
   fragment UpdateProductOutputFields on UpdateProductOutput {
     success
-    updateMessage
-    notificationSent
-    inventoryUpdateMessage
+    error {
+      ...ProductErrorInfoFields
+    }
     product {
       ...ProductFields
     }
-    error {
-      ...ErrorInfoFields
-    }
+    updateMessage
+    notificationSent
+    inventoryUpdateMessage
   }
 `;
 
-// ============================================================================
-// Queries
-// ============================================================================
+// ─── Queries ─────────────────────────────────────────────────────────────────
 
 export const LIST_PRODUCTS = gql`
   ${PRODUCT_FIELDS}
@@ -105,7 +107,7 @@ export const LIST_PRODUCTS = gql`
   }
 `;
 
-export const FIND_PRODUCT_BY_ID = gql`
+export const GET_PRODUCT = gql`
   ${PRODUCT_FIELDS}
   query FindProductById($id: Int!) {
     findProductById(id: $id) {
@@ -114,9 +116,7 @@ export const FIND_PRODUCT_BY_ID = gql`
   }
 `;
 
-// ============================================================================
-// Mutations
-// ============================================================================
+// ─── Mutations ────────────────────────────────────────────────────────────────
 
 export const CREATE_PRODUCT = gql`
   ${CREATE_PRODUCT_OUTPUT_FIELDS}

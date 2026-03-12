@@ -1,54 +1,51 @@
 import { useCallback, useRef } from 'react';
-import {
+import type { ApiResponse } from '../types';
+import { useProductsContext } from '../context';
+import { getProductsService } from '../services';
+import type {
   CreateProductInput,
   UpdateProductInput,
   CreateProductInventoryInput,
   UpdateProductInventoryInput,
-} from '@starcoex-frontend/graphql';
-import type { ApiResponse } from '../types';
-import { useProductsContext } from '../context';
-import { getProductsService } from '../services';
+} from '../types';
 
 export const useProducts = () => {
   const context = useProductsContext();
 
   const {
-    // 제품 관련
     setProducts,
     addProduct,
-    updateProduct: updateProductInContext,
+    updateProductInContext,
     setCurrentProduct,
+    setLoading,
+    setError,
+    clearError,
+    isLoading: contextIsLoading,
     products,
     currentProduct,
-    // 필터 관련
     filters,
-    // 공통
-    setLoading,
-    clearError,
-    setError,
-    isLoading: contextIsLoading,
   } = context;
 
   const isLoadingRef = useRef(contextIsLoading);
   isLoadingRef.current = contextIsLoading;
 
+  // ============================================================================
   // 공통 로딩 래퍼
+  // ============================================================================
+
   const withLoading = useCallback(
     async <T>(
       operation: () => Promise<ApiResponse<T>>,
       defaultErrorMessage: string
     ): Promise<ApiResponse<T>> => {
       try {
-        if (!isLoadingRef.current) {
-          setLoading(true);
-        }
+        if (!isLoadingRef.current) setLoading(true);
         clearError();
 
         const res = await operation();
 
         if (!res.success) {
-          const msg = res.error?.message ?? defaultErrorMessage;
-          setError(msg);
+          setError(res.error?.message ?? defaultErrorMessage);
         }
 
         return res;
@@ -63,11 +60,10 @@ export const useProducts = () => {
     [setLoading, clearError, setError]
   );
 
-  // ===== Queries =====
+  // ============================================================================
+  // Queries
+  // ============================================================================
 
-  /**
-   * 제품 목록 조회
-   */
   const fetchProducts = useCallback(
     async () =>
       withLoading(async () => {
@@ -82,14 +78,11 @@ export const useProducts = () => {
     [withLoading, setProducts]
   );
 
-  /**
-   * 제품 상세 조회
-   */
   const fetchProductById = useCallback(
     async (id: number) =>
       withLoading(async () => {
         const service = getProductsService();
-        const res = await service.findProductById(id);
+        const res = await service.getProductById(id);
 
         if (res.success && res.data) {
           setCurrentProduct(res.data);
@@ -99,11 +92,10 @@ export const useProducts = () => {
     [withLoading, setCurrentProduct]
   );
 
-  // ===== Mutations =====
+  // ============================================================================
+  // Mutations
+  // ============================================================================
 
-  /**
-   * 제품 생성
-   */
   const createProduct = useCallback(
     async (input: CreateProductInput) =>
       withLoading(async () => {
@@ -118,9 +110,6 @@ export const useProducts = () => {
     [withLoading, addProduct]
   );
 
-  /**
-   * 제품 수정
-   */
   const updateProduct = useCallback(
     async (input: UpdateProductInput) =>
       withLoading(async () => {
@@ -129,20 +118,12 @@ export const useProducts = () => {
 
         if (res.success && res.data?.product) {
           updateProductInContext(input.id, res.data.product);
-
-          // 현재 제품이 수정된 제품이면 업데이트
-          if (currentProduct?.id === input.id) {
-            setCurrentProduct(res.data.product);
-          }
         }
         return res;
       }, '제품 수정에 실패했습니다.'),
-    [withLoading, updateProductInContext, currentProduct, setCurrentProduct]
+    [withLoading, updateProductInContext]
   );
 
-  /**
-   * 제품 재고 생성
-   */
   const createInventory = useCallback(
     async (input: CreateProductInventoryInput) =>
       withLoading(async () => {
@@ -150,7 +131,6 @@ export const useProducts = () => {
         const res = await service.createProductInventory(input);
 
         if (res.success && res.data) {
-          // 해당 제품의 inventories 업데이트
           const product = products.find((p) => p.id === input.productId);
           if (product) {
             updateProductInContext(input.productId, {
@@ -163,9 +143,6 @@ export const useProducts = () => {
     [withLoading, products, updateProductInContext]
   );
 
-  /**
-   * 제품 재고 수정
-   */
   const updateInventory = useCallback(
     async (input: UpdateProductInventoryInput) =>
       withLoading(async () => {
@@ -173,16 +150,14 @@ export const useProducts = () => {
         const res = await service.updateProductInventory(input);
 
         if (res.success && res.data) {
-          // 해당 제품의 inventories 업데이트
           const product = products.find((p) =>
             p.inventories.some((inv) => inv.id === input.id)
           );
           if (product) {
-            const updatedInventories = product.inventories.map((inv) =>
-              inv.id === input.id ? res.data! : inv
-            );
             updateProductInContext(product.id, {
-              inventories: updatedInventories,
+              inventories: product.inventories.map((inv) =>
+                inv.id === input.id ? res.data! : inv
+              ),
             });
           }
         }
@@ -191,9 +166,6 @@ export const useProducts = () => {
     [withLoading, products, updateProductInContext]
   );
 
-  /**
-   * 제품 재고 삭제
-   */
   const deleteInventory = useCallback(
     async (id: number) =>
       withLoading(async () => {
@@ -201,16 +173,12 @@ export const useProducts = () => {
         const res = await service.deleteProductInventory(id);
 
         if (res.success) {
-          // 해당 제품의 inventories에서 제거
           const product = products.find((p) =>
             p.inventories.some((inv) => inv.id === id)
           );
           if (product) {
-            const updatedInventories = product.inventories.filter(
-              (inv) => inv.id !== id
-            );
             updateProductInContext(product.id, {
-              inventories: updatedInventories,
+              inventories: product.inventories.filter((inv) => inv.id !== id),
             });
           }
         }
@@ -219,9 +187,9 @@ export const useProducts = () => {
     [withLoading, products, updateProductInContext]
   );
 
-  // =========================================================================
+  // ============================================================================
   // 필터링된 제품 목록 (클라이언트 사이드)
-  // =========================================================================
+  // ============================================================================
 
   const filteredProducts = useCallback(() => {
     let result = [...products];
@@ -235,60 +203,26 @@ export const useProducts = () => {
           p.sku.toLowerCase().includes(searchLower)
       );
     }
-
-    if (filters.categoryId !== undefined) {
+    if (filters.categoryId !== undefined)
       result = result.filter((p) => p.categoryId === filters.categoryId);
-    }
-
-    if (filters.brandId !== undefined) {
+    if (filters.brandId !== undefined)
       result = result.filter((p) => p.brandId === filters.brandId);
-    }
-
-    if (filters.minPrice !== undefined) {
+    if (filters.minPrice !== undefined)
       result = result.filter((p) => p.basePrice >= filters.minPrice!);
-    }
-
-    if (filters.maxPrice !== undefined) {
+    if (filters.maxPrice !== undefined)
       result = result.filter((p) => p.basePrice <= filters.maxPrice!);
-    }
-
-    if (filters.isActive !== undefined) {
+    if (filters.isActive !== undefined)
       result = result.filter((p) => p.isActive === filters.isActive);
-    }
-
-    if (filters.isAvailable !== undefined) {
+    if (filters.isAvailable !== undefined)
       result = result.filter((p) => p.isAvailable === filters.isAvailable);
-    }
-
-    if (filters.isFeatured !== undefined) {
+    if (filters.isFeatured !== undefined)
       result = result.filter((p) => p.isFeatured === filters.isFeatured);
-    }
 
     return result;
   }, [products, filters]);
 
-  // =========================================================================
-  // 계산된 값
-  // =========================================================================
-
-  const computedValues = {
-    // 전체 제품 수
-    totalProducts: products.length,
-    // 필터링된 제품 수
-    filteredProductsCount: filteredProducts().length,
-    // 활성화된 제품 수
-    activeProducts: products.filter((p) => p.isActive).length,
-    // 판매 가능한 제품 수
-    availableProducts: products.filter((p) => p.isAvailable).length,
-    // 추천 제품 수
-    featuredProducts: products.filter((p) => p.isFeatured).length,
-    // 재고 부족 제품 (baseStock < 10)
-    lowStockProducts: products.filter((p) => p.baseStock < 10).length,
-  };
-
   return {
     ...context,
-    ...computedValues,
 
     // Queries
     fetchProducts,
@@ -301,5 +235,10 @@ export const useProducts = () => {
     createInventory,
     updateInventory,
     deleteInventory,
+
+    // 편의 값
+    products,
+    currentProduct,
+    filters,
   };
 };

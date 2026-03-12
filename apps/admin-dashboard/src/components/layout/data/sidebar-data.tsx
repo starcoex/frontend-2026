@@ -184,7 +184,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconPackage,
             items: [
               { title: '제품 목록', url: '/admin/products' },
-              { title: '제품 상세', url: '/admin/products/:id' }, // 동적 라우트
               { title: '제품 추가', url: '/admin/products/create' },
               { title: '재고 현황', url: '/admin/products/inventory' },
             ],
@@ -205,7 +204,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconCategory,
             items: [
               { title: '카테고리 목록', url: '/admin/categories' },
-              { title: '카테고리 추가', url: '/admin/categories/create' },
               { title: '카테고리 계층', url: '/admin/categories/hierarchy' },
             ],
           },

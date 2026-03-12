@@ -43,7 +43,7 @@ export const SuggestionsProvider = ({ children }: { children: ReactNode }) => {
         initSuggestionsService(apolloClient);
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ SuggestionsService initialization failed:', error);
+        console.error('❌ CategoriesService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);

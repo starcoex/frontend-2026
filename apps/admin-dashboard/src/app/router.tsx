@@ -45,6 +45,9 @@ import StoreCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/store
 import BrandsPage from '@/app/pages/dashboard/ecommerce/stores/brands-page';
 import BrandCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/brand-create-page';
 import { SuggestionsWithProvider } from '@/app/pages/dashboard/suggestions/suggestions-with-provider';
+import { CategoriesWithProvider } from '@/app/pages/dashboard/ecommerce/categories/categories-with-provider';
+import CategoriesPage from '@/app/pages/dashboard/ecommerce/categories/categories-page';
+import CategoryHierarchyPage from '@/app/pages/dashboard/ecommerce/categories/category-hierachy-page';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -307,18 +310,15 @@ const router = createBrowserRouter([
       // ✅ 커머스 관리 - 카테고리
       {
         path: 'categories',
+        element: <CategoriesWithProvider />,
         children: [
           {
             index: true,
-            element: <div>카테고리 목록 (구현 예정)</div>,
-          },
-          {
-            path: 'create',
-            element: <div>카테고리 추가 (구현 예정)</div>,
+            element: <CategoriesPage />,
           },
           {
             path: 'hierarchy',
-            element: <div>카테고리 계층 (구현 예정)</div>,
+            element: <CategoryHierarchyPage />,
           },
         ],
       },

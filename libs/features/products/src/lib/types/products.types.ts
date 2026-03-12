@@ -1,27 +1,154 @@
 import type { ApiResponse } from '../types';
-import {
-  // Inputs
-  CreateProductInput,
-  UpdateProductInput,
-  CreateProductInventoryInput,
-  UpdateProductInventoryInput,
-  // Outputs
-  CreateProductOutput,
-  UpdateProductOutput,
-  // Types
-  Product,
-  ProductInventory,
-} from '@starcoex-frontend/graphql';
+
+// ============================================================================
+// GraphQL 스키마 기반 타입
+// ============================================================================
+
+export interface ProductInventory {
+  id: number;
+  productId: number;
+  storeId: number;
+  stock: number;
+  minStock: number;
+  maxStock: number;
+  storePrice?: number | null;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  brandId?: number | null;
+  categoryId: number;
+  metadata?: Record<string, any> | null;
+  imageUrl?: string | null;
+  imageUrls: string[];
+  basePrice: number;
+  salePrice?: number | null;
+  sku: string;
+  barcode?: string | null;
+  baseStock: number;
+  isActive: boolean;
+  isAvailable: boolean;
+  isFeatured: boolean;
+  sortOrder: number;
+  viewCount: number;
+  orderCount: number;
+  rating?: number | null;
+  reviewCount: number;
+  createdById: number;
+  updatedById: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  inventories: ProductInventory[];
+}
+
+export interface ErrorInfo {
+  code?: string | null;
+  message: string;
+  details?: string | null;
+}
+
+export interface CreateProductOutput {
+  success?: boolean | null;
+  error?: ErrorInfo | null;
+  product?: Product | null;
+  creationMessage?: string | null;
+  notificationMessage?: string | null;
+  inventoryMessage?: string | null;
+}
+
+export interface UpdateProductOutput {
+  success?: boolean | null;
+  error?: ErrorInfo | null;
+  product?: Product | null;
+  updateMessage?: string | null;
+  notificationSent?: boolean | null;
+  inventoryUpdateMessage?: string | null;
+}
+
+export interface CreateProductInput {
+  name: string;
+  slug: string;
+  description?: string;
+  brandId?: number;
+  categoryId: number;
+  imageUrl?: string;
+  basePrice: number;
+  salePrice?: number;
+  sku: string;
+  barcode?: string;
+  baseStock?: number;
+  isActive?: boolean;
+  isAvailable?: boolean;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  metadata?: Record<string, any>;
+  imageUrls?: string[];
+  tags?: string[];
+  initialInventories?: CreateProductInventoryInput[];
+  pricingPolicy?: Record<string, any>;
+}
+
+export interface UpdateProductInput {
+  id: number;
+  name?: string;
+  slug?: string;
+  description?: string;
+  brandId?: number;
+  categoryId?: number;
+  imageUrl?: string;
+  basePrice?: number;
+  salePrice?: number;
+  sku?: string;
+  barcode?: string;
+  baseStock?: number;
+  isActive?: boolean;
+  isAvailable?: boolean;
+  isFeatured?: boolean;
+  sortOrder?: number;
+  metadata?: Record<string, any>;
+  imageUrls?: string[];
+  tags?: string[];
+  initialInventories?: CreateProductInventoryInput[];
+  pricingPolicy?: Record<string, any>;
+  updateReason?: string;
+}
+
+export interface CreateProductInventoryInput {
+  productId: number;
+  storeId: number;
+  stock?: number;
+  isAvailable?: boolean;
+  minStock?: number;
+  maxStock?: number;
+  storePrice?: number;
+}
+
+export interface UpdateProductInventoryInput {
+  id: number;
+  productId?: number;
+  storeId?: number;
+  stock?: number;
+  isAvailable?: boolean;
+  minStock?: number;
+  maxStock?: number;
+  storePrice?: number;
+}
 
 // ============================================================================
 // 서비스 인터페이스
 // ============================================================================
-export interface IProductsService {
-  // ===== Queries =====
-  listProducts(): Promise<ApiResponse<Product[]>>;
-  findProductById(id: number): Promise<ApiResponse<Product>>;
 
-  // ===== Mutations =====
+export interface IProductsService {
+  listProducts(): Promise<ApiResponse<Product[]>>;
+  getProductById(id: number): Promise<ApiResponse<Product>>;
   createProduct(
     input: CreateProductInput
   ): Promise<ApiResponse<CreateProductOutput>>;
@@ -40,24 +167,7 @@ export interface IProductsService {
 // ============================================================================
 // Context 상태 타입
 // ============================================================================
-export interface ProductsState {
-  // 제품 목록
-  products: Product[];
 
-  // 현재 선택된 제품
-  currentProduct: Product | null;
-
-  // 필터/검색
-  filters: ProductFilters;
-
-  // 공통 로딩/에러
-  isLoading: boolean;
-  error: string | null;
-}
-
-// ============================================================================
-// 필터 타입
-// ============================================================================
 export interface ProductFilters {
   search?: string;
   categoryId?: number;
@@ -69,39 +179,26 @@ export interface ProductFilters {
   isFeatured?: boolean;
 }
 
-// ============================================================================
-// Context 액션 타입
-// ============================================================================
+export interface ProductsState {
+  products: Product[];
+  currentProduct: Product | null;
+  filters: ProductFilters;
+  isLoading: boolean;
+  error: string | null;
+}
+
 export interface ProductsContextActions {
-  // 제품 관련
   setProducts: (products: Product[]) => void;
   addProduct: (product: Product) => void;
-  updateProduct: (id: number, updates: Partial<Product>) => void;
+  updateProductInContext: (id: number, updates: Partial<Product>) => void;
   removeProduct: (id: number) => void;
   setCurrentProduct: (product: Product | null) => void;
-  loadProducts: () => Promise<void>; // 추가
-  loadProductById: (id: number) => Promise<void>; // 추가
-
-  // 필터 관련
   setFilters: (filters: Partial<ProductFilters>) => void;
   clearFilters: () => void;
-
-  // 공통
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   reset: () => void;
 }
 
-// Context 전체 타입
 export type ProductsContextValue = ProductsState & ProductsContextActions;
-
-// Re-export for convenience
-export type {
-  Product,
-  ProductInventory,
-  CreateProductInput,
-  UpdateProductInput,
-  CreateProductOutput,
-  UpdateProductOutput,
-};

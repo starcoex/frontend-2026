@@ -92,6 +92,9 @@
     },
     {
       "path": "./libs/features/reviews"
+    },
+    {
+      "path": "./libs/features/notices"
     }
   ]
 }

@@ -44,10 +44,10 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
     if (!serviceRegistry.isServiceInitialized('stores')) {
       try {
         initStoresService(apolloClient);
-        console.log('✅ SuggestionsService initialized');
+        console.log('✅ CategoriesService initialized');
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ SuggestionsService initialization failed:', error);
+        console.error('❌ CategoriesService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);

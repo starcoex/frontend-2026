@@ -107,7 +107,7 @@ export function SuggestionMutateDrawer({
       }}
     >
       <SheetContent className="flex flex-col">
-        <SheetHeader>
+        <SheetHeader className="px-4 sm:px-6">
           <SheetTitle>
             {isUpdate ? '건의사항 수정' : '건의사항 등록'}
           </SheetTitle>
@@ -122,7 +122,7 @@ export function SuggestionMutateDrawer({
           <form
             id="suggestion-form"
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex-1 space-y-4 overflow-y-auto py-2"
+            className="flex-1 space-y-4 overflow-y-auto px-4 py-2 sm:px-6"
           >
             <FormField
               control={form.control}
@@ -228,7 +228,7 @@ export function SuggestionMutateDrawer({
           </form>
         </Form>
 
-        <SheetFooter className="gap-2">
+        <SheetFooter className="gap-2 px-4 sm:px-6">
           <SheetClose asChild>
             <Button variant="outline">취소</Button>
           </SheetClose>
