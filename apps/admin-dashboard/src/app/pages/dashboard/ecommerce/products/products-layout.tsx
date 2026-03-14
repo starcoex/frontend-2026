@@ -28,6 +28,7 @@ import {
   DEFAULT_PRODUCT_BREADCRUMB_CONFIG,
   type BreadcrumbConfig,
 } from '@/app/constants/product-breadcrumb-config';
+import { useProducts } from '@starcoex-frontend/products';
 
 const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [PRODUCT_ROUTES.LIST]: PRODUCT_BREADCRUMB_CONFIGS.LIST,
@@ -64,56 +65,78 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
 
 // 제품 통계 컴포넌트
 const ProductStats = () => {
+  const { products } = useProducts();
+
+  const stats = useMemo(() => {
+    const totalRevenue = products.reduce(
+      (sum, p) => sum + p.basePrice * p.orderCount,
+      0
+    );
+    const totalOrders = products.reduce((sum, p) => sum + p.orderCount, 0);
+    const featuredCount = products.filter((p) => p.isFeatured).length;
+    const lowStockCount = products.filter((p) => p.baseStock < 10).length;
+
+    return { totalRevenue, totalOrders, featuredCount, lowStockCount };
+  }, [products]);
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader>
-          <CardDescription>Total Sales</CardDescription>
+          <CardDescription>총 매출</CardDescription>
           <CardTitle className="font-display text-2xl lg:text-3xl">
-            $30,230
+            ₩{stats.totalRevenue.toLocaleString()}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <span className="text-green-600">+20.1%</span>
+              <span className="text-muted-foreground">전체 기간</span>
             </Badge>
           </CardAction>
         </CardHeader>
       </Card>
       <Card>
         <CardHeader>
-          <CardDescription>Number of Sales</CardDescription>
+          <CardDescription>총 주문수</CardDescription>
           <CardTitle className="font-display text-2xl lg:text-3xl">
-            982
+            {stats.totalOrders.toLocaleString()}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <span className="text-green-600">+5.02</span>
+              <span className="text-muted-foreground">전체 기간</span>
             </Badge>
           </CardAction>
         </CardHeader>
       </Card>
       <Card>
         <CardHeader>
-          <CardDescription>Affiliate</CardDescription>
+          <CardDescription>추천 상품</CardDescription>
           <CardTitle className="font-display text-2xl lg:text-3xl">
-            $4,530
+            {stats.featuredCount}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <span className="text-green-600">+3.1%</span>
+              <span className="text-muted-foreground">
+                {products.length > 0
+                  ? `${Math.round(
+                      (stats.featuredCount / products.length) * 100
+                    )}%`
+                  : '0%'}
+              </span>
             </Badge>
           </CardAction>
         </CardHeader>
       </Card>
       <Card>
         <CardHeader>
-          <CardDescription>Discounts</CardDescription>
+          <CardDescription>재고 부족</CardDescription>
           <CardTitle className="font-display text-2xl lg:text-3xl">
-            $2,230
+            {stats.lowStockCount}
           </CardTitle>
           <CardAction>
-            <Badge variant="outline">
-              <span className="text-red-600">-3.58%</span>
+            <Badge
+              variant={stats.lowStockCount > 0 ? 'destructive' : 'outline'}
+            >
+              {stats.lowStockCount > 0 ? '주의' : '정상'}
             </Badge>
           </CardAction>
         </CardHeader>

@@ -42,7 +42,6 @@ export const PRODUCT_FIELDS = gql`
     salePrice
     sku
     barcode
-    baseStock
     isActive
     isAvailable
     isFeatured
@@ -58,6 +57,14 @@ export const PRODUCT_FIELDS = gql`
     deletedAt
     inventories {
       ...ProductInventoryFields
+    }
+    category {
+      id
+      name
+    }
+    brand {
+      id
+      name
     }
   }
 `;
@@ -76,6 +83,17 @@ export const CREATE_PRODUCT_OUTPUT_FIELDS = gql`
     creationMessage
     notificationMessage
     inventoryMessage
+  }
+`;
+
+export const DELETE_PRODUCT_OUTPUT_FIELDS = gql`
+  ${PRODUCT_ERROR_INFO_FIELDS}
+  fragment DeleteProductOutputFields on DeleteProductOutput {
+    success
+    error {
+      ...ProductErrorInfoFields
+    }
+    deleteMessage
   }
 `;
 
@@ -107,6 +125,15 @@ export const LIST_PRODUCTS = gql`
   }
 `;
 
+export const GET_PRODUCT_BY_BARCODE = gql`
+  ${PRODUCT_FIELDS}
+  query ProductByBarcode($barcode: String!) {
+    productByBarcode(barcode: $barcode) {
+      ...ProductFields
+    }
+  }
+`;
+
 export const GET_PRODUCT = gql`
   ${PRODUCT_FIELDS}
   query FindProductById($id: Int!) {
@@ -132,6 +159,15 @@ export const UPDATE_PRODUCT = gql`
   mutation UpdateProductNew($input: UpdateProductInput!) {
     updateProductNew(input: $input) {
       ...UpdateProductOutputFields
+    }
+  }
+`;
+
+export const DELETE_PRODUCT = gql`
+  ${DELETE_PRODUCT_OUTPUT_FIELDS}
+  mutation DeleteProductNew($id: Int!) {
+    deleteProductNew(id: $id) {
+      ...DeleteProductOutputFields
     }
   }
 `;

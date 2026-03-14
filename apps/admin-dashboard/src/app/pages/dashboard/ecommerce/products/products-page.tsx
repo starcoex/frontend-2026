@@ -1,12 +1,13 @@
-import { Button } from '@/components/ui/button';
-import ProductList from '@/app/pages/dashboard/ecommerce/products/product-list';
-import { PageHead } from '@starcoex-frontend/common';
-import { COMPANY_INFO } from '@/app/config/company-config';
 import { useEffect } from 'react';
 import { AlertCircle, Loader2, Package } from 'lucide-react';
-import { useProducts } from '@starcoex-frontend/products';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { PageHead } from '@starcoex-frontend/common';
+import { COMPANY_INFO } from '@/app/config/company-config';
+import { useProducts } from '@starcoex-frontend/products';
+import { ProductsTable } from '@/app/pages/dashboard/ecommerce/products/components/product-table';
+import { ProductPrimaryActions } from '@/app/pages/dashboard/ecommerce/products/components/product-primary-actions';
 
 export default function ProductsPage() {
   const { products, isLoading, error, fetchProducts } = useProducts();
@@ -17,10 +18,10 @@ export default function ProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">
             제품 데이터를 불러오는 중...
           </p>
         </div>
@@ -42,7 +43,12 @@ export default function ProductsPage() {
         }}
       />
 
-      {/* ✅ 에러 알림 */}
+      {/* 헤더 */}
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">제품 관리</h1>
+        <ProductPrimaryActions />
+      </div>
+
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
@@ -61,12 +67,11 @@ export default function ProductsPage() {
         </Alert>
       )}
 
-      {/* ✅ Empty State */}
       {!error && products.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-          <Package className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">제품이 없습니다</h3>
-          <p className="text-sm text-muted-foreground mb-4">
+        <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed">
+          <Package className="text-muted-foreground h-12 w-12" />
+          <h3 className="text-lg font-semibold">제품이 없습니다</h3>
+          <p className="text-muted-foreground text-sm">
             첫 제품을 등록하여 시작하세요
           </p>
           <Button asChild>
@@ -75,8 +80,7 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* ✅ 데이터가 있을 때만 테이블 표시 */}
-      {!error && products.length > 0 && <ProductList data={products} />}
+      {!error && products.length > 0 && <ProductsTable data={products} />}
     </>
   );
 }

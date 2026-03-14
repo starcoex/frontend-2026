@@ -48,6 +48,9 @@ import { SuggestionsWithProvider } from '@/app/pages/dashboard/suggestions/sugge
 import { CategoriesWithProvider } from '@/app/pages/dashboard/ecommerce/categories/categories-with-provider';
 import CategoriesPage from '@/app/pages/dashboard/ecommerce/categories/categories-page';
 import CategoryHierarchyPage from '@/app/pages/dashboard/ecommerce/categories/category-hierachy-page';
+import ProductEditPage from '@/app/pages/dashboard/ecommerce/products/edit/product-edit-page';
+import InventoryPage from '@/app/pages/dashboard/ecommerce/products/inventory/inventory-page';
+import ProductScanPage from '@/app/pages/dashboard/ecommerce/products/scan/product-scan';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -266,11 +269,19 @@ const router = createBrowserRouter([
           },
           {
             path: 'inventory',
-            element: <div>재고 현황 (구현 예정)</div>,
+            element: <InventoryPage />,
+          },
+          {
+            path: 'scan',
+            element: <ProductScanPage />,
           },
           {
             path: ':id',
             element: <ProductDetailPage />,
+          },
+          {
+            path: ':id/edit',
+            element: <ProductEditPage />,
           },
         ],
       },

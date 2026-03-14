@@ -8,6 +8,9 @@ import {
   CREATE_PRODUCT_INVENTORY,
   UPDATE_PRODUCT_INVENTORY,
   DELETE_PRODUCT_INVENTORY,
+  DeleteProductOutput,
+  DELETE_PRODUCT,
+  GET_PRODUCT_BY_BARCODE,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -130,6 +133,17 @@ export class ProductsService implements IProductsService {
     return res as unknown as ApiResponse<Product>;
   }
 
+  async getProductByBarcode(barcode: string): Promise<ApiResponse<Product>> {
+    const res = await this.query<{ productByBarcode: Product }>(
+      GET_PRODUCT_BY_BARCODE,
+      { barcode }
+    );
+    if (res.success && res.data?.productByBarcode) {
+      return { success: true, data: res.data.productByBarcode };
+    }
+    return res as unknown as ApiResponse<Product>;
+  }
+
   // ============================================================================
   // Mutations
   // ============================================================================
@@ -158,6 +172,17 @@ export class ProductsService implements IProductsService {
       return { success: true, data: res.data.updateProductNew };
     }
     return res as unknown as ApiResponse<UpdateProductOutput>;
+  }
+
+  async deleteProduct(id: number): Promise<ApiResponse<DeleteProductOutput>> {
+    const res = await this.mutate<{ deleteProductNew: DeleteProductOutput }>(
+      DELETE_PRODUCT,
+      { id }
+    );
+    if (res.success && res.data?.deleteProductNew) {
+      return { success: true, data: res.data.deleteProductNew };
+    }
+    return res as unknown as ApiResponse<DeleteProductOutput>;
   }
 
   async createProductInventory(

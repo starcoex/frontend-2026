@@ -16,6 +16,7 @@ export const useProducts = () => {
     setProducts,
     addProduct,
     updateProductInContext,
+    removeProduct,
     setCurrentProduct,
     setLoading,
     setError,
@@ -86,9 +87,25 @@ export const useProducts = () => {
 
         if (res.success && res.data) {
           setCurrentProduct(res.data);
+          // products 배열도 동기화 (재고 등 최신 데이터 반영)
+          updateProductInContext(id, res.data);
         }
         return res;
       }, '제품 정보를 불러오는데 실패했습니다.'),
+    [withLoading, setCurrentProduct, updateProductInContext]
+  );
+
+  const fetchProductByBarcode = useCallback(
+    async (barcode: string) =>
+      withLoading(async () => {
+        const service = getProductsService();
+        const res = await service.getProductByBarcode(barcode);
+
+        if (res.success && res.data) {
+          setCurrentProduct(res.data);
+        }
+        return res;
+      }, '바코드로 제품을 찾는데 실패했습니다.'),
     [withLoading, setCurrentProduct]
   );
 
@@ -122,6 +139,23 @@ export const useProducts = () => {
         return res;
       }, '제품 수정에 실패했습니다.'),
     [withLoading, updateProductInContext]
+  );
+
+  const deleteProduct = useCallback(
+    async (id: number) =>
+      withLoading(async () => {
+        const service = getProductsService();
+        const res = await service.deleteProduct(id);
+
+        if (res.success) {
+          removeProduct(id);
+          if (currentProduct?.id === id) {
+            setCurrentProduct(null);
+          }
+        }
+        return res;
+      }, '제품 삭제에 실패했습니다.'),
+    [withLoading, removeProduct, currentProduct, setCurrentProduct]
   );
 
   const createInventory = useCallback(
@@ -227,11 +261,13 @@ export const useProducts = () => {
     // Queries
     fetchProducts,
     fetchProductById,
+    fetchProductByBarcode,
     filteredProducts,
 
     // Mutations
     createProduct,
     updateProduct,
+    deleteProduct,
     createInventory,
     updateInventory,
     deleteInventory,

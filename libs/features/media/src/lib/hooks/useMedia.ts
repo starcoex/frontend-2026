@@ -231,7 +231,8 @@ export const useMedia = () => {
               ? await service.uploadVideo(videos[0], meta)
               : await service.uploadMultipleVideos(videos, meta);
 
-          if (!res.success) finalResponse = res;
+          // 성공/실패 모두 finalResponse 갱신
+          finalResponse = res;
         }
 
         if (others.length > 0) {
@@ -240,7 +241,8 @@ export const useMedia = () => {
               ? await service.uploadFile(others[0], meta)
               : await service.uploadMultipleFiles(others, meta);
 
-          if (!res.success) finalResponse = res;
+          // 성공/실패 모두 finalResponse 갱신
+          finalResponse = res;
         }
 
         if (finalResponse.success) {

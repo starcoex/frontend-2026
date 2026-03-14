@@ -4,6 +4,25 @@ import type { ApiResponse } from '../types';
 // GraphQL 스키마 기반 타입
 // ============================================================================
 
+export interface ProductCategoryRef {
+  id: number;
+  name?: string;
+}
+
+export interface ProductBrandRef {
+  id: number;
+  name?: string;
+}
+
+export interface InitialInventoryInput {
+  storeId: number;
+  stock: number;
+  storePrice?: number;
+  minStock?: number;
+  maxStock?: number;
+  isAvailable?: boolean;
+}
+
 export interface ProductInventory {
   id: number;
   productId: number;
@@ -32,7 +51,6 @@ export interface Product {
   salePrice?: number | null;
   sku: string;
   barcode?: string | null;
-  baseStock: number;
   isActive: boolean;
   isAvailable: boolean;
   isFeatured: boolean;
@@ -47,6 +65,9 @@ export interface Product {
   updatedAt: string;
   deletedAt?: string | null;
   inventories: ProductInventory[];
+  // ─── 관계 필드 (GraphQL federation 응답 시 포함) ───
+  category?: ProductCategoryRef | null;
+  brand?: ProductBrandRef | null;
 }
 
 export interface ErrorInfo {
@@ -84,7 +105,6 @@ export interface CreateProductInput {
   salePrice?: number;
   sku: string;
   barcode?: string;
-  baseStock?: number;
   isActive?: boolean;
   isAvailable?: boolean;
   isFeatured?: boolean;
@@ -92,7 +112,7 @@ export interface CreateProductInput {
   metadata?: Record<string, any>;
   imageUrls?: string[];
   tags?: string[];
-  initialInventories?: CreateProductInventoryInput[];
+  initialInventories?: InitialInventoryInput[]; // ← 변경
   pricingPolicy?: Record<string, any>;
 }
 
@@ -108,7 +128,6 @@ export interface UpdateProductInput {
   salePrice?: number;
   sku?: string;
   barcode?: string;
-  baseStock?: number;
   isActive?: boolean;
   isAvailable?: boolean;
   isFeatured?: boolean;
@@ -116,13 +135,19 @@ export interface UpdateProductInput {
   metadata?: Record<string, any>;
   imageUrls?: string[];
   tags?: string[];
-  initialInventories?: CreateProductInventoryInput[];
+  initialInventories?: InitialInventoryInput[]; // ← 변경
   pricingPolicy?: Record<string, any>;
   updateReason?: string;
 }
 
+export interface DeleteProductOutput {
+  success?: boolean | null;
+  error?: ErrorInfo | null;
+  deleteMessage?: string | null;
+}
+
 export interface CreateProductInventoryInput {
-  productId: number;
+  productId: number; // 단독 재고 생성 시 필수 (CreateProductInventoryInput)
   storeId: number;
   stock?: number;
   isAvailable?: boolean;
@@ -149,12 +174,14 @@ export interface UpdateProductInventoryInput {
 export interface IProductsService {
   listProducts(): Promise<ApiResponse<Product[]>>;
   getProductById(id: number): Promise<ApiResponse<Product>>;
+  getProductByBarcode(barcode: string): Promise<ApiResponse<Product>>;
   createProduct(
     input: CreateProductInput
   ): Promise<ApiResponse<CreateProductOutput>>;
   updateProduct(
     input: UpdateProductInput
   ): Promise<ApiResponse<UpdateProductOutput>>;
+  deleteProduct(id: number): Promise<ApiResponse<DeleteProductOutput>>;
   createProductInventory(
     input: CreateProductInventoryInput
   ): Promise<ApiResponse<ProductInventory>>;

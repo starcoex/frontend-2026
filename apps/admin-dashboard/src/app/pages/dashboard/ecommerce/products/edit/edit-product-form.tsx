@@ -4,10 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
   AlertCircleIcon,
+  Badge,
   ChevronLeft,
   ImageIcon,
   Loader2,
+  Pencil,
+  PlusIcon,
   RefreshCwIcon,
+  Trash2,
   UploadIcon,
   XIcon,
 } from 'lucide-react';
@@ -22,13 +26,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -40,33 +38,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Link, useNavigate } from 'react-router-dom';
-import { AddMediaFromUrl } from '@/app/pages/dashboard/ecommerce/products/create/add-media-from-url';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useMedia } from '@starcoex-frontend/media';
 import { useCategories } from '@starcoex-frontend/categories';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
-import { useProducts } from '@starcoex-frontend/products';
 import { useStores } from '@starcoex-frontend/stores';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useProducts } from '@starcoex-frontend/products';
+import type { Product } from '@starcoex-frontend/products';
 import Barcode from 'react-barcode';
-import { InitialInventoryManager } from '@/app/pages/dashboard/ecommerce/products/inventory/components/initial-inventory-manager';
+import { InventoryMutateDrawer } from '@/app/pages/dashboard/ecommerce/products/inventory/components/inventory-mutate-drawer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
-// ─── 유틸: 슬러그 자동 생성 ────────────────────────────────────────────────────
-const generateSlug = (name: string): string =>
-  name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9가-힣\s-]/g, '')
-    .replace(/\s+/g, '-');
-
-// ─── 유틸: SKU 생성 방식 ──────────────────────────────────────────────────────
+// ─── SKU 유틸 ────────────────────────────────────────────────────────────────
 const SKU_MODES = [
   { value: 'category', label: '카테고리 기반' },
   { value: 'date', label: '날짜 기반' },
@@ -100,18 +94,16 @@ const generateSKU = (
   }
 };
 
-// EAN-13 체크섬 포함 자동 생성
+// ─── 바코드 유틸 ──────────────────────────────────────────────────────────────
 const generateBarcode = (): string => {
   const digits = Array.from({ length: 12 }, () =>
     Math.floor(Math.random() * 10)
   );
-  // 체크섬 계산
   const checksum =
     (10 -
       (digits.reduce((sum, d, i) => sum + d * (i % 2 === 0 ? 1 : 3), 0) % 10)) %
     10;
   return [...digits, checksum].join('');
-  // 예: 4901234567890
 };
 
 // ─── Zod 스키마 ───────────────────────────────────────────────────────────────
@@ -132,41 +124,51 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-// ─── 파일 프리뷰 타입 ─────────────────────────────────────────────────────────
 interface FilePreview {
   id: string;
   file: File;
   preview: string;
 }
 
-export default function AddProductForm() {
-  const { currentUser } = useAuth();
+// 기존 이미지 (URL 기반)
+interface ExistingImage {
+  url: string;
+  removed: boolean;
+}
+
+interface EditProductFormProps {
+  product: Product;
+}
+
+export default function EditProductForm({ product }: EditProductFormProps) {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const { uploadMedia, isLoading: isUploading } = useMedia();
-  const { createProduct } = useProducts();
+  const { updateProduct, deleteInventory, fetchProductById } = useProducts();
   const { brands, fetchBrands, stores, fetchStores } = useStores();
   const { categoryTree, fetchCategoryTree } = useCategories();
 
+  // ─── 재고 관련 상태 ───────────────────────────────────────────────────────────
+  const [inventories, setInventories] = useState(product.inventories ?? []);
+  const [inventoryDrawerOpen, setInventoryDrawerOpen] = useState(false);
+  const [editingInventory, setEditingInventory] = useState<
+    (typeof inventories)[number] | undefined
+  >(undefined);
+  const [deletingInventoryId, setDeletingInventoryId] = useState<number | null>(
+    null
+  );
+  const [isDeletingInventory, setIsDeletingInventory] = useState(false);
+
+  // ─── 기존 이미지 상태 (삭제 가능) ────────────────────────────────────────
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>(
+    product.imageUrls.map((url) => ({ url, removed: false }))
+  );
+  // ─── 새 이미지 상태 ───────────────────────────────────────────────────────
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [skuMode, setSkuMode] = useState<SKUMode>('category');
-  // ─── 초기 재고 상태 ───────────────────────────────────────────────────────────
-  const [initialInventories, setInitialInventories] = useState<
-    Array<{
-      storeId: number;
-      stock: number;
-      minStock: number;
-      maxStock: number;
-      storePrice?: number;
-      isAvailable: boolean;
-    }>
-  >([]);
-  const initialInventoriesRef = useRef(initialInventories);
-
-  useEffect(() => {
-    initialInventoriesRef.current = initialInventories;
-  }, [initialInventories]);
+  // ─── SKU 모드 (기존 SKU는 'manual' 로 시작) ───────────────────────────────
+  const [skuMode, setSkuMode] = useState<SKUMode>('manual');
 
   useEffect(() => {
     fetchCategoryTree();
@@ -174,7 +176,6 @@ export default function AddProductForm() {
     fetchStores();
   }, [fetchCategoryTree, fetchBrands, fetchStores]);
 
-  // 카테고리 평면화 — 중복 id 제거
   const flatCategories = useMemo(() => {
     const seen = new Set<number>();
     return categoryTree
@@ -189,39 +190,24 @@ export default function AddProductForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: '',
-      slug: '',
-      sku: generateSKU('category'),
-      barcode: generateBarcode(),
-      description: '',
-      basePrice: 0,
-      salePrice: undefined,
-      categoryId: 0,
-      isActive: true,
-      isAvailable: true,
-      isFeatured: false,
+      name: product.name,
+      slug: product.slug,
+      sku: product.sku,
+      barcode: product.barcode ?? '',
+      description: product.description ?? '',
+      basePrice: product.basePrice,
+      salePrice: product.salePrice ?? undefined,
+      brandId: product.brandId ?? undefined,
+      categoryId: product.categoryId,
+      isActive: product.isActive,
+      isAvailable: product.isAvailable,
+      isFeatured: product.isFeatured,
     },
   });
 
-  // 이름 변경 시 슬러그 자동 생성
-  const nameValue = form.watch('name');
-  useEffect(() => {
-    if (nameValue) {
-      form.setValue('slug', generateSlug(nameValue), { shouldValidate: false });
-    }
-  }, [nameValue, form]);
-
   const categoryIdValue = form.watch('categoryId');
 
-  useEffect(() => {
-    if (nameValue) {
-      form.setValue('slug', generateSlug(nameValue), {
-        shouldValidate: false,
-      });
-    }
-  }, [nameValue, form]);
-
-  // SKU 모드 또는 카테고리/브랜드 변경 시 자동 재생성 (직접 입력 모드 제외)
+  // SKU 모드 변경 시 자동 재생성 (manual 제외)
   useEffect(() => {
     if (skuMode !== 'manual') {
       form.setValue(
@@ -236,14 +222,55 @@ export default function AddProductForm() {
     }
   }, [skuMode, categoryIdValue]);
 
-  // ─── 파일 유효성 검사 ──────────────────────────────────────────────────────
+  // 재고 Drawer 닫힐 때 목록 갱신
+  const handleInventoryDrawerClose = useCallback(
+    async (open: boolean) => {
+      setInventoryDrawerOpen(open);
+      if (!open) {
+        setEditingInventory(undefined);
+        // 최신 재고 목록 반영
+        const res = await fetchProductById(product.id);
+        if (res?.data?.inventories) setInventories(res?.data?.inventories);
+      }
+    },
+    [fetchProductById, product.id]
+  );
 
+  const handleDeleteInventory = async () => {
+    if (!deletingInventoryId) return;
+    setIsDeletingInventory(true);
+    try {
+      const res = await deleteInventory(deletingInventoryId);
+      if (res.success) {
+        toast.success('재고가 삭제되었습니다.');
+        setInventories((prev) =>
+          prev.filter((i) => i.id !== deletingInventoryId)
+        );
+      } else {
+        toast.error(res.error?.message ?? '삭제에 실패했습니다.');
+      }
+    } finally {
+      setIsDeletingInventory(false);
+      setDeletingInventoryId(null);
+    }
+  };
+
+  // ─── 기존 이미지 삭제 토글 ────────────────────────────────────────────────
+  const toggleRemoveExisting = useCallback((url: string) => {
+    setExistingImages((prev) =>
+      prev.map((img) =>
+        img.url === url ? { ...img, removed: !img.removed } : img
+      )
+    );
+  }, []);
+
+  // ─── 새 파일 관련 ─────────────────────────────────────────────────────────
   const validateFile = useCallback((file: File): string | null => {
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-    const maxSize = 5 * 1024 * 1024;
     if (!validTypes.includes(file.type))
-      return '지원되지 않는 파일 형식입니다. (PNG, JPG, JPEG, WebP만 가능)';
-    if (file.size > maxSize) return '파일 크기는 5MB를 초과할 수 없습니다.';
+      return '지원되지 않는 파일 형식입니다. (PNG, JPG, WebP만 가능)';
+    if (file.size > 5 * 1024 * 1024)
+      return '파일 크기는 5MB를 초과할 수 없습니다.';
     return null;
   }, []);
 
@@ -251,8 +278,9 @@ export default function AddProductForm() {
     (newFiles: FileList | File[]) => {
       setUploadError(null);
       const fileArray = Array.from(newFiles);
-      if (files.length + fileArray.length > 5) {
-        setUploadError('최대 5개의 이미지만 업로드할 수 있습니다.');
+      const remaining = existingImages.filter((i) => !i.removed).length;
+      if (remaining + files.length + fileArray.length > 5) {
+        setUploadError('이미지는 최대 5개까지 가능합니다.');
         return;
       }
       const validFiles: FilePreview[] = [];
@@ -270,7 +298,7 @@ export default function AddProductForm() {
       }
       setFiles((prev) => [...prev, ...validFiles]);
     },
-    [files.length, validateFile]
+    [files.length, existingImages, validateFile]
   );
 
   const removeFile = useCallback((id: string) => {
@@ -280,35 +308,6 @@ export default function AddProductForm() {
       return prev.filter((f) => f.id !== id);
     });
   }, []);
-
-  // ─── 드래그 앤 드롭 ────────────────────────────────────────────────────────
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
-    },
-    [addFiles]
-  );
 
   const openFileDialog = useCallback(() => {
     const input = document.createElement('input');
@@ -322,41 +321,58 @@ export default function AddProductForm() {
     input.click();
   }, [addFiles]);
 
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files);
+    },
+    [addFiles]
+  );
+
   // ─── 폼 제출 ───────────────────────────────────────────────────────────────
-
   async function onSubmit(data: FormValues) {
-    if (!currentUser?.id) {
-      toast.error('사용자 정보를 찾을 수 없습니다.');
-      return;
-    }
-
     try {
-      let imageUrls: string[] = [];
+      // 남아있는 기존 이미지 URL
+      let imageUrls = existingImages
+        .filter((i) => !i.removed)
+        .map((i) => i.url);
 
-      if (files.length > 0) {
+      // 새 이미지 업로드
+      if (files.length > 0 && currentUser?.id) {
         const uploadResult = await uploadMedia(
           files.map((f) => f.file),
-          currentUser.id
+          currentUser.id,
+          'PRODUCT'
         );
-
-        if (!uploadResult.success || !uploadResult.data) {
-          toast.error('이미지 업로드에 실패했습니다.');
-          return;
+        if (uploadResult.success && uploadResult.data) {
+          const response = uploadResult.data;
+          const newUrls = response.files
+            ? response.files.map((f) => f.fileUrl)
+            : response.fileUrl
+            ? [response.fileUrl]
+            : [];
+          imageUrls = [...imageUrls, ...newUrls];
         }
-
-        const response = uploadResult.data;
-
-        // UploadResponse 타입 기준 파싱
-        // 다중 파일 → files[].fileUrl
-        // 단일 파일 → fileUrl
-        imageUrls = response.files
-          ? response.files.map((f) => f.fileUrl)
-          : response.fileUrl
-          ? [response.fileUrl]
-          : [];
       }
 
-      const result = await createProduct({
+      const result = await updateProduct({
+        id: product.id,
         name: data.name,
         slug: data.slug,
         sku: data.sku,
@@ -365,31 +381,20 @@ export default function AddProductForm() {
         basePrice: data.basePrice,
         salePrice: data.salePrice || undefined,
         categoryId: data.categoryId,
-        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+        imageUrls,
         isActive: data.isActive,
         isAvailable: data.isAvailable,
         isFeatured: data.isFeatured,
-        initialInventories:
-          initialInventories.length > 0
-            ? initialInventories.map((inv) => ({
-                storeId: inv.storeId,
-                stock: inv.stock,
-                minStock: inv.minStock,
-                maxStock: inv.maxStock,
-                storePrice: inv.storePrice,
-                isAvailable: inv.isAvailable,
-              }))
-            : undefined,
       });
 
       if (result.success) {
-        toast.success('제품이 성공적으로 등록되었습니다!');
-        navigate('/admin/products');
+        toast.success('제품이 성공적으로 수정되었습니다!');
+        navigate(`/admin/products/${product.id}`);
       } else {
-        toast.error(result.error?.message || '제품 등록에 실패했습니다.');
+        toast.error(result.error?.message || '제품 수정에 실패했습니다.');
       }
     } catch {
-      toast.error('제품 등록 중 오류가 발생했습니다.');
+      toast.error('제품 수정 중 오류가 발생했습니다.');
     }
   }
 
@@ -398,21 +403,23 @@ export default function AddProductForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* ─── 헤더 ─────────────────────────────────────────────────────────── */}
+        {/* 헤더 */}
         <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" asChild>
-              <Link to="/admin/products">
+              <Link to={`/admin/products/${product.id}`}>
                 <ChevronLeft className="h-4 w-4" />
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight">제품 추가</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              제품 수정: {product.name}
+            </h1>
           </div>
           <div className="flex gap-2">
             <Button
               type="button"
               variant="secondary"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate(`/admin/products/${product.id}`)}
             >
               취소
             </Button>
@@ -420,17 +427,17 @@ export default function AddProductForm() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
+                  저장 중...
                 </>
               ) : (
-                '등록하기'
+                '저장하기'
               )}
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-6">
-          {/* ─── 좌측: 메인 정보 ──────────────────────────────────────────── */}
+          {/* ─── 좌측 ──────────────────────────────────────────────────────── */}
           <div className="space-y-4 lg:col-span-4">
             {/* 제품 정보 */}
             <Card>
@@ -445,7 +452,7 @@ export default function AddProductForm() {
                     <FormItem>
                       <FormLabel>제품명 *</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="제품명을 입력하세요" />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -458,23 +465,22 @@ export default function AddProductForm() {
                     <FormItem>
                       <FormLabel>슬러그 *</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="url-friendly-slug" />
+                        <Input {...field} />
                       </FormControl>
-                      <FormDescription>
-                        제품명 입력 시 자동 생성됩니다.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* SKU + 바코드 */}
                 <div className="grid gap-4 lg:grid-cols-2">
+                  {/* SKU */}
                   <FormField
                     control={form.control}
                     name="sku"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>SKU</FormLabel>
-                        {/* 생성 방식 선택 */}
                         <RadioGroup
                           value={skuMode}
                           onValueChange={(v) => setSkuMode(v as SKUMode)}
@@ -487,10 +493,10 @@ export default function AddProductForm() {
                             >
                               <RadioGroupItem
                                 value={mode.value}
-                                id={`sku-${mode.value}`}
+                                id={`edit-sku-${mode.value}`}
                               />
                               <Label
-                                htmlFor={`sku-${mode.value}`}
+                                htmlFor={`edit-sku-${mode.value}`}
                                 className="cursor-pointer text-sm"
                               >
                                 {mode.label}
@@ -535,13 +541,15 @@ export default function AddProductForm() {
                         </div>
                         <FormDescription>
                           {skuMode === 'manual'
-                            ? '원하는 SKU를 직접 입력하세요.'
-                            : '방식 선택 시 자동 생성됩니다. 🔄로 재생성 가능합니다.'}
+                            ? '기존 SKU를 유지하거나 직접 수정하세요.'
+                            : '방식 선택 시 자동 재생성됩니다.'}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* 바코드 */}
                   <FormField
                     control={form.control}
                     name="barcode"
@@ -552,7 +560,7 @@ export default function AddProductForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="바코드를 입력하거나 자동 생성하세요"
+                              placeholder="바코드를 입력하거나 재생성하세요"
                               className="font-mono text-xs"
                             />
                           </FormControl>
@@ -570,7 +578,6 @@ export default function AddProductForm() {
                             <RefreshCwIcon className="size-4" />
                           </Button>
                         </div>
-                        {/* 바코드 이미지 미리보기 */}
                         {field.value && field.value.length === 13 && (
                           <div className="mt-2 flex justify-center rounded-md border bg-white p-3">
                             <Barcode
@@ -591,6 +598,7 @@ export default function AddProductForm() {
                     )}
                   />
                 </div>
+
                 <FormField
                   control={form.control}
                   name="description"
@@ -598,15 +606,8 @@ export default function AddProductForm() {
                     <FormItem>
                       <FormLabel>설명</FormLabel>
                       <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="제품 설명을 입력하세요"
-                          rows={4}
-                        />
+                        <Textarea {...field} rows={4} />
                       </FormControl>
-                      <FormDescription>
-                        제품에 대한 상세 설명을 작성하여 검색 노출을 높이세요.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -614,24 +615,59 @@ export default function AddProductForm() {
               </CardContent>
             </Card>
 
-            {/* 제품 이미지 */}
+            {/* 이미지 */}
             <Card>
               <CardHeader>
                 <CardTitle>제품 이미지</CardTitle>
-                <CardAction>
-                  <AddMediaFromUrl>
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="mt-0! h-auto p-0"
-                    >
-                      URL에서 추가
-                    </Button>
-                  </AddMediaFromUrl>
-                </CardAction>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
+              <CardContent className="space-y-4">
+                {/* ── 기존 이미지 (삭제 가능) ─────────────────────────────── */}
+                {existingImages.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground mb-2 text-sm">
+                      현재 이미지{' '}
+                      <span className="text-xs">
+                        (✕ 클릭 시 저장 시 삭제됩니다)
+                      </span>
+                    </p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {existingImages.map((img) => (
+                        <div key={img.url} className="relative aspect-square">
+                          <img
+                            src={img.url}
+                            alt="기존 이미지"
+                            className={`size-full rounded-md border object-cover transition-opacity ${
+                              img.removed ? 'opacity-30' : ''
+                            }`}
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant={img.removed ? 'outline' : 'destructive'}
+                            onClick={() => toggleRemoveExisting(img.url)}
+                            className="absolute -top-2 -right-2 size-6 rounded-full border-2 shadow-none"
+                            title={img.removed ? '삭제 취소' : '이미지 삭제'}
+                          >
+                            <XIcon className="size-3.5" />
+                          </Button>
+                          {img.removed && (
+                            <div className="absolute inset-0 flex items-center justify-center rounded-md">
+                              <span className="bg-destructive/80 rounded px-1 text-xs text-white">
+                                삭제 예정
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── 새 이미지 업로드 ─────────────────────────────────────── */}
+                <div>
+                  <p className="text-muted-foreground mb-2 text-sm">
+                    새 이미지 추가
+                  </p>
                   <div
                     onDragEnter={handleDragEnter}
                     onDragLeave={handleDragLeave}
@@ -639,26 +675,29 @@ export default function AddProductForm() {
                     onDrop={handleDrop}
                     data-dragging={isDragging || undefined}
                     data-files={files.length > 0 || undefined}
-                    className="border-input data-[dragging=true]:bg-accent/50 relative flex min-h-52 flex-col items-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors not-data-[files]:justify-center"
+                    className="border-input data-[dragging=true]:bg-accent/50 relative flex min-h-40 flex-col items-center overflow-hidden rounded-xl border border-dashed p-4 transition-colors not-data-[files]:justify-center"
                   >
                     {files.length > 0 ? (
                       <div className="flex w-full flex-col gap-3">
                         <div className="flex items-center justify-between gap-2">
-                          <h3 className="truncate text-sm font-medium">
-                            업로드된 파일 ({files.length}/5)
-                          </h3>
+                          <span className="text-sm font-medium">
+                            새 이미지 ({files.length}개)
+                          </span>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={openFileDialog}
-                            disabled={files.length >= 5}
+                            disabled={
+                              existingImages.filter((i) => !i.removed).length +
+                                files.length >=
+                              5
+                            }
                           >
-                            <UploadIcon className="-ms-0.5 size-3.5 opacity-60" />
-                            더 추가
+                            <UploadIcon className="mr-1 size-3.5" />더 추가
                           </Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div className="grid grid-cols-4 gap-2">
                           {files.map((file) => (
                             <div
                               key={file.id}
@@ -682,26 +721,24 @@ export default function AddProductForm() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center px-4 py-3 text-center">
-                        <div
-                          className="bg-background mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border"
-                          aria-hidden="true"
-                        >
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        <div className="bg-background mb-1 flex size-10 items-center justify-center rounded-full border">
                           <ImageIcon className="size-4 opacity-60" />
                         </div>
-                        <p className="mb-1.5 text-sm font-medium">
-                          이미지를 여기에 드롭하세요
+                        <p className="text-muted-foreground text-sm">
+                          이미지를 드롭하거나 선택하세요
                         </p>
                         <p className="text-muted-foreground text-xs">
-                          PNG, JPG, WebP (최대 5MB, 최대 5개)
+                          PNG, JPG, WebP (최대 5MB)
                         </p>
                         <Button
                           type="button"
                           variant="outline"
-                          className="mt-4"
+                          size="sm"
+                          className="mt-2"
                           onClick={openFileDialog}
                         >
-                          <UploadIcon className="-ms-1 opacity-60" />
+                          <UploadIcon className="mr-1 size-3.5" />
                           이미지 선택
                         </Button>
                       </div>
@@ -709,7 +746,7 @@ export default function AddProductForm() {
                   </div>
                   {uploadError && (
                     <div
-                      className="text-destructive flex items-center gap-1 text-xs"
+                      className="text-destructive mt-2 flex items-center gap-1 text-xs"
                       role="alert"
                     >
                       <AlertCircleIcon className="size-3 shrink-0" />
@@ -721,9 +758,9 @@ export default function AddProductForm() {
             </Card>
           </div>
 
-          {/* ─── 우측: 설정 ──────────────────────────────────────────────────── */}
+          {/* ─── 우측 ──────────────────────────────────────────────────────── */}
           <div className="space-y-4 lg:col-span-2">
-            {/* 가격 설정 */}
+            {/* 가격 */}
             <Card>
               <CardHeader>
                 <CardTitle>가격 설정</CardTitle>
@@ -741,7 +778,6 @@ export default function AddProductForm() {
                           onChange={(e) =>
                             field.onChange(parseFloat(e.target.value) || 0)
                           }
-                          placeholder="0"
                           type="number"
                           min={0}
                           step={0.01}
@@ -767,7 +803,6 @@ export default function AddProductForm() {
                                 : parseFloat(e.target.value)
                             )
                           }
-                          placeholder="0"
                           type="number"
                           min={0}
                           step={0.01}
@@ -780,12 +815,80 @@ export default function AddProductForm() {
               </CardContent>
             </Card>
 
-            {/* 초기 재고 설정 */}
-            <InitialInventoryManager
-              stores={stores}
-              value={initialInventories}
-              onChange={setInitialInventories}
-            />
+            {/* 재고 관리 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>재고 관리</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {inventories.length === 0 ? (
+                  <p className="text-muted-foreground text-xs">
+                    등록된 재고가 없습니다.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {inventories.map((inv) => {
+                      const storeName =
+                        stores.find((s) => s.id === inv.storeId)?.name ??
+                        `매장 #${inv.storeId}`;
+                      const isLow = inv.stock <= inv.minStock;
+                      return (
+                        <div
+                          key={inv.id}
+                          className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{storeName}</p>
+                            <div className="text-muted-foreground flex items-center gap-2 text-xs">
+                              <span>{inv.stock}개</span>
+                              {isLow && (
+                                <Badge className="text-xs">재고 부족</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              onClick={() => {
+                                setEditingInventory(inv);
+                                setInventoryDrawerOpen(true);
+                              }}
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:text-destructive size-7"
+                              onClick={() => setDeletingInventoryId(inv.id)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    setEditingInventory(undefined);
+                    setInventoryDrawerOpen(true);
+                  }}
+                >
+                  <PlusIcon className="mr-1 size-3.5" />
+                  매장 재고 추가
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* 브랜드 */}
             <Card>
@@ -803,9 +906,7 @@ export default function AddProductForm() {
                         <Select
                           value={field.value ? String(field.value) : ''}
                           onValueChange={(v) =>
-                            field.onChange(
-                              v === '__none__' ? undefined : Number(v)
-                            )
+                            field.onChange(v ? Number(v) : undefined)
                           }
                         >
                           <SelectTrigger className="w-full">
@@ -813,9 +914,6 @@ export default function AddProductForm() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
-                              <SelectItem value="__none__">
-                                선택 안 함
-                              </SelectItem>
                               {brands.map((brand) => (
                                 <SelectItem
                                   key={brand.id}
@@ -841,54 +939,32 @@ export default function AddProductForm() {
                 <CardTitle>상태</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="isActive"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between">
-                      <Label htmlFor="isActive">활성화</Label>
-                      <FormControl>
-                        <Switch
-                          id="isActive"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="isAvailable"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between">
-                      <Label htmlFor="isAvailable">판매 가능</Label>
-                      <FormControl>
-                        <Switch
-                          id="isAvailable"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="isFeatured"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center justify-between">
-                      <Label htmlFor="isFeatured">추천 상품</Label>
-                      <FormControl>
-                        <Switch
-                          id="isFeatured"
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {(['isActive', 'isAvailable', 'isFeatured'] as const).map(
+                  (key) => (
+                    <FormField
+                      key={key}
+                      control={form.control}
+                      name={key}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between">
+                          <Label>
+                            {key === 'isActive'
+                              ? '활성화'
+                              : key === 'isAvailable'
+                              ? '판매 가능'
+                              : '추천 상품'}
+                          </Label>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )
+                )}
               </CardContent>
             </Card>
 
@@ -935,6 +1011,42 @@ export default function AddProductForm() {
           </div>
         </div>
       </form>
+      {/* 재고 수정/추가 Drawer */}
+      <InventoryMutateDrawer
+        open={inventoryDrawerOpen}
+        onOpenChange={handleInventoryDrawerClose}
+        inventory={
+          editingInventory
+            ? { ...editingInventory, product: undefined }
+            : undefined
+        }
+        productId={product.id}
+      />
+
+      {/* 재고 삭제 확인 Dialog */}
+      <AlertDialog
+        open={!!deletingInventoryId}
+        onOpenChange={(open) => !open && setDeletingInventoryId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>재고 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              이 재고 항목을 삭제합니다. 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteInventory}
+              disabled={isDeletingInventory}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingInventory ? '삭제 중...' : '삭제'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Form>
   );
 }
