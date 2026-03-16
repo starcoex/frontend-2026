@@ -64,7 +64,8 @@ export const UsersLayout = () => {
   const location = useLocation();
 
   // ✅ Context에서 모든 상태 가져오기
-  const { users, stats, loading, statsLoading, refetch } = useUsersContext();
+  const { users, stats, loading, statsLoading, error, refetch } =
+    useUsersContext();
 
   // ✅ config 계산
   const config = useMemo((): UserBreadcrumbConfig => {
@@ -122,7 +123,12 @@ export const UsersLayout = () => {
           </div>
         ) : (
           <Outlet
-            context={{ users, loading, error: null, refreshUsers: refetch }}
+            context={{
+              users,
+              loading,
+              error: error ?? null,
+              refreshUsers: refetch,
+            }}
           />
         )}
       </div>

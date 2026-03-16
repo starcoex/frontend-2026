@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { AlertCircle, Loader2, PackageX } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { PageHead } from '@starcoex-frontend/common';
@@ -16,7 +16,6 @@ export default function InventoryPage() {
     fetchProducts();
   }, [fetchProducts]);
 
-  // products → InventoryRow 평면화
   const inventoryRows = useMemo<InventoryRow[]>(() => {
     return products.flatMap((product) =>
       product.inventories.map((inv) => ({
@@ -59,7 +58,6 @@ export default function InventoryPage() {
       />
 
       <div className="space-y-6">
-        {/* 에러 알림 */}
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -78,24 +76,9 @@ export default function InventoryPage() {
           </Alert>
         )}
 
-        {/* 통계 카드 */}
         {!error && <InventoryStats inventories={inventoryRows} />}
 
-        {/* Empty State */}
-        {!error && inventoryRows.length === 0 && (
-          <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed">
-            <PackageX className="text-muted-foreground h-12 w-12" />
-            <h3 className="text-lg font-semibold">재고 항목이 없습니다</h3>
-            <p className="text-muted-foreground text-sm">
-              제품에 매장 재고를 등록하여 관리를 시작하세요
-            </p>
-          </div>
-        )}
-
-        {/* 재고 테이블 */}
-        {!error && inventoryRows.length > 0 && (
-          <InventoryTable data={inventoryRows} />
-        )}
+        {!error && <InventoryTable data={inventoryRows} />}
       </div>
     </>
   );

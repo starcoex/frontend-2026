@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { userTypes } from '../data/data';
+import { userTypes } from '../data/users-data';
 import { User, Role } from '@starcoex-frontend/graphql'; // ✅ GraphQL 타입 사용
 import { userToasts } from '@/components/ui/toast.helpers';
 import {
@@ -187,10 +187,10 @@ export function UsersActionDialog({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? 'Edit User' : 'Add New User'}</DialogTitle>
+          <DialogTitle>{isEdit ? '사용자 수정' : '사용자 추가'}</DialogTitle>
           <DialogDescription>
-            {isEdit ? 'Update the user here. ' : 'Create new user here. '}
-            Click save when you&apos;re done.
+            {isEdit ? '사용자 정보를 수정합니다. ' : '새 사용자를 생성합니다. '}
+            완료 후 저장 버튼을 클릭하세요.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -204,9 +204,7 @@ export function UsersActionDialog({
               name="username"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">
-                    Username
-                  </FormLabel>
+                  <FormLabel className="col-span-2 text-right">이름</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="john_doe"
@@ -223,7 +221,9 @@ export function UsersActionDialog({
               name="email"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Email</FormLabel>
+                  <FormLabel className="col-span-2 text-right">
+                    이메일
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="john.doe@gmail.com"
@@ -242,7 +242,7 @@ export function UsersActionDialog({
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
                   <FormLabel className="col-span-2 text-right">
-                    Phone Number
+                    전화번호
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -260,11 +260,11 @@ export function UsersActionDialog({
               name="role"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
-                  <FormLabel className="col-span-2 text-right">Role</FormLabel>
+                  <FormLabel className="col-span-2 text-right">역할</FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select a role"
+                    placeholder="역할 선택"
                     className="col-span-4"
                     items={userTypes.map(({ label, value }) => ({
                       label,
@@ -281,16 +281,16 @@ export function UsersActionDialog({
               render={({ field }) => (
                 <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
                   <FormLabel className="col-span-2 text-right">
-                    User Type
+                    사용자 유형{' '}
                   </FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select user type"
+                    placeholder="유형 선택"
                     className="col-span-4"
                     items={[
-                      { label: 'Individual', value: 'INDIVIDUAL' },
-                      { label: 'Business', value: 'BUSINESS' },
+                      { label: '개인', value: 'INDIVIDUAL' },
+                      { label: '사업자', value: 'BUSINESS' },
                     ]}
                   />
                   <FormMessage className="col-span-4 col-start-3" />
@@ -306,7 +306,7 @@ export function UsersActionDialog({
                   render={({ field }) => (
                     <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
                       <FormLabel className="col-span-2 text-right">
-                        Password
+                        비밀번호
                       </FormLabel>
                       <FormControl>
                         <PasswordInput
@@ -325,7 +325,7 @@ export function UsersActionDialog({
                   render={({ field }) => (
                     <FormItem className="grid grid-cols-6 items-center gap-x-4 space-y-0 gap-y-1">
                       <FormLabel className="col-span-2 text-right">
-                        Confirm Password
+                        비밀번호 확인
                       </FormLabel>
                       <FormControl>
                         <PasswordInput
@@ -345,7 +345,7 @@ export function UsersActionDialog({
         </Form>
         <DialogFooter>
           <Button type="submit" form="user-form">
-            Save changes
+            저장
           </Button>
         </DialogFooter>
       </DialogContent>

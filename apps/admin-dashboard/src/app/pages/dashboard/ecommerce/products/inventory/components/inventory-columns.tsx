@@ -1,12 +1,10 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { ProductInventory, Product } from '@starcoex-frontend/products';
 import { InventoryRowActions } from './inventory-row-actions';
+import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
 
-// 테이블 행 타입: Inventory + 연결된 Product 정보
 export type InventoryRow = ProductInventory & {
   product?: Pick<Product, 'id' | 'name' | 'sku' | 'imageUrls'>;
 };
@@ -36,7 +34,10 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
   },
   {
     id: 'product',
-    header: '제품',
+    accessorFn: (row) => row.product?.name ?? '',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="제품" />
+    ),
     cell: ({ row }) => {
       const product = row.original.product;
       return (
@@ -67,14 +68,7 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
   {
     accessorKey: 'storeId',
     header: ({ column }) => (
-      <Button
-        className="-ml-3"
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        매장
-        <ArrowUpDown className="size-3" />
-      </Button>
+      <DataTableColumnHeader column={column} title="매장" />
     ),
     cell: ({ row }) => (
       <span className="text-sm">매장 #{row.original.storeId}</span>
@@ -83,14 +77,7 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
   {
     accessorKey: 'stock',
     header: ({ column }) => (
-      <Button
-        className="-ml-3"
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        현재 재고
-        <ArrowUpDown className="size-3" />
-      </Button>
+      <DataTableColumnHeader column={column} title="현재 재고" />
     ),
     cell: ({ row }) => {
       const { stock, minStock } = row.original;
@@ -122,14 +109,7 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
   {
     accessorKey: 'storePrice',
     header: ({ column }) => (
-      <Button
-        className="-ml-3"
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        매장 가격
-        <ArrowUpDown className="size-3" />
-      </Button>
+      <DataTableColumnHeader column={column} title="매장 가격" />
     ),
     cell: ({ row }) => {
       const price = row.original.storePrice;
@@ -142,12 +122,17 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
   },
   {
     accessorKey: 'isAvailable',
-    header: '판매 가능',
+    accessorFn: (row) => (row.isAvailable ? 'available' : 'unavailable'),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="판매 가능" />
+    ),
     cell: ({ row }) => (
       <Badge variant={row.original.isAvailable ? 'success' : 'secondary'}>
         {row.original.isAvailable ? '가능' : '불가'}
       </Badge>
     ),
+    filterFn: (row, id, value: string[]) =>
+      !value?.length || value.includes(row.getValue(id)),
   },
   {
     id: 'actions',

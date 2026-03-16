@@ -1,10 +1,10 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, ImageIcon, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ImageIcon, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Product, ProductCategoryRef } from '@starcoex-frontend/products';
 import { ProductRowActions } from './product-row-actions';
+import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
 
 const getCategoryName = (
   category: ProductCategoryRef | null | undefined
@@ -28,7 +28,6 @@ const STATUS_CONFIG: Record<
 };
 
 export const productColumns: ColumnDef<Product>[] = [
-  // ── 선택 ──────────────────────────────────────────────────────────────────
   {
     id: 'select',
     header: ({ table }) => (
@@ -51,18 +50,10 @@ export const productColumns: ColumnDef<Product>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-
-  // ── 제품명 + 이미지 ────────────────────────────────────────────────────────
   {
     accessorKey: 'name',
     header: ({ column }) => (
-      <Button
-        className="-ml-3"
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        제품명 <ArrowUpDown className="size-3" />
-      </Button>
+      <DataTableColumnHeader column={column} title="제품명" />
     ),
     cell: ({ row }) => {
       const imageUrl = row.original.imageUrls?.[0];
@@ -93,18 +84,10 @@ export const productColumns: ColumnDef<Product>[] = [
       );
     },
   },
-
-  // ── 가격 ──────────────────────────────────────────────────────────────────
   {
     accessorKey: 'basePrice',
     header: ({ column }) => (
-      <Button
-        className="-ml-3"
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        가격 <ArrowUpDown className="size-3" />
-      </Button>
+      <DataTableColumnHeader column={column} title="가격" />
     ),
     cell: ({ row }) => (
       <div className="flex flex-col">
@@ -119,8 +102,6 @@ export const productColumns: ColumnDef<Product>[] = [
       </div>
     ),
   },
-
-  // ── 카테고리 ──────────────────────────────────────────────────────────────
   {
     accessorKey: 'categoryId',
     header: '카테고리',
@@ -128,18 +109,10 @@ export const productColumns: ColumnDef<Product>[] = [
       <span className="text-sm">{getCategoryName(row.original.category)}</span>
     ),
   },
-
-  // ── 재고 (inventories 합산) ────────────────────────────────────────────────
   {
     id: 'stock',
     header: ({ column }) => (
-      <Button
-        className="-ml-3"
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-      >
-        재고 <ArrowUpDown className="size-3" />
-      </Button>
+      <DataTableColumnHeader column={column} title="재고" />
     ),
     cell: ({ row }) => {
       const inventories = row.original.inventories ?? [];
@@ -149,7 +122,7 @@ export const productColumns: ColumnDef<Product>[] = [
         <div className="flex flex-col">
           <span
             className={
-              isLow ? 'text-destructive font-semibold text-sm' : 'text-sm'
+              isLow ? 'text-destructive text-sm font-semibold' : 'text-sm'
             }
           >
             {stock.toLocaleString()}
@@ -174,8 +147,6 @@ export const productColumns: ColumnDef<Product>[] = [
       return stockA - stockB;
     },
   },
-
-  // ── SKU ───────────────────────────────────────────────────────────────────
   {
     accessorKey: 'sku',
     header: 'SKU',
@@ -185,8 +156,6 @@ export const productColumns: ColumnDef<Product>[] = [
       </span>
     ),
   },
-
-  // ── 바코드 ────────────────────────────────────────────────────────────────
   {
     accessorKey: 'barcode',
     header: '바코드',
@@ -197,11 +166,11 @@ export const productColumns: ColumnDef<Product>[] = [
         <span className="text-muted-foreground text-xs">-</span>
       ),
   },
-
-  // ── 평점 ──────────────────────────────────────────────────────────────────
   {
     accessorKey: 'rating',
-    header: '평점',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="평점" />
+    ),
     cell: ({ row }) => (
       <div className="flex items-center gap-1">
         <Star className="size-3.5 fill-orange-400 text-orange-400" />
@@ -211,23 +180,22 @@ export const productColumns: ColumnDef<Product>[] = [
       </div>
     ),
   },
-
-  // ── 상태 ──────────────────────────────────────────────────────────────────
   {
     id: 'status',
-    header: '상태',
+    accessorFn: (row) => getProductStatus(row),
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="상태" />
+    ),
     cell: ({ row }) => {
       const status = getProductStatus(row.original);
       const config = STATUS_CONFIG[status];
       return <Badge variant={config.variant}>{config.label}</Badge>;
     },
-    filterFn: (row, _, filterValue) => {
-      if (!filterValue) return true;
-      return getProductStatus(row.original) === filterValue;
+    filterFn: (row, _, value: string[]) => {
+      if (!value?.length) return true;
+      return value.includes(getProductStatus(row.original));
     },
   },
-
-  // ── 액션 ──────────────────────────────────────────────────────────────────
   {
     id: 'actions',
     enableHiding: false,

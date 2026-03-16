@@ -67,7 +67,7 @@ export function InvitationRowActions({ row }: Props) {
       <DropdownMenuContent align="end" className="w-[160px]">
         {canResend && (
           <DropdownMenuItem onClick={handleResend}>
-            Resend Invitation
+            초대 재발송
             <DropdownMenuShortcut>
               <IconMailForward size={16} />
             </DropdownMenuShortcut>
@@ -76,14 +76,14 @@ export function InvitationRowActions({ row }: Props) {
         {canResend && canCancel && <DropdownMenuSeparator />}
         {canCancel && (
           <DropdownMenuItem onClick={handleCancel} className="text-red-500!">
-            Cancel Invitation
+            초대 취소
             <DropdownMenuShortcut>
               <IconTrash size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         )}
         {!canResend && !canCancel && (
-          <DropdownMenuItem disabled>No actions available</DropdownMenuItem>
+          <DropdownMenuItem disabled>가능한 액션이 없습니다</DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

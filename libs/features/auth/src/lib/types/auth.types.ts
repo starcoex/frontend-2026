@@ -75,6 +75,7 @@ import {
   PromoteToSuperAdminWithMasterKeyMutation,
   ChangeRoleInput,
   ChangeUserRoleMutation,
+  CreateGuestUserByAdminMutation,
 } from '@starcoex-frontend/graphql';
 import { ApiResponse } from './common.types';
 
@@ -229,6 +230,12 @@ export interface IAuthService {
   changeUserRole(
     input: ChangeRoleInput
   ): Promise<ApiResponse<ChangeUserRoleMutation>>;
+  // ✅ 신규 추가
+  createGuestUserByAdmin(input: {
+    name: string;
+    phoneNumber: string;
+    email?: string;
+  }): Promise<ApiResponse<CreateGuestUserByAdminMutation>>;
 
   // 유틸리티 메서드들 (추가)
   clearAuthCache(): void;

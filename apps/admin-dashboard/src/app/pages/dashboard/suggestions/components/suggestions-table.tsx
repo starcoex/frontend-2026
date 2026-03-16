@@ -97,7 +97,9 @@ export function SuggestionsTable({ columns, data }: Props) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  건의사항이 없습니다.
+                  {table.getState().columnFilters.length > 0
+                    ? '검색 결과가 없습니다. 필터를 초기화해보세요.'
+                    : '건의사항이 없습니다.'}
                 </TableCell>
               </TableRow>
             )}

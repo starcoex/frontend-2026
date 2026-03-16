@@ -25,9 +25,15 @@ interface Props {
   category: Category;
   depth: number;
   overId: number | null;
+  visibleIds: Set<number> | null;
 }
 
-export function CategoryTreeItem({ category, depth, overId }: Props) {
+export function CategoryTreeItem({
+  category,
+  depth,
+  overId,
+  visibleIds,
+}: Props) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [open, setOpen] = useDialogState<'edit' | 'detail'>(null);
 
@@ -147,14 +153,17 @@ export function CategoryTreeItem({ category, depth, overId }: Props) {
             strategy={verticalListSortingStrategy}
           >
             <ul>
-              {category.children.map((child) => (
-                <CategoryTreeItem
-                  key={child.id}
-                  category={child}
-                  depth={depth + 1}
-                  overId={overId}
-                />
-              ))}
+              {category.children
+                .filter((child) => !visibleIds || visibleIds.has(child.id))
+                .map((child) => (
+                  <CategoryTreeItem
+                    key={child.id}
+                    category={child}
+                    depth={depth + 1}
+                    overId={overId}
+                    visibleIds={visibleIds}
+                  />
+                ))}
             </ul>
           </SortableContext>
         )}

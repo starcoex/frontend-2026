@@ -78,6 +78,7 @@ import {
   PromoteToSuperAdminWithMasterKeyMutation,
   ChangeRoleInput,
   ChangeUserRoleMutation,
+  CreateGuestUserByAdminMutation,
 } from '@starcoex-frontend/graphql';
 import type { ApiResponse, IAuthService } from '../types';
 
@@ -243,6 +244,12 @@ interface UseAuthReturn {
   changeUserRole(
     input: ChangeRoleInput
   ): Promise<ApiResponse<ChangeUserRoleMutation>>;
+  // ✅ 신규 추가
+  createGuestUserByAdmin(input: {
+    name: string;
+    phoneNumber: string;
+    email?: string;
+  }): Promise<ApiResponse<CreateGuestUserByAdminMutation>>;
 
   clearError: () => void;
   clearAuthCache: () => void;
@@ -918,6 +925,21 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
+  // ✅ 신규 추가: 관리자 게스트 유저 생성
+  const createGuestUserByAdmin = useCallback(
+    (input: { name: string; phoneNumber: string; email?: string }) =>
+      withLoading(
+        () => getAuthService().createGuestUserByAdmin(input),
+        '고객 등록에 실패했습니다',
+        false,
+        {
+          operationId: `create-guest-${input.phoneNumber}`,
+          preventDuplicate: true, // 동일 전화번호 중복 생성 방지
+        }
+      ),
+    [withLoading]
+  );
+
   // ============================================================================
   // 유틸리티
   // ============================================================================
@@ -1007,6 +1029,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
 
     promoteToSuperAdminWithMasterKey,
     changeUserRole,
+    createGuestUserByAdmin,
 
     clearError: context.clearError,
     clearAuthCache,

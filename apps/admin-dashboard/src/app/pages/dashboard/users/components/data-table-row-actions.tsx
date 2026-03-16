@@ -41,14 +41,14 @@ export function DataTableRowActions({ row }: Props) {
         <DropdownMenuContent align="end" className="w-[160px]">
           <DropdownMenuItem asChild>
             <Link to={USER_ROUTES.DETAIL(row.original.id)}>
-              View Detail
+              상세 보기
               <DropdownMenuShortcut>
                 <IconChecklist size={16} />
               </DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setOpen('edit')}>
-            Edit
+            수정
             <DropdownMenuShortcut>
               <IconEdit size={16} />
             </DropdownMenuShortcut>
@@ -58,7 +58,7 @@ export function DataTableRowActions({ row }: Props) {
             onClick={() => setOpen('deactivate')}
             className="text-red-500!"
           >
-            Deactivate
+            비활성화
             <DropdownMenuShortcut>
               <IconTrash size={16} />
             </DropdownMenuShortcut>

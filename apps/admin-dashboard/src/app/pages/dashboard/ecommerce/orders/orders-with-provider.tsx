@@ -1,6 +1,16 @@
 import { OrdersLayout } from '@/app/pages/dashboard/ecommerce/orders/orders-layout';
+import { OrdersProvider } from '@starcoex-frontend/orders';
+import { StoresProvider } from '@starcoex-frontend/stores';
+import { ProductsProvider } from '@starcoex-frontend/products';
 
-// Orders는 특별한 Provider가 필요 없지만, 일관성을 위해 구조 유지
 export const OrdersWithProvider = () => {
-  return <OrdersLayout />;
+  return (
+    <ProductsProvider>
+      <StoresProvider>
+        <OrdersProvider>
+          <OrdersLayout />
+        </OrdersProvider>
+      </StoresProvider>
+    </ProductsProvider>
+  );
 };

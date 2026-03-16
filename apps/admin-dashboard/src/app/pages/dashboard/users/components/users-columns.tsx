@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { ColumnDef } from '@tanstack/react-table';
-import { statusStyles, userTypes } from '../data/data';
+import { statusStyles, userTypes } from '../data/users-data';
 import { User } from '@starcoex-frontend/graphql'; // ✅ GraphQL 타입 사용
 import { Link } from 'react-router-dom';
 import { DataTableColumnHeader } from './data-table-column-header';
@@ -46,7 +46,7 @@ export const columns: ColumnDef<User>[] = [
   {
     id: 'fullName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Name" />
+      <DataTableColumnHeader column={column} title="이름" />
     ),
     cell: ({ row }) => {
       const { name, id } = row.original;
@@ -63,7 +63,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'email',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Email" />
+      <DataTableColumnHeader column={column} title="이메일" />
     ),
     cell: ({ row }) => (
       <div className="w-fit text-nowrap">{row.getValue('email')}</div>
@@ -72,7 +72,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'phoneNumber',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Phone Number" />
+      <DataTableColumnHeader column={column} title="전화번호" />
     ),
     cell: ({ row }) => <div>{row.getValue('phoneNumber')}</div>,
     enableSorting: false,
@@ -80,7 +80,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Registered Date" />
+      <DataTableColumnHeader column={column} title="가입일" />
     ),
     cell: ({ row }) => (
       <div className="w-fit text-nowrap">
@@ -92,7 +92,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'lastLoginAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Last Login Date" />
+      <DataTableColumnHeader column={column} title="최근 로그인" />
     ),
     cell: ({ row }) => (
       <div className="w-fit text-nowrap">
@@ -104,7 +104,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="상태" />
     ),
     cell: ({ row }) => {
       const status = row.original.isActive ? 'ACTIVE' : 'INACTIVE';
@@ -124,7 +124,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'role',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Role" />
+      <DataTableColumnHeader column={column} title="역할" />
     ),
     cell: ({ row }) => {
       const { role } = row.original;

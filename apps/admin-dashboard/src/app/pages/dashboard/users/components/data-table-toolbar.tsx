@@ -1,6 +1,6 @@
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
-import { userTypes } from '../data/data';
+import { userTypes } from '../data/users-data';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
 import { DataTableViewOptions } from './data-table-view-options';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ export function DataTableToolbar<TData>({ table }: Props<TData>) {
     <div className="flex items-center justify-between">
       <div className="flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2">
         <Input
-          placeholder="Filter tasks..."
+          placeholder="이메일 검색..."
           value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('email')?.setFilterValue(event.target.value)
@@ -28,19 +28,19 @@ export function DataTableToolbar<TData>({ table }: Props<TData>) {
           {table.getColumn('status') && (
             <DataTableFacetedFilter
               column={table.getColumn('status')}
-              title="Status"
+              title="상태"
               options={[
-                { label: 'Active', value: 'active' },
-                { label: 'Inactive', value: 'inactive' },
-                { label: 'Invited', value: 'invited' },
-                { label: 'Suspended', value: 'suspended' },
+                { label: '활성', value: 'active' },
+                { label: '비활성', value: 'inactive' },
+                { label: '초대됨', value: 'invited' },
+                { label: '정지됨', value: 'suspended' },
               ]}
             />
           )}
           {table.getColumn('role') && (
             <DataTableFacetedFilter
               column={table.getColumn('role')}
-              title="Role"
+              title="역할"
               options={userTypes.map((t) => ({ ...t }))}
             />
           )}
@@ -51,7 +51,7 @@ export function DataTableToolbar<TData>({ table }: Props<TData>) {
             onClick={() => table.resetColumnFilters()}
             className="h-8 px-2 lg:px-3"
           >
-            Reset
+            초기화
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}

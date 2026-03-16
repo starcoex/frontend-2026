@@ -1,15 +1,16 @@
+import { useEffect, useMemo } from 'react';
+import { AlertCircle, ArrowLeft, Loader2, PieChart } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMedia } from '@starcoex-frontend/media';
 import { useAuth } from '@starcoex-frontend/auth';
-import { useEffect, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TableRecentFiles } from '../components/table-recent-files';
-import { ArrowLeft, PieChart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { FileTable } from '../components/file-table';
+import { formatSize } from '@/app/utils/file-utils';
 
 export default function StorageAnalysisPage() {
-  // ✅ isLoading 추가
-  const { loadUserFiles, files, initialized, isLoading } = useMedia();
+  const { loadUserFiles, files, initialized, isLoading, error } = useMedia();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -19,25 +20,29 @@ export default function StorageAnalysisPage() {
     }
   }, [currentUser, loadUserFiles, initialized]);
 
-  // 용량 큰 순서로 정렬 (Top 20)
-  const largeFiles = useMemo(() => {
-    return [...files]
-      .sort((a, b) => (b.fileSize ?? 0) - (a.fileSize ?? 0))
-      .slice(0, 20);
-  }, [files]);
-
   const totalSize = useMemo(
-    () => files.reduce((acc, curr) => acc + (curr.fileSize ?? 0), 0),
+    () => files.reduce((acc, f) => acc + (f.fileSize ?? 0), 0),
     [files]
   );
 
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  const largestFileSize = useMemo(
+    () =>
+      files.length > 0 ? Math.max(...files.map((f) => f.fileSize ?? 0)) : 0,
+    [files]
+  );
+
+  if (isLoading && !initialized) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">
+            분석 데이터를 불러오는 중...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -55,10 +60,31 @@ export default function StorageAnalysisPage() {
         </div>
       </div>
 
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>데이터 로딩 실패</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                currentUser &&
+                loadUserFiles({ userId: currentUser.id, limit: 100 })
+              }
+              className="ml-4"
+            >
+              다시 시도
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Total Used Space
             </CardTitle>
           </CardHeader>
@@ -68,7 +94,7 @@ export default function StorageAnalysisPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Total Files
             </CardTitle>
           </CardHeader>
@@ -78,37 +104,31 @@ export default function StorageAnalysisPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-muted-foreground text-sm font-medium">
               Largest File
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {largeFiles.length > 0
-                ? formatSize(largeFiles[0].fileSize ?? 0)
-                : '0 B'}
+              {formatSize(largestFileSize)}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <PieChart className="h-5 w-5 text-primary" />
-            Top Space Consumers
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* ✅ 계산된 largeFiles와 로딩 상태를 전달 */}
-          <TableRecentFiles
-            limit={20}
-            showViewAll={false}
-            files={largeFiles}
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
+      {!error && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="text-primary h-5 w-5" />
+              All Files
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <FileTable data={files} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

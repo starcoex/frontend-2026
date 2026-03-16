@@ -1,11 +1,10 @@
-import { Button } from '@/components/ui/button';
-import BrandList from './brand-list';
 import { PageHead } from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
-import { AlertCircle, Tag } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { useStores } from '@starcoex-frontend/stores';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { BrandTable } from '@/app/pages/dashboard/ecommerce/stores/brands/components/brand-table';
 
 export default function BrandsPage() {
   const { brands, error, fetchBrands } = useStores();
@@ -24,7 +23,6 @@ export default function BrandsPage() {
         }}
       />
 
-      {/* ✅ 에러 알림 */}
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
@@ -43,22 +41,7 @@ export default function BrandsPage() {
         </Alert>
       )}
 
-      {/* ✅ Empty State */}
-      {!error && brands.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-          <Tag className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">브랜드가 없습니다</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            첫 브랜드를 등록하여 시작하세요
-          </p>
-          <Button asChild>
-            <Link to="/admin/stores/brands/create">브랜드 추가</Link>
-          </Button>
-        </div>
-      )}
-
-      {/* ✅ 브랜드 목록 */}
-      {brands.length > 0 && <BrandList data={brands} />}
+      {!error && <BrandTable data={brands} />}
     </>
   );
 }

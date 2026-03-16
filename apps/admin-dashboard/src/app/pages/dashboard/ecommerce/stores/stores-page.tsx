@@ -1,12 +1,11 @@
-import { Button } from '@/components/ui/button';
 import { PageHead } from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
-import { useEffect } from 'react';
-import { AlertCircle, Loader2, StoreIcon } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { useStores } from '@starcoex-frontend/stores';
-import StoreList from '@/app/pages/dashboard/ecommerce/stores/store-list';
+import { StoreTable } from '@/app/pages/dashboard/ecommerce/stores/components/store-table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 
 export default function StoresPage() {
   const { stores, isLoading, error, fetchStores } = useStores();
@@ -17,10 +16,10 @@ export default function StoresPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex h-64 items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">
             매장 데이터를 불러오는 중...
           </p>
         </div>
@@ -42,7 +41,6 @@ export default function StoresPage() {
         }}
       />
 
-      {/* ✅ 실제 에러만 표시 */}
       {error && (
         <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
@@ -61,22 +59,7 @@ export default function StoresPage() {
         </Alert>
       )}
 
-      {/* ✅ Empty State: 에러 없고 데이터도 없을 때 */}
-      {!error && stores.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-          <StoreIcon className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">매장이 없습니다</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            첫 매장을 등록하여 시작하세요
-          </p>
-          <Button asChild>
-            <Link to="/admin/stores/create">매장 추가</Link>
-          </Button>
-        </div>
-      )}
-
-      {/* ✅ 데이터가 있을 때만 테이블 표시 */}
-      {!error && stores.length > 0 && <StoreList data={stores} />}
+      {!error && <StoreTable data={stores} />}
     </>
   );
 }

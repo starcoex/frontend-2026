@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,62 +9,39 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import {
-  FileUploadDialog,
-  SummaryCards,
-} from '@/app/pages/dashboard/board/file-manager/components';
 import { CardTitle } from '@/components/ui/card';
 import { MediaProvider } from '@starcoex-frontend/media';
+import {
+  FILE_BREADCRUMB_CONFIGS,
+  DEFAULT_FILE_BREADCRUMB_CONFIG,
+  type FileBreadcrumbConfig,
+} from '@/app/constants/file-breadcrumb-config';
+import { FILE_ROUTES } from '@/app/constants/file-routes';
+import { FilePrimaryActions } from '@/app/pages/dashboard/board/file-manager/components/file-primary-action';
+import { SummaryCards } from '@/app/pages/dashboard/board/file-manager/components/summary-cards';
 
-interface BreadcrumbConfig {
-  label: string;
-  title: string;
-  showInBreadcrumb?: boolean;
-  showActions?: boolean; // 업로드 버튼 표시 여부
-  showStats?: boolean; // SummaryCards 표시 여부
-}
+const PATH_TO_CONFIG_MAP: Record<string, FileBreadcrumbConfig> = {
+  [FILE_ROUTES.ROOT]: FILE_BREADCRUMB_CONFIGS.ROOT,
+  [FILE_ROUTES.RECENT]: FILE_BREADCRUMB_CONFIGS.RECENT,
+  [FILE_ROUTES.ANALYSIS]: FILE_BREADCRUMB_CONFIGS.ANALYSIS,
+};
 
 export const FileManagerLayout = () => {
   const location = useLocation();
 
-  // ✅ 경로별 설정 정의
-  const getBreadcrumbConfig = (pathname: string): BreadcrumbConfig => {
-    const pathConfigs: Record<string, BreadcrumbConfig> = {
-      '/admin/media': {
-        label: 'File Manager',
-        title: 'File Manager',
-        showInBreadcrumb: true,
-        showActions: true, // 메인 화면에서만 업로드 버튼 표시
-        showStats: true, // 메인 화면에서만 요약 카드 표시
-      },
-      '/admin/media/recent': {
-        label: 'Recent Files',
-        title: 'Recently Uploaded',
-        showInBreadcrumb: true,
-        showActions: false,
-        showStats: false,
-      },
-    };
-
-    // 기본값
+  const config = useMemo((): FileBreadcrumbConfig => {
     return (
-      pathConfigs[pathname] || {
-        label: 'File Manager',
-        title: 'File Management',
-        showInBreadcrumb: true,
-        showActions: true,
-        showStats: true,
-      }
+      PATH_TO_CONFIG_MAP[location.pathname] ?? DEFAULT_FILE_BREADCRUMB_CONFIG
     );
-  };
+  }, [location.pathname]);
 
-  const config = getBreadcrumbConfig(location.pathname);
+  const isRoot = location.pathname === FILE_ROUTES.ROOT;
 
   return (
     <MediaProvider>
       <main className="flex h-full flex-1 flex-col p-4">
-        <div className="mb-4 flex flex-col gap-2">
-          {/* 1. Breadcrumb 영역 */}
+        <div className="mb-4 flex flex-col gap-4">
+          {/* 1. Breadcrumb */}
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -72,37 +50,43 @@ export const FileManagerLayout = () => {
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/admin/media">Media</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              {config.showInBreadcrumb &&
-                location.pathname !== '/admin/media' && (
-                  <>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>{config.label}</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </>
-                )}
+              {isRoot ? (
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Media</BreadcrumbPage>
+                </BreadcrumbItem>
+              ) : (
+                <>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={FILE_ROUTES.ROOT}>Media</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  {config.showInBreadcrumb && (
+                    <>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{config.label}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </>
+                  )}
+                </>
+              )}
             </BreadcrumbList>
           </Breadcrumb>
 
-          {/* 2. 타이틀 및 액션(업로드) 버튼 영역 */}
+          {/* 2. 타이틀 + 액션 */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="flex-none text-xl font-bold tracking-tight lg:text-2xl">
               {config.title}
             </CardTitle>
-            {/* ✅ 조건부로 액션 버튼(파일 업로드) 표시 */}
-            {config.showActions && <FileUploadDialog />}
+            {config.showActions && <FilePrimaryActions />}
           </div>
 
-          {/* 3. 통계(Summary Cards) 영역 - 조건부 표시 */}
+          {/* 3. 통계 카드 */}
           {config.showStats && <SummaryCards />}
         </div>
 
-        {/* 4. 하위 페이지 컨텐츠 (File Manager SalesPage 등) */}
+        {/* 4. 하위 페이지 */}
         <div className="flex-1">
           <Outlet />
         </div>

@@ -55,7 +55,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'email',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Email" />
+      <DataTableColumnHeader column={column} title="이메일" />
     ),
     cell: ({ row }) => (
       <LongText className="max-w-[250px] font-medium">
@@ -66,7 +66,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'role',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Role" />
+      <DataTableColumnHeader column={column} title="역할" />
     ),
     cell: ({ row }) => (
       <span className="capitalize">{row.getValue('role')}</span>
@@ -76,7 +76,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'userType',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="User Type" />
+      <DataTableColumnHeader column={column} title="사용자 유형" />
     ),
     cell: ({ row }) => {
       const userType = row.getValue('userType') as string;
@@ -90,7 +90,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Status" />
+      <DataTableColumnHeader column={column} title="상태" />
     ),
     cell: ({ row }) => {
       const status = row.getValue('status') as InvitationStatusType;
@@ -106,7 +106,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'createdAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Invited At" />
+      <DataTableColumnHeader column={column} title="초대일시" />
     ),
     cell: ({ row }) => {
       const date = row.getValue('createdAt') as string;
@@ -120,7 +120,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'expiresAt',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Expires At" />
+      <DataTableColumnHeader column={column} title="만료일시" />
     ),
     cell: ({ row }) => {
       const date = row.getValue('expiresAt') as string;
@@ -140,7 +140,7 @@ export const columns: ColumnDef<UserInvitation>[] = [
   {
     accessorKey: 'adminMessage',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Message" />
+      <DataTableColumnHeader column={column} title="메시지" />
     ),
     cell: ({ row }) => {
       const message = row.getValue('adminMessage') as string;

@@ -1,7 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
-import { PlusIcon } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,8 +10,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ORDER_ROUTES,
   ORDER_ROUTE_PATTERNS,
@@ -22,19 +19,32 @@ import {
   DEFAULT_ORDER_BREADCRUMB_CONFIG,
   type BreadcrumbConfig,
 } from '@/app/constants/order-breadcrumb-config';
+import { useOrders } from '@starcoex-frontend/orders';
+import { OrderPrimaryActions } from '@/app/pages/dashboard/ecommerce/orders/components/order-primary-action';
+import { OrderStats } from '@/app/pages/dashboard/ecommerce/orders/components/order-stats';
 
 const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [ORDER_ROUTES.LIST]: ORDER_BREADCRUMB_CONFIGS.LIST,
-  [ORDER_ROUTES.CREATE]: ORDER_BREADCRUMB_CONFIGS.CREATE,
+  [ORDER_ROUTES.LIST + '/create']: ORDER_BREADCRUMB_CONFIGS.CREATE,
 };
 
 const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
+  const editMatch = pathname.match(/^\/admin\/orders\/(\d+)\/edit$/);
+  if (editMatch) {
+    return {
+      label: `주문 수정 #${editMatch[1]}`,
+      title: `주문 수정 #${editMatch[1]}`,
+      showInBreadcrumb: true,
+      showActions: false,
+      showTabs: false,
+    };
+  }
+
   const detailMatch = pathname.match(ORDER_ROUTE_PATTERNS.DETAIL);
   if (detailMatch) {
-    const orderId = detailMatch[1];
     return {
-      label: `Order #${orderId}`,
-      title: `Order #${orderId}`,
+      label: `주문 #${detailMatch[1]}`,
+      title: `주문 #${detailMatch[1]}`,
       showInBreadcrumb: true,
       showActions: false,
       showTabs: false,
@@ -44,35 +54,9 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
   return null;
 };
 
-// 주문 액션 버튼
-const OrderActions = () => {
-  return (
-    <Button asChild>
-      <Link to={ORDER_ROUTES.CREATE}>
-        <PlusIcon className="mr-2 h-4 w-4" />
-        Create Order
-      </Link>
-    </Button>
-  );
-};
-
-// 주문 탭 컴포넌트
-const OrderTabs = () => {
-  return (
-    <Tabs defaultValue="all" className="w-full">
-      <TabsList>
-        <TabsTrigger value="all">All</TabsTrigger>
-        <TabsTrigger value="completed">Completed</TabsTrigger>
-        <TabsTrigger value="processed">Processed</TabsTrigger>
-        <TabsTrigger value="returned">Returned</TabsTrigger>
-        <TabsTrigger value="canceled">Canceled</TabsTrigger>
-      </TabsList>
-    </Tabs>
-  );
-};
-
 export const OrdersLayout = () => {
   const location = useLocation();
+  const { orders } = useOrders();
 
   const config = useMemo((): BreadcrumbConfig => {
     const pathname = location.pathname;
@@ -103,15 +87,13 @@ export const OrdersLayout = () => {
             )}
           </BreadcrumbList>
         </Breadcrumb>
-
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="flex-none text-xl font-bold tracking-tight lg:text-2xl">
             {config.title}
           </CardTitle>
-          {config.showActions && <OrderActions />}
+          {config.showActions && <OrderPrimaryActions />}
         </div>
-
-        {config.showTabs && <OrderTabs />}
+        {config.showTabs && <OrderStats orders={orders} />}
       </div>
 
       <div className="flex-1">

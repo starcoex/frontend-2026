@@ -1,21 +1,16 @@
 import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ColumnsIcon, PlusIcon } from 'lucide-react';
+import { Cross2Icon } from '@radix-ui/react-icons';
+import { PlusIcon } from 'lucide-react';
 import type { InventoryRow } from './inventory-columns';
+import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
+import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
+
+const AVAILABILITY_OPTIONS = [
+  { value: 'available', label: '판매 가능' },
+  { value: 'unavailable', label: '판매 불가' },
+] as const;
 
 interface InventoryToolbarProps {
   table: Table<InventoryRow>;
@@ -23,65 +18,39 @@ interface InventoryToolbarProps {
 }
 
 export function InventoryToolbar({ table, onAddClick }: InventoryToolbarProps) {
+  const isFiltered = table.getState().columnFilters.length > 0;
+
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <Input
         placeholder="제품명으로 검색..."
         value={(table.getColumn('product')?.getFilterValue() as string) ?? ''}
         onChange={(e) =>
           table.getColumn('product')?.setFilterValue(e.target.value)
         }
-        className="max-w-xs"
+        className="h-8 w-[200px] lg:w-[280px]"
       />
 
-      {/* 판매 가능 필터 */}
-      <Select
-        defaultValue="all"
-        onValueChange={(val) => {
-          if (val === 'all') {
-            table.getColumn('isAvailable')?.setFilterValue(undefined);
-          } else {
-            table.getColumn('isAvailable')?.setFilterValue(val === 'true');
-          }
-        }}
-      >
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="판매 상태" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">전체</SelectItem>
-          <SelectItem value="true">판매 가능</SelectItem>
-          <SelectItem value="false">판매 불가</SelectItem>
-        </SelectContent>
-      </Select>
+      <DataTableFacetedFilter
+        column={table.getColumn('isAvailable')}
+        title="판매 상태"
+        options={AVAILABILITY_OPTIONS}
+      />
 
-      <div className="ml-auto flex gap-2">
-        {/* 컬럼 토글 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <ColumnsIcon className="size-4" />
-              <span className="hidden lg:inline">컬럼</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((col) => col.getCanHide())
-              .map((col) => (
-                <DropdownMenuCheckboxItem
-                  key={col.id}
-                  className="capitalize"
-                  checked={col.getIsVisible()}
-                  onCheckedChange={(value) => col.toggleVisibility(value)}
-                >
-                  {col.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      {isFiltered && (
+        <Button
+          variant="ghost"
+          onClick={() => table.resetColumnFilters()}
+          className="h-8 px-2 lg:px-3"
+        >
+          초기화
+          <Cross2Icon className="ml-2 h-4 w-4" />
+        </Button>
+      )}
 
-        <Button onClick={onAddClick}>
+      <div className="ml-auto flex items-center gap-2">
+        <DataTableViewOptions table={table} />
+        <Button size="sm" onClick={onAddClick}>
           <PlusIcon className="mr-2 size-4" />
           재고 등록
         </Button>

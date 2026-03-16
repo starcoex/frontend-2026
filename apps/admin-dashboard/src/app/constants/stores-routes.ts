@@ -4,7 +4,6 @@ export const STORE_ROUTES = {
   EDIT: '/admin/stores/:id/edit',
   DETAIL: '/admin/stores/:id',
   BRANDS: '/admin/stores/brands',
-  BRANDS_CREATE: '/admin/stores/brands/create',
 } as const;
 
 export const STORE_ROUTE_PATTERNS = {

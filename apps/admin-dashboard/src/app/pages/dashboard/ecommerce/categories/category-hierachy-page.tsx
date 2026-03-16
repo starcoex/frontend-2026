@@ -55,18 +55,7 @@ const CategoryHierarchyPage = () => {
         </Alert>
       )}
 
-      {!error && categoryTree.length === 0 && (
-        <div className="flex h-64 flex-col items-center justify-center rounded-lg border-2 border-dashed">
-          <h3 className="mb-2 text-lg font-semibold">카테고리가 없습니다</h3>
-          <p className="text-muted-foreground text-sm">
-            카테고리 목록에서 먼저 카테고리를 등록해 주세요.
-          </p>
-        </div>
-      )}
-
-      {!error && categoryTree.length > 0 && (
-        <CategoryTreeView categories={categoryTree} />
-      )}
+      {!error && <CategoryTreeView categories={categoryTree} />}
     </>
   );
 };

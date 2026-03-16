@@ -24,7 +24,7 @@ export function InvitationsToolbar<TData>({ table }: Props<TData>) {
     <div className="flex items-center justify-between">
       <div className="flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2">
         <Input
-          placeholder="Filter by email..."
+          placeholder="이메일 검색..."
           value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('email')?.setFilterValue(event.target.value)
@@ -35,7 +35,7 @@ export function InvitationsToolbar<TData>({ table }: Props<TData>) {
           {table.getColumn('status') && (
             <DataTableFacetedFilter
               column={table.getColumn('status')}
-              title="Status"
+              title="상태"
               options={statusOptions}
             />
           )}
@@ -46,7 +46,7 @@ export function InvitationsToolbar<TData>({ table }: Props<TData>) {
             onClick={() => table.resetColumnFilters()}
             className="h-8 px-2 lg:px-3"
           >
-            Reset
+            초기화
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}

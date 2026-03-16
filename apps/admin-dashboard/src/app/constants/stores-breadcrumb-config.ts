@@ -25,15 +25,8 @@ export const STORE_BREADCRUMB_CONFIGS = {
     label: '브랜드 목록',
     title: '브랜드 관리',
     showInBreadcrumb: true,
-    showActions: true,
-    showStats: true,
-  },
-  BRANDS_CREATE: {
-    label: '브랜드 추가',
-    title: '새 브랜드 등록',
-    showInBreadcrumb: true,
     showActions: false,
-    showStats: false,
+    showStats: true,
   },
 } as const;
 

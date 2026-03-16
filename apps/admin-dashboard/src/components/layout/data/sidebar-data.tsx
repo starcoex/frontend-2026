@@ -194,7 +194,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconFileInvoice,
             items: [
               { title: '주문 목록', url: '/admin/orders' },
-              { title: '주문 상세', url: '/admin/orders/detail' },
+              { title: '주문 추가', url: '/admin/orders/create' }, // ✅ detail → create
               { title: '주문 통계', url: '/admin/orders/stats' },
             ],
           },
@@ -216,7 +216,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '매장 목록', url: '/admin/stores' },
               { title: '매장 추가', url: '/admin/stores/create' },
               { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
-              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
             ],
           },
         ],

@@ -170,6 +170,8 @@ import {
   ChangeUserRoleMutation,
   ChangeUserRoleMutationVariables,
   CHANGE_USER_ROLE,
+  CREATE_GUEST_USER_BY_ADMIN,
+  CreateGuestUserByAdminMutation,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -758,6 +760,18 @@ export class AuthService implements IAuthService {
       CHANGE_USER_ROLE,
       { input }
     );
+  }
+
+  // ✅ 신규 추가: 관리자가 게스트 유저 즉시 생성
+  async createGuestUserByAdmin(input: {
+    name: string;
+    phoneNumber: string;
+    email?: string;
+  }): Promise<ApiResponse<CreateGuestUserByAdminMutation>> {
+    return this.mutate<
+      CreateGuestUserByAdminMutation,
+      { input: { name: string; phoneNumber: string; email?: string } }
+    >(CREATE_GUEST_USER_BY_ADMIN, { input });
   }
 
   clearAuthCache(): void {

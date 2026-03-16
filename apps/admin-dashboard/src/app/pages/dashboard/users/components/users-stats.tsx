@@ -1,5 +1,4 @@
 import { IconInfoCircle } from '@tabler/icons-react';
-import { UserStatProps, userStatsConfig } from '../data/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
@@ -7,40 +6,42 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  UserStatProps,
+  userStatsConfig,
+} from '@/app/pages/dashboard/users/data/users-data';
 
-// ✅ props로 데이터 받기
 interface UsersStatsProps {
   stats: any;
   loading: boolean;
 }
 
 export function UsersStats({ stats, loading }: UsersStatsProps) {
-  // ✅ API 호출 제거, props로 받은 데이터 사용
+  // useUsers.ts의 stats 구조와 일치: flat 객체
   const statsValues = {
-    totalUsers: stats?.overview?.totalUsers || 0,
-    activeUsers: stats?.overview?.activeUsers || 0,
-    inactiveUsers: stats?.overview?.inactiveUsers || 0,
-    emailUnverifiedUsers: stats?.verification?.emailUnverifiedUsers || 0,
+    totalUsers: stats?.totalUsers ?? 0,
+    activeUsers: stats?.activeUsers ?? 0,
+    inactiveUsers: stats?.inactiveUsers ?? 0,
+    emailUnverifiedUsers: stats?.emailUnverifiedUsers ?? 0,
   };
 
-  const statsData: UserStatProps[] = userStatsConfig.map((config, index) => {
-    const statValues = [
-      statsValues.totalUsers.toLocaleString(),
-      statsValues.activeUsers.toLocaleString(),
-      statsValues.emailUnverifiedUsers.toString(),
-      statsValues.inactiveUsers.toLocaleString(),
-    ];
+  // userStatsConfig 순서와 일치: 전체 → 활성 → 이메일 미인증 → 비활성
+  const statValues = [
+    statsValues.totalUsers.toLocaleString(),
+    statsValues.activeUsers.toLocaleString(),
+    statsValues.emailUnverifiedUsers.toLocaleString(),
+    statsValues.inactiveUsers.toLocaleString(),
+  ];
 
-    return {
-      ...config,
-      stat: loading ? '...' : statValues[index],
-    };
-  });
+  const statsData: UserStatProps[] = userStatsConfig.map((config, index) => ({
+    ...config,
+    stat: loading ? '...' : statValues[index],
+  }));
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {statsData.map((stats) => (
-        <UserStat key={stats.title} {...stats} />
+      {statsData.map((stat) => (
+        <UserStat key={stat.title} {...stat} />
       ))}
     </div>
   );
@@ -58,7 +59,7 @@ const UserStat = (props: UserStatProps) => {
           <Tooltip delayDuration={50}>
             <TooltipTrigger>
               <IconInfoCircle className="text-muted-foreground scale-90 stroke-[1.25]" />
-              <span className="sr-only">More Info</span>
+              <span className="sr-only">상세 정보</span>
             </TooltipTrigger>
             <TooltipContent>
               <p>{props.desc}</p>

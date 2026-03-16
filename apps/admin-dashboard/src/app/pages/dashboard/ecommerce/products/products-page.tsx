@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { AlertCircle, Loader2, Package } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PageHead } from '@starcoex-frontend/common';
@@ -67,20 +66,7 @@ export default function ProductsPage() {
         </Alert>
       )}
 
-      {!error && products.length === 0 && (
-        <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed">
-          <Package className="text-muted-foreground h-12 w-12" />
-          <h3 className="text-lg font-semibold">제품이 없습니다</h3>
-          <p className="text-muted-foreground text-sm">
-            첫 제품을 등록하여 시작하세요
-          </p>
-          <Button asChild>
-            <Link to="/admin/products/create">제품 추가</Link>
-          </Button>
-        </div>
-      )}
-
-      {!error && products.length > 0 && <ProductsTable data={products} />}
+      {!error && <ProductsTable data={products} />}
     </>
   );
 }

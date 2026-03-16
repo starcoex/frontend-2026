@@ -26,7 +26,6 @@ import { FileManagerLayout } from '@/app/pages/dashboard/board/file-manager/file
 import { FileManagerPage } from '@/app/pages/dashboard/board/file-manager/file-manager-page';
 import RecentFilesPage from '@/app/pages/dashboard/board/file-manager/pages/recent-files-page';
 import StorageAnalysisPage from '@/app/pages/dashboard/board/file-manager/pages/storage-analysis-page';
-import { FileUploadDialog } from '@/app/pages/dashboard/board/file-manager/components';
 import { UsersWithProvider } from '@/app/pages/dashboard/users/users-with-provider';
 import { InvitationsPage } from '@/app/pages/dashboard/users/Invitations.page';
 import { AcceptInvitationPage } from '@/app/pages/auth/accept-invitations.page';
@@ -42,8 +41,6 @@ import OrderDetailPage from '@/app/pages/dashboard/ecommerce/orders/order-detail
 import { StoresWithProvider } from '@/app/pages/dashboard/ecommerce/stores/stores-with-provider';
 import StoresPage from '@/app/pages/dashboard/ecommerce/stores/stores-page';
 import StoreCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/store-create-page';
-import BrandsPage from '@/app/pages/dashboard/ecommerce/stores/brands-page';
-import BrandCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/brand-create-page';
 import { SuggestionsWithProvider } from '@/app/pages/dashboard/suggestions/suggestions-with-provider';
 import { CategoriesWithProvider } from '@/app/pages/dashboard/ecommerce/categories/categories-with-provider';
 import CategoriesPage from '@/app/pages/dashboard/ecommerce/categories/categories-page';
@@ -51,6 +48,11 @@ import CategoryHierarchyPage from '@/app/pages/dashboard/ecommerce/categories/ca
 import ProductEditPage from '@/app/pages/dashboard/ecommerce/products/edit/product-edit-page';
 import InventoryPage from '@/app/pages/dashboard/ecommerce/products/inventory/inventory-page';
 import ProductScanPage from '@/app/pages/dashboard/ecommerce/products/scan/product-scan';
+import OrderEditPage from '@/app/pages/dashboard/ecommerce/orders/edit/order-edit-page';
+import OrderCreatePage from '@/app/pages/dashboard/ecommerce/orders/create/order-create-page';
+import BrandsPage from '@/app/pages/dashboard/ecommerce/stores/brands/brands-page';
+import StoreDetailPage from '@/app/pages/dashboard/ecommerce/stores/stores-detail/store-detail-page';
+import StoreEditPage from '@/app/pages/dashboard/ecommerce/stores/edit/store-edit-page';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -240,16 +242,12 @@ const router = createBrowserRouter([
             element: <BrandsPage />,
           },
           {
-            path: 'brands/create',
-            element: <BrandCreatePage />,
-          },
-          {
             path: ':id',
-            element: <div>매장 상세 (구현 예정)</div>,
+            element: <StoreDetailPage />,
           },
           {
             path: ':id/edit',
-            element: <div>매장 수정 (구현 예정)</div>,
+            element: <StoreEditPage />,
           },
         ],
       },
@@ -296,8 +294,8 @@ const router = createBrowserRouter([
             element: <OrdersPage />,
           },
           {
-            path: 'detail',
-            element: <OrderDetailPage />,
+            path: 'create',
+            element: <OrderCreatePage />,
           },
           {
             path: 'stats',
@@ -311,9 +309,14 @@ const router = createBrowserRouter([
             path: 'history',
             element: <div>주문 히스토리 (구현 예정)</div>,
           },
+          // ✅ 동적 :id는 반드시 마지막 (products 패턴 동일)
           {
             path: ':id',
             element: <OrderDetailPage />,
+          },
+          {
+            path: ':id/edit',
+            element: <OrderEditPage />,
           },
         ],
       },
@@ -350,10 +353,6 @@ const router = createBrowserRouter([
           {
             path: 'analysis',
             element: <StorageAnalysisPage />,
-          },
-          {
-            path: 'upload',
-            element: <FileUploadDialog />,
           },
         ],
       },

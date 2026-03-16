@@ -8,52 +8,52 @@ export interface UserBreadcrumbConfig {
 
 export const BREADCRUMB_CONFIGS: Record<string, UserBreadcrumbConfig> = {
   LIST: {
-    label: 'Users',
-    title: 'User List',
+    label: '사용자',
+    title: '사용자 목록',
     showInBreadcrumb: true,
     showActions: true,
     showStats: true,
   },
   CREATE: {
-    label: 'Create User',
-    title: 'Create New User',
+    label: '사용자 생성',
+    title: '새 사용자 생성',
     showInBreadcrumb: true,
     showActions: false,
     showStats: false,
   },
   ADMINS: {
-    label: 'Admin Users',
-    title: 'Administrator List',
+    label: '관리자',
+    title: '관리자 목록',
     showInBreadcrumb: true,
     showActions: true,
     showStats: false,
   },
   MEMBERS: {
-    label: 'Member Users',
-    title: 'Member List',
+    label: '일반 회원',
+    title: '일반 회원 목록',
     showInBreadcrumb: true,
     showActions: true,
     showStats: false,
   },
   DRIVERS: {
-    label: 'Driver Users',
-    title: 'Driver List',
+    label: '배송 담당자',
+    title: '배송 담당자 목록',
     showInBreadcrumb: true,
     showActions: true,
     showStats: false,
   },
   INVITATIONS: {
-    label: 'Invitations',
-    title: 'User Invitations',
+    label: '초대 관리',
+    title: '사용자 초대 목록',
     showInBreadcrumb: true,
-    showActions: true, // ✅ 초대 보내기 버튼 표시
+    showActions: true,
     showStats: false,
   },
 } as const;
 
 export const DEFAULT_BREADCRUMB_CONFIG: UserBreadcrumbConfig = {
-  label: 'Users',
-  title: 'User Management',
+  label: '사용자',
+  title: '사용자 관리',
   showInBreadcrumb: true,
   showActions: false,
   showStats: false,

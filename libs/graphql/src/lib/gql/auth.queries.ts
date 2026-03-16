@@ -1032,3 +1032,21 @@ export const CHANGE_USER_ROLE = gql`
     }
   }
 `;
+
+// ✅ 신규 추가: 관리자가 게스트 유저 즉시 생성 (이메일 인증 없음)
+export const CREATE_GUEST_USER_BY_ADMIN = gql`
+  ${ERROR_INFO_FIELDS}
+  ${CORE_USER_FIELDS}
+  mutation CreateGuestUserByAdmin($input: CreateGuestUserInput!) {
+    createGuestUserByAdmin(input: $input) {
+      success
+      message
+      error {
+        ...ErrorInfoFields
+      }
+      user {
+        ...CoreUserFields
+      }
+    }
+  }
+`;

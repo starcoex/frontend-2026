@@ -2,7 +2,14 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { ChevronLeft, MapPin, Phone, Mail, CheckCircle2 } from 'lucide-react';
+import {
+  ChevronLeft,
+  MapPin,
+  Phone,
+  Mail,
+  CheckCircle2,
+  PlusCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,11 +35,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useStores } from '@starcoex-frontend/stores';
 import { useEffect, useState } from 'react';
-import { AddBrandDialog } from '@/app/pages/dashboard/ecommerce/stores/create/add-brand-dialog';
 import { JusoApiAddress } from '@starcoex-frontend/graphql';
 import { AddressSearchInput } from '@/components/address-search';
 import { slugify as transliterateSlugify } from 'transliteration';
-import { useAddress } from '@starcoex-frontend/address'; // ✅ 추가
+import { useAddress } from '@starcoex-frontend/address';
+import { BrandMutateDrawer } from '@/app/pages/dashboard/ecommerce/stores/brands/components/brand-mutate-drawer'; // ✅ 추가
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -73,6 +80,7 @@ export default function AddStoreForm() {
   const navigate = useNavigate();
   const { createStore, brands, fetchBrands } = useStores();
   const { saveAddress } = useAddress();
+  const [brandDrawerOpen, setBrandDrawerOpen] = useState(false);
 
   // ✅ 주소 선택 상태
   const [selectedAddress, setSelectedAddress] = useState<JusoApiAddress | null>(
@@ -541,7 +549,14 @@ export default function AddStoreForm() {
                             </SelectGroup>
                           </SelectContent>
                         </Select>
-                        <AddBrandDialog />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setBrandDrawerOpen(true)}
+                        >
+                          <PlusCircle className="h-4 w-4" />
+                        </Button>
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -624,6 +639,10 @@ export default function AddStoreForm() {
             </Card>
           </div>
         </div>
+        <BrandMutateDrawer
+          open={brandDrawerOpen}
+          onOpenChange={setBrandDrawerOpen}
+        />
       </form>
     </Form>
   );

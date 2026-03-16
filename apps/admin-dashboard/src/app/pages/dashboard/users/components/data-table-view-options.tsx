@@ -24,11 +24,11 @@ export function DataTableViewOptions<TData>({ table }: Props<TData>) {
           className="ml-auto hidden h-8 lg:flex"
         >
           <MixerHorizontalIcon className="mr-2 h-4 w-4" />
-          View
+          보기
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[150px]">
-        <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+        <DropdownMenuLabel>컬럼 표시</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {table
           .getAllColumns()

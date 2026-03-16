@@ -119,7 +119,8 @@ export function UsersTable({ columns, data }: Props) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  {/* 필터 적용 여부에 따라 메시지 분기 */}
+                  검색 결과가 없습니다.
                 </TableCell>
               </TableRow>
             )}

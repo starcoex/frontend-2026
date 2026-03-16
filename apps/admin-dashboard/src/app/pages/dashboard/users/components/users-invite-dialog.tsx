@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { IconMailPlus, IconSend, IconLoader2 } from '@tabler/icons-react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { userTypes } from '../data/data';
+import { userTypes } from '../data/users-data';
 import { userToasts } from '@/components/ui/toast.helpers';
 import {
   Dialog,
@@ -115,11 +115,11 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="text-left">
           <DialogTitle className="flex items-center gap-2">
-            <IconMailPlus /> Invite User
+            <IconMailPlus /> 사용자 초대
           </DialogTitle>
           <DialogDescription>
-            Invite new user to join your team by sending them an email
-            invitation. Assign a role to define their access level.
+            이메일 초대를 통해 새 사용자를 팀에 초대하세요. 역할을 지정하여 접근
+            권한을 설정합니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -149,7 +149,7 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>이메일</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -166,11 +166,11 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
               name="role"
               render={({ field }) => (
                 <FormItem className="space-y-1">
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>역할</FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select a role"
+                    placeholder="역할 선택"
                     items={userTypes.map(({ label, value }) => ({
                       label,
                       value,
@@ -189,10 +189,10 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select user type"
+                    placeholder="유형 선택"
                     items={[
-                      { label: 'Individual', value: 'INDIVIDUAL' },
-                      { label: 'Business', value: 'BUSINESS' },
+                      { label: '개인', value: 'INDIVIDUAL' },
+                      { label: '사업자', value: 'BUSINESS' },
                     ]}
                   />
                   <FormMessage />
@@ -208,7 +208,7 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
                   <FormControl>
                     <Textarea
                       className="resize-none"
-                      placeholder="Add a personal note to your invitation (optional)"
+                      placeholder="초대 메시지를 입력하세요 (선택 사항)"
                       {...field}
                     />
                   </FormControl>
@@ -226,11 +226,11 @@ export function UsersInviteDialog({ open, onOpenChange, onSuccess }: Props) {
             {isSubmitting ? (
               <>
                 <IconLoader2 />
-                Sending...
+                발송 중...
               </>
             ) : (
               <>
-                Invite <IconSend />
+                초대 <IconSend />
               </>
             )}
           </Button>

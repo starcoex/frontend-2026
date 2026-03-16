@@ -8,31 +8,24 @@ export interface BreadcrumbConfig {
 
 export const ORDER_BREADCRUMB_CONFIGS = {
   LIST: {
-    label: 'Orders',
-    title: 'Order Management',
+    label: '주문 관리',
+    title: '주문 관리',
     showInBreadcrumb: true,
-    showActions: true,
-    showTabs: true,
+    showActions: true, // ✅ true로 변경 → 주문 추가 버튼 표시
+    showTabs: true, // ✅ true → OrderStats 표시
   },
   CREATE: {
-    label: 'Create Order',
-    title: 'Create New Order',
+    label: '주문 추가',
+    title: '주문 추가',
     showInBreadcrumb: true,
     showActions: false,
     showTabs: false,
   },
-  DETAIL: {
-    label: 'Order Details',
-    title: 'Order Details',
-    showInBreadcrumb: true,
-    showActions: false,
-    showTabs: false,
-  },
-} as const;
+} satisfies Record<string, BreadcrumbConfig>;
 
 export const DEFAULT_ORDER_BREADCRUMB_CONFIG: BreadcrumbConfig = {
-  label: 'Orders',
-  title: 'Orders',
+  label: '주문 관리',
+  title: '주문 관리',
   showInBreadcrumb: true,
   showActions: false,
   showTabs: false,

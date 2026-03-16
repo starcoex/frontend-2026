@@ -5,6 +5,8 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -18,10 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { InventoryToolbar } from './inventory-toolbar';
 import { inventoryColumns, type InventoryRow } from './inventory-columns';
 import { InventoryMutateDrawer } from './inventory-mutate-drawer';
+import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/products/components/data-table-pagination';
 
 interface InventoryTableProps {
   data: InventoryRow[];
@@ -50,9 +52,12 @@ export function InventoryTable({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     state: { sorting, columnFilters, columnVisibility, rowSelection },
+    initialState: { pagination: { pageSize: 20 } },
   });
 
   return (
@@ -98,9 +103,11 @@ export function InventoryTable({
               <TableRow>
                 <TableCell
                   colSpan={inventoryColumns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="text-muted-foreground h-24 text-center"
                 >
-                  재고 항목이 없습니다.
+                  {table.getState().columnFilters.length > 0
+                    ? '검색 결과가 없습니다. 필터를 초기화해보세요.'
+                    : '재고 항목이 없습니다.'}
                 </TableCell>
               </TableRow>
             )}
@@ -108,31 +115,8 @@ export function InventoryTable({
         </Table>
       </div>
 
-      {/* 페이지네이션 */}
-      <div className="flex items-center justify-end gap-2">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} /{' '}
-          {table.getFilteredRowModel().rows.length} 행 선택
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          이전
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          다음
-        </Button>
-      </div>
+      <DataTablePagination table={table} />
 
-      {/* 재고 등록 Drawer */}
       <InventoryMutateDrawer
         open={addOpen}
         onOpenChange={setAddOpen}

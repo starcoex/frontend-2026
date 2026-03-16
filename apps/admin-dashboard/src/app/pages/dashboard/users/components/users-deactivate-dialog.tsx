@@ -54,40 +54,40 @@ export function UsersDeactivateDialog({
             className="stroke-destructive mr-1 inline-block"
             size={18}
           />{' '}
-          Deactivate
+          계정 비활성화
         </span>
       }
       desc={
         <div className="space-y-4">
           <p className="mb-2">
-            Are you sure you want to deactivate the account with the email{' '}
-            <span className="font-bold">{currentRow.email}</span>?
+            <span className="font-bold">{currentRow.email}</span> 계정을 정말로
+            비활성화하시겠습니까?
             <br />
-            This action will remove the user with the role of{' '}
             <span className="font-bold">
               {currentRow.role?.toUpperCase()}
             </span>{' '}
-            from the system. Please proceed with caution.
+            권한을 가진 이 사용자가 시스템에서 제거됩니다. 신중하게
+            진행해주세요.
           </p>
 
           <Label className="my-2">
-            Email:
+            확인을 위해 이메일을 입력하세요:
             <Input
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              placeholder="Enter the email to confirm deactivation."
+              placeholder="이메일을 입력하여 비활성화를 확인하세요."
             />
           </Label>
 
           <Alert variant="destructive">
             <AlertTitle>Warning!</AlertTitle>
             <AlertDescription>
-              Please be careful, this operation can not be rolled back.
+              이 작업은 되돌릴 수 없습니다. 신중하게 진행해주세요.
             </AlertDescription>
           </Alert>
         </div>
       }
-      confirmText="Deactivate"
+      confirmText="비활성화"
       destructive
     />
   );
