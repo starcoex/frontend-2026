@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -10,10 +9,6 @@ import { ProductPrimaryActions } from '@/app/pages/dashboard/ecommerce/products/
 
 export default function ProductsPage() {
   const { products, isLoading, error, fetchProducts } = useProducts();
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
 
   if (isLoading) {
     return (

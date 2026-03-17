@@ -47,12 +47,12 @@ import CategoriesPage from '@/app/pages/dashboard/ecommerce/categories/categorie
 import CategoryHierarchyPage from '@/app/pages/dashboard/ecommerce/categories/category-hierachy-page';
 import ProductEditPage from '@/app/pages/dashboard/ecommerce/products/edit/product-edit-page';
 import InventoryPage from '@/app/pages/dashboard/ecommerce/products/inventory/inventory-page';
-import ProductScanPage from '@/app/pages/dashboard/ecommerce/products/scan/product-scan';
 import OrderEditPage from '@/app/pages/dashboard/ecommerce/orders/edit/order-edit-page';
 import OrderCreatePage from '@/app/pages/dashboard/ecommerce/orders/create/order-create-page';
 import BrandsPage from '@/app/pages/dashboard/ecommerce/stores/brands/brands-page';
 import StoreDetailPage from '@/app/pages/dashboard/ecommerce/stores/stores-detail/store-detail-page';
 import StoreEditPage from '@/app/pages/dashboard/ecommerce/stores/edit/store-edit-page';
+import { ProductScanWithProvider } from '@/app/pages/dashboard/ecommerce/products/products-scan-with-provider';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -270,10 +270,6 @@ const router = createBrowserRouter([
             element: <InventoryPage />,
           },
           {
-            path: 'scan',
-            element: <ProductScanPage />,
-          },
-          {
             path: ':id',
             element: <ProductDetailPage />,
           },
@@ -282,6 +278,11 @@ const router = createBrowserRouter([
             element: <ProductEditPage />,
           },
         ],
+      },
+      // ✅ 스캔 페이지 — ProductsWithProvider 밖, 독립된 Provider
+      {
+        path: 'products/scan',
+        element: <ProductScanWithProvider />,
       },
 
       // ✅ 커머스 관리 - 주문

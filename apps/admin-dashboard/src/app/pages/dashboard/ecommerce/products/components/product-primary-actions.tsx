@@ -1,17 +1,16 @@
 import { PlusIcon, ScanBarcode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BarcodeScanDialog } from '@/app/pages/dashboard/ecommerce/products/scan/components/barcode-scan-dialog';
 
 export function ProductPrimaryActions() {
   return (
     <div className="flex gap-2">
-      <BarcodeScanDialog>
-        <Button variant="outline">
+      <Button variant="outline" asChild>
+        <Link to="/admin/products/scan">
           <ScanBarcode className="mr-2 h-4 w-4" />
           바코드 스캔
-        </Button>
-      </BarcodeScanDialog>
+        </Link>
+      </Button>
       <Button asChild>
         <Link to="/admin/products/create">
           <PlusIcon className="mr-2 h-4 w-4" />

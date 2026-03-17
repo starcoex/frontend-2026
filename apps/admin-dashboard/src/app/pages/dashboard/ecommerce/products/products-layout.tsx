@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,6 +26,7 @@ import { ProductStats } from '@/app/pages/dashboard/ecommerce/products/component
 const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [PRODUCT_ROUTES.LIST]: PRODUCT_BREADCRUMB_CONFIGS.LIST,
   [PRODUCT_ROUTES.CREATE]: PRODUCT_BREADCRUMB_CONFIGS.CREATE,
+  [PRODUCT_ROUTES.SCAN]: PRODUCT_BREADCRUMB_CONFIGS.SCAN, // ✅ 추가
 };
 
 const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
@@ -56,7 +57,11 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
 
 export const ProductsLayout = () => {
   const location = useLocation();
-  const { products } = useProducts();
+  const { products, fetchProducts } = useProducts();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const config = useMemo((): BreadcrumbConfig => {
     const pathname = location.pathname;
