@@ -7,6 +7,9 @@ import {
   UPDATE_ORDER_STATUS,
   UPDATE_ORDER_ITEM_STATUS,
   ATTACH_PAYMENT_TO_ORDER,
+  DELETE_ORDER,
+  DELETE_ORDERS,
+  CreateOrderInput,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -20,7 +23,6 @@ import type {
   Order,
   OrderItem,
   OrderItemStatus,
-  CreateOrderInput,
   CreateOrderOutput,
   UpdateOrderStatusInput,
   UpdateOrderOutput,
@@ -187,5 +189,25 @@ export class OrdersService implements IOrdersService {
       return { success: true, data: res.data.attachPaymentToOrder };
     }
     return res as unknown as ApiResponse<Order>;
+  }
+
+  async deleteOrder(id: number): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteOrder: boolean }>(DELETE_ORDER, {
+      id,
+    });
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteOrder };
+    }
+    return res as unknown as ApiResponse<boolean>;
+  }
+
+  async deleteOrders(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteOrders: boolean }>(DELETE_ORDERS, {
+      ids,
+    });
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteOrders };
+    }
+    return res as unknown as ApiResponse<boolean>;
   }
 }

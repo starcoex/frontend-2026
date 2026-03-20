@@ -158,6 +158,22 @@ export const useProducts = () => {
     [withLoading, removeProduct, currentProduct, setCurrentProduct]
   );
 
+  const deleteProducts = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getProductsService();
+        const res = await service.deleteProducts(ids);
+        if (res.success) {
+          ids.forEach((id) => removeProduct(id));
+          if (currentProduct && ids.includes(currentProduct.id)) {
+            setCurrentProduct(null);
+          }
+        }
+        return res;
+      }, '제품 다건 삭제에 실패했습니다.'),
+    [withLoading, removeProduct, currentProduct, setCurrentProduct]
+  );
+
   const createInventory = useCallback(
     async (input: CreateProductInventoryInput) =>
       withLoading(async () => {
@@ -268,6 +284,7 @@ export const useProducts = () => {
     createProduct,
     updateProduct,
     deleteProduct,
+    deleteProducts,
     createInventory,
     updateInventory,
     deleteInventory,

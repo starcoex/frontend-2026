@@ -3,9 +3,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { PlusIcon } from 'lucide-react';
-import type { Brand } from '@starcoex-frontend/stores';
+import { Brand, useStores } from '@starcoex-frontend/stores';
 import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-faceted-filter';
 import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-view-options';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
 const BRAND_STATUS_OPTIONS = [
   { value: 'active', label: '활성' },
@@ -19,6 +20,7 @@ interface BrandToolbarProps {
 
 export function BrandToolbar({ table, onAddClick }: BrandToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteBrands, fetchBrands } = useStores();
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -47,6 +49,13 @@ export function BrandToolbar({ table, onAddClick }: BrandToolbarProps) {
           <Cross2Icon className="ml-2 h-4 w-4" />
         </Button>
       )}
+
+      <BulkDeleteToolbar
+        table={table}
+        onDelete={deleteBrands}
+        onSuccess={fetchBrands}
+        itemLabel="브랜드"
+      />
 
       <div className="ml-auto flex items-center gap-2">
         <DataTableViewOptions table={table} />

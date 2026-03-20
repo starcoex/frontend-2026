@@ -172,6 +172,12 @@ export const DELETE_PRODUCT = gql`
   }
 `;
 
+export const DELETE_PRODUCTS = gql`
+  mutation DeleteProductsNew($ids: [Int!]!) {
+    deleteProductsNew(ids: $ids)
+  }
+`;
+
 export const CREATE_PRODUCT_INVENTORY = gql`
   ${PRODUCT_INVENTORY_FIELDS}
   mutation CreateProductInventory($input: CreateProductInventoryInput!) {

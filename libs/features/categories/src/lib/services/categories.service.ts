@@ -9,6 +9,7 @@ import {
   UPDATE_CATEGORY,
   DELETE_CATEGORY,
   MOVE_CATEGORY,
+  DELETE_CATEGORIES,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -195,6 +196,17 @@ export class CategoriesService implements ICategoriesService {
     );
     if (res.success && res.data !== undefined) {
       return { success: true, data: res.data.deleteCategory };
+    }
+    return res as unknown as ApiResponse<boolean>;
+  }
+
+  async deleteCategories(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteCategoriesNew: boolean }>(
+      DELETE_CATEGORIES,
+      { ids }
+    );
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteCategoriesNew };
     }
     return res as unknown as ApiResponse<boolean>;
   }

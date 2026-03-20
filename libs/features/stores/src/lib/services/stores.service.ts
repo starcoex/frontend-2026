@@ -45,6 +45,8 @@ import {
   DeleteBrandOutput,
   GetStoreStatisticsQuery,
   GET_STORE_STATISTICS,
+  DELETE_STORES,
+  DELETE_BRANDS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -233,6 +235,17 @@ export class StoresService implements IStoresService {
     return res as ApiResponse<DeleteStoreOutput>;
   }
 
+  async deleteStores(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteStores: boolean }, { ids: number[] }>(
+      DELETE_STORES,
+      { ids }
+    );
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteStores };
+    }
+    return res as unknown as ApiResponse<boolean>;
+  }
+
   // ===== Brand Mutations =====
 
   async createBrand(
@@ -281,5 +294,16 @@ export class StoresService implements IStoresService {
       };
     }
     return res as ApiResponse<DeleteBrandOutput>;
+  }
+
+  async deleteBrands(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteBrands: boolean }, { ids: number[] }>(
+      DELETE_BRANDS,
+      { ids }
+    );
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteBrands };
+    }
+    return res as unknown as ApiResponse<boolean>;
   }
 }

@@ -166,6 +166,22 @@ export const useCategories = () => {
     [withLoading, removeCategory, currentCategory, setCurrentCategory]
   );
 
+  const deleteCategories = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getCategoriesService();
+        const res = await service.deleteCategories(ids);
+        if (res.success) {
+          ids.forEach((id) => removeCategory(id));
+          if (currentCategory && ids.includes(currentCategory.id)) {
+            setCurrentCategory(null);
+          }
+        }
+        return res;
+      }, '카테고리 다건 삭제에 실패했습니다.'),
+    [withLoading, removeCategory, currentCategory, setCurrentCategory]
+  );
+
   const moveCategory = useCallback(
     async (id: number, newParentId?: number) =>
       withLoading(async () => {
@@ -193,6 +209,7 @@ export const useCategories = () => {
     createCategory,
     updateCategory,
     deleteCategory,
+    deleteCategories,
     moveCategory,
 
     // 편의 값

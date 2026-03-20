@@ -9,6 +9,7 @@ import {
   UPDATE_SUGGESTION,
   UPDATE_SUGGESTION_STATUS,
   DELETE_SUGGESTION,
+  DELETE_SUGGESTIONS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -208,6 +209,17 @@ export class SuggestionsService implements ISuggestionsService {
     );
     if (res.success && res.data !== undefined) {
       return { success: true, data: res.data.deleteSuggestion };
+    }
+    return res as unknown as ApiResponse<boolean>;
+  }
+
+  async deleteSuggestions(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteSuggestions: boolean }>(
+      DELETE_SUGGESTIONS,
+      { ids }
+    );
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteSuggestions };
     }
     return res as unknown as ApiResponse<boolean>;
   }

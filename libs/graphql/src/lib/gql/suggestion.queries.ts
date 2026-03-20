@@ -143,3 +143,9 @@ export const DELETE_SUGGESTION = gql`
     deleteSuggestion(id: $id)
   }
 `;
+
+export const DELETE_SUGGESTIONS = gql`
+  mutation DeleteSuggestions($ids: [Int!]!) {
+    deleteSuggestions(ids: $ids)
+  }
+`;

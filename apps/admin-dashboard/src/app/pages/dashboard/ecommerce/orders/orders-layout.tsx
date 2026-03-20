@@ -80,11 +80,20 @@ export const OrdersLayout = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            {config.showInBreadcrumb && (
-              <BreadcrumbItem>
-                <BreadcrumbPage>{config.label}</BreadcrumbPage>
-              </BreadcrumbItem>
-            )}
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={ORDER_ROUTES.LIST}>주문 관리</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {config.showInBreadcrumb &&
+              location.pathname !== ORDER_ROUTES.LIST && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{config.label}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
           </BreadcrumbList>
         </Breadcrumb>
         <div className="flex flex-wrap items-center justify-between gap-2">

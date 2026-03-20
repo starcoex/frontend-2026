@@ -8,13 +8,16 @@ import { DataTableFacetedFilter } from './data-table-faceted-filter';
 import { DataTableViewOptions } from './data-table-view-options';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Suggestion, useSuggestions } from '@starcoex-frontend/suggestions';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
-interface Props<TData> {
-  table: Table<TData>;
+interface Props {
+  table: Table<Suggestion>;
 }
 
-export function SuggestionsTableToolbar<TData>({ table }: Props<TData>) {
+export function SuggestionsTableToolbar({ table }: Props) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteSuggestions, fetchSuggestions } = useSuggestions();
 
   return (
     <div className="flex items-center justify-between">
@@ -53,6 +56,13 @@ export function SuggestionsTableToolbar<TData>({ table }: Props<TData>) {
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}
+
+        <BulkDeleteToolbar
+          table={table}
+          onDelete={deleteSuggestions}
+          onSuccess={fetchSuggestions}
+          itemLabel="건의사항"
+        />
       </div>
       <DataTableViewOptions table={table} />
     </div>

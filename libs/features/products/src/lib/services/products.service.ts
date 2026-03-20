@@ -11,6 +11,7 @@ import {
   DeleteProductOutput,
   DELETE_PRODUCT,
   GET_PRODUCT_BY_BARCODE,
+  DELETE_PRODUCTS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -183,6 +184,17 @@ export class ProductsService implements IProductsService {
       return { success: true, data: res.data.deleteProductNew };
     }
     return res as unknown as ApiResponse<DeleteProductOutput>;
+  }
+
+  async deleteProducts(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteProductsNew: boolean }>(
+      DELETE_PRODUCTS,
+      { ids }
+    );
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteProductsNew };
+    }
+    return res as unknown as ApiResponse<boolean>;
   }
 
   async createProductInventory(

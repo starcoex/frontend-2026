@@ -3,11 +3,11 @@ import type { ApiResponse } from '../types';
 import { useOrdersContext } from '../context';
 import { getOrdersService } from '../services';
 import type {
-  CreateOrderInput,
   UpdateOrderStatusInput,
   AttachPaymentToOrderInput,
   OrderItemStatus,
 } from '../types';
+import { CreateOrderInput } from '@starcoex-frontend/graphql';
 
 export const useOrders = () => {
   const context = useOrdersContext();
@@ -153,6 +153,36 @@ export const useOrders = () => {
     [withLoading, updateOrderInContext]
   );
 
+  const deleteOrder = useCallback(
+    async (id: number) =>
+      withLoading(async () => {
+        const service = getOrdersService();
+        const res = await service.deleteOrder(id);
+        if (res.success) {
+          setOrders(orders.filter((o) => o.id !== id));
+          if (currentOrder?.id === id) setCurrentOrder(null);
+        }
+        return res;
+      }, '주문 삭제에 실패했습니다.'),
+    [withLoading, orders, setOrders, currentOrder, setCurrentOrder]
+  );
+
+  const deleteOrders = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getOrdersService();
+        const res = await service.deleteOrders(ids);
+        if (res.success) {
+          setOrders(orders.filter((o) => !ids.includes(o.id)));
+          if (currentOrder && ids.includes(currentOrder.id)) {
+            setCurrentOrder(null);
+          }
+        }
+        return res;
+      }, '주문 다건 삭제에 실패했습니다.'),
+    [withLoading, orders, setOrders, currentOrder, setCurrentOrder]
+  );
+
   // ============================================================================
   // 클라이언트 사이드 필터링
   // ============================================================================
@@ -210,6 +240,8 @@ export const useOrders = () => {
     updateOrderStatus,
     updateOrderItemStatus,
     attachPaymentToOrder,
+    deleteOrder,
+    deleteOrders,
 
     // 편의 값
     orders,

@@ -183,6 +183,8 @@ export interface IOrdersService {
   attachPaymentToOrder(
     input: AttachPaymentToOrderInput
   ): Promise<ApiResponse<Order>>;
+  deleteOrder(id: number): Promise<ApiResponse<boolean>>;
+  deleteOrders(ids: number[]): Promise<ApiResponse<boolean>>;
 }
 
 // ============================================================================

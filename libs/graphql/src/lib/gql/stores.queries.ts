@@ -331,6 +331,12 @@ export const DELETE_STORE = gql`
   }
 `;
 
+export const DELETE_STORES = gql`
+  mutation DeleteStores($ids: [Int!]!) {
+    deleteStores(ids: $ids)
+  }
+`;
+
 /**
  * 브랜드 생성
  */
@@ -364,5 +370,11 @@ export const DELETE_BRAND = gql`
     deleteBrand(input: $input) {
       ...DeleteBrandOutputFields
     }
+  }
+`;
+
+export const DELETE_BRANDS = gql`
+  mutation DeleteBrands($ids: [Int!]!) {
+    deleteBrands(ids: $ids)
   }
 `;

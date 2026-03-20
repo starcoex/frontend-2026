@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { useOrders } from '@starcoex-frontend/orders';
+import { NEXT_STATUS_MAP } from '@/app/pages/dashboard/ecommerce/orders/data/order-data';
 
 // ─── 주문 상태 흐름 (schema.prisma OrderStatus 기준) ─────────────────────────
 const ORDER_STATUS_OPTIONS = [
@@ -95,11 +96,6 @@ export default function EditOrderForm({
 
   const orderId = id ? parseInt(id, 10) : NaN;
 
-  // ❌ 아래 useEffect 제거 (OrderEditPage에서 이미 처리)
-  // useEffect(() => {
-  //   if (!isNaN(orderId)) fetchOrderById(orderId);
-  // }, [orderId, fetchOrderById]);
-
   const form = useForm<FormValues>({
     resolver: zodResolver(FormSchema),
     defaultValues: { status: order.status, reason: '' }, // order prop 직접 사용
@@ -117,6 +113,12 @@ export default function EditOrderForm({
     (s) => s.value === selectedStatus
   );
   const isStatusChanged = selectedStatus !== order?.status;
+
+  // 현재 상태에서 이동 가능한 상태만 + 현재 상태 포함
+  const availableStatuses = [
+    order.status,
+    ...(NEXT_STATUS_MAP[order.status as OrderStatusValue] ?? []),
+  ];
 
   // ── 제출 ────────────────────────────────────────────────────────────────────
   async function onSubmit(data: FormValues) {
@@ -380,7 +382,9 @@ export default function EditOrderForm({
                     <FormItem>
                       <FormControl>
                         <div className="space-y-1.5">
-                          {ORDER_STATUS_OPTIONS.map((opt) => (
+                          {ORDER_STATUS_OPTIONS.filter((opt) =>
+                            availableStatuses.includes(opt.value)
+                          ).map((opt) => (
                             <button
                               key={opt.value}
                               type="button"

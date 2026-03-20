@@ -36,7 +36,7 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
         initOrdersService(apolloClient);
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ OrdersService initialization failed:', error);
+        console.error('❌ NoticesService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);

@@ -229,6 +229,22 @@ export const useStores = () => {
     [withLoading, removeStore, currentStore, setCurrentStore]
   );
 
+  const deleteStores = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.deleteStores(ids);
+        if (res.success) {
+          ids.forEach((id) => removeStore(id));
+          if (currentStore && ids.includes(currentStore.id)) {
+            setCurrentStore(null);
+          }
+        }
+        return res;
+      }, '매장 다건 삭제에 실패했습니다.'),
+    [withLoading, removeStore, currentStore, setCurrentStore]
+  );
+
   // ===== Brand Mutations =====
 
   /**
@@ -289,6 +305,22 @@ export const useStores = () => {
         }
         return res;
       }, '브랜드 삭제에 실패했습니다.'),
+    [withLoading, removeBrand, currentBrand, setCurrentBrand]
+  );
+
+  const deleteBrands = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.deleteBrands(ids);
+        if (res.success) {
+          ids.forEach((id) => removeBrand(id));
+          if (currentBrand && ids.includes(currentBrand.id)) {
+            setCurrentBrand(null);
+          }
+        }
+        return res;
+      }, '브랜드 다건 삭제에 실패했습니다.'),
     [withLoading, removeBrand, currentBrand, setCurrentBrand]
   );
 
@@ -382,10 +414,12 @@ export const useStores = () => {
     createStore,
     updateStore,
     deleteStore,
+    deleteStores,
 
     // Brand Mutations
     createBrand,
     updateBrand,
     deleteBrand,
+    deleteBrands,
   };
 };

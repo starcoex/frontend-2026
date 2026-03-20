@@ -39,11 +39,13 @@ export interface IStoresService {
   createStore(input: CreateStoreInput): Promise<ApiResponse<CreateStoreOutput>>;
   updateStore(input: UpdateStoreInput): Promise<ApiResponse<UpdateStoreOutput>>;
   deleteStore(input: DeleteStoreInput): Promise<ApiResponse<DeleteStoreOutput>>;
+  deleteStores(ids: number[]): Promise<ApiResponse<boolean>>;
 
   // ===== Brand Mutations =====
   createBrand(input: CreateBrandInput): Promise<ApiResponse<CreateBrandOutput>>;
   updateBrand(input: UpdateBrandInput): Promise<ApiResponse<UpdateBrandOutput>>;
   deleteBrand(input: DeleteBrandInput): Promise<ApiResponse<DeleteBrandOutput>>;
+  deleteBrands(ids: number[]): Promise<ApiResponse<boolean>>;
 }
 
 // ============================================================================

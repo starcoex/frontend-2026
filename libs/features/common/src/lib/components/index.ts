@@ -13,3 +13,4 @@ export * from './coupon';
 export * from './membership-dashboard';
 export * from './welcome';
 export * from './my-page';
+export * from './bulk-delete';

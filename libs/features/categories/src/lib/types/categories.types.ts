@@ -95,6 +95,7 @@ export interface ICategoriesService {
     input: UpdateCategoryInput
   ): Promise<ApiResponse<UpdateCategoryOutput>>;
   deleteCategory(id: number): Promise<ApiResponse<boolean>>;
+  deleteCategories(ids: number[]): Promise<ApiResponse<boolean>>;
   moveCategory(
     id: number,
     newParentId?: number

@@ -28,11 +28,13 @@ import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/products/co
 interface InventoryTableProps {
   data: InventoryRow[];
   defaultProductId?: number;
+  onRefresh?: () => void;
 }
 
 export function InventoryTable({
   data,
   defaultProductId,
+  onRefresh,
 }: InventoryTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -62,7 +64,11 @@ export function InventoryTable({
 
   return (
     <div className="space-y-4">
-      <InventoryToolbar table={table} onAddClick={() => setAddOpen(true)} />
+      <InventoryToolbar
+        table={table}
+        onAddClick={() => setAddOpen(true)}
+        onRefresh={onRefresh}
+      />
 
       <div className="rounded-lg border">
         <Table>

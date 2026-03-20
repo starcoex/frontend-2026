@@ -5,13 +5,16 @@ import { DataTableFacetedFilter } from './data-table-faceted-filter';
 import { DataTableViewOptions } from './data-table-view-options';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Category, useCategories } from '@starcoex-frontend/categories';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
-interface Props<TData> {
-  table: Table<TData>;
+interface Props {
+  table: Table<Category>;
 }
 
-export function CategoriesTableToolbar<TData>({ table }: Props<TData>) {
+export function CategoriesTableToolbar({ table }: Props) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteCategories, fetchCategories } = useCategories();
 
   return (
     <div className="flex items-center justify-between">
@@ -43,6 +46,13 @@ export function CategoriesTableToolbar<TData>({ table }: Props<TData>) {
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}
+
+        <BulkDeleteToolbar
+          table={table}
+          onDelete={deleteCategories}
+          onSuccess={fetchCategories}
+          itemLabel="카테고리"
+        />
       </div>
       <DataTableViewOptions table={table} />
     </div>

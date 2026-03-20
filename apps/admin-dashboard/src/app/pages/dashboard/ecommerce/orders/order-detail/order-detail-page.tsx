@@ -19,6 +19,7 @@ import {
 } from '@/app/pages/dashboard/ecommerce/orders/data/order-data';
 import {
   FulfillmentBadge,
+  ORDER_STATUS_MAP,
   OrderStatusBadge,
   PaymentStatusBadge,
 } from '@/app/pages/dashboard/ecommerce/orders/components/order-status-bage';
@@ -327,7 +328,18 @@ export default function OrderDetailPage() {
                             )}
                           </div>
                           <div className="pb-3">
-                            <p className="text-sm font-medium">{h.toStatus}</p>
+                            <p className="text-sm font-medium">
+                              {h.fromStatus && (
+                                <span className="text-muted-foreground">
+                                  {ORDER_STATUS_MAP[
+                                    h.fromStatus as OrderStatusValue
+                                  ]?.label ?? h.fromStatus}
+                                  {' → '}
+                                </span>
+                              )}
+                              {ORDER_STATUS_MAP[h.toStatus as OrderStatusValue]
+                                ?.label ?? h.toStatus}
+                            </p>
                             {h.reason && (
                               <p className="text-muted-foreground text-xs">
                                 {h.reason}

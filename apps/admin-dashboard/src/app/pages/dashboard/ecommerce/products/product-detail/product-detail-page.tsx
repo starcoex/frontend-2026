@@ -25,11 +25,12 @@ import { Badge } from '@/components/ui/badge';
 import { PageHead } from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
 import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useProducts } from '@starcoex-frontend/products';
 import { InventoryTable } from '@/app/pages/dashboard/ecommerce/products/inventory/components/inventory-table';
 import type { InventoryRow } from '@/app/pages/dashboard/ecommerce/products/inventory/components/inventory-columns';
 import Barcode from 'react-barcode';
+import { INVENTORY_ROUTES } from '@/app/constants/inventory-routes';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -367,6 +368,13 @@ export default function ProductDetailPage() {
                         총 {totalInventoryStock.toLocaleString()}개
                       </span>
                     </CardTitle>
+                    <CardAction>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={INVENTORY_ROUTES.LIST}>
+                          재고 관리로 이동 →
+                        </Link>
+                      </Button>
+                    </CardAction>
                   </CardHeader>
                   <CardContent>
                     <InventoryTable

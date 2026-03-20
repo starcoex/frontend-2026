@@ -151,6 +151,18 @@ export const UPDATE_ORDER_STATUS = gql`
   }
 `;
 
+export const DELETE_ORDER = gql`
+  mutation DeleteOrder($id: Int!) {
+    deleteOrder(id: $id)
+  }
+`;
+
+export const DELETE_ORDERS = gql`
+  mutation DeleteOrders($ids: [Int!]!) {
+    deleteOrders(ids: $ids)
+  }
+`;
+
 export const UPDATE_ORDER_ITEM_STATUS = gql`
   ${ORDER_ITEM_FIELDS}
   mutation UpdateOrderItemStatus($itemId: Int!, $status: OrderItemStatus!) {

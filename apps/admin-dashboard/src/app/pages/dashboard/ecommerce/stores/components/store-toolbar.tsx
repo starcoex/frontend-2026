@@ -2,9 +2,10 @@ import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import type { Store } from '@starcoex-frontend/stores';
+import { Store, useStores } from '@starcoex-frontend/stores';
 import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-faceted-filter';
 import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-view-options';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
 const STORE_STATUS_OPTIONS = [
   { value: 'active', label: '운영 중' },
@@ -23,6 +24,7 @@ interface StoreToolbarProps {
 
 export function StoreToolbar({ table }: StoreToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteStores, fetchStores } = useStores();
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -57,6 +59,13 @@ export function StoreToolbar({ table }: StoreToolbarProps) {
           <Cross2Icon className="ml-2 h-4 w-4" />
         </Button>
       )}
+
+      <BulkDeleteToolbar
+        table={table}
+        onDelete={deleteStores}
+        onSuccess={fetchStores}
+        itemLabel="매장"
+      />
 
       <div className="ml-auto">
         <DataTableViewOptions table={table} />

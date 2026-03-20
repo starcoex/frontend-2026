@@ -179,6 +179,22 @@ export const useSuggestions = () => {
     [withLoading, removeSuggestion, currentSuggestion, setCurrentSuggestion]
   );
 
+  const deleteSuggestions = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getSuggestionsService();
+        const res = await service.deleteSuggestions(ids);
+        if (res.success) {
+          ids.forEach((id) => removeSuggestion(id));
+          if (currentSuggestion && ids.includes(currentSuggestion.id)) {
+            setCurrentSuggestion(null);
+          }
+        }
+        return res;
+      }, '건의사항 다건 삭제에 실패했습니다.'),
+    [withLoading, removeSuggestion, currentSuggestion, setCurrentSuggestion]
+  );
+
   return {
     ...context,
 
@@ -192,6 +208,7 @@ export const useSuggestions = () => {
     updateSuggestion,
     updateSuggestionStatus,
     deleteSuggestion,
+    deleteSuggestions,
 
     // 편의 값
     setFilters,

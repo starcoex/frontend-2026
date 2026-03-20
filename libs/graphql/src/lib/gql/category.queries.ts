@@ -138,6 +138,12 @@ export const DELETE_CATEGORY = gql`
   }
 `;
 
+export const DELETE_CATEGORIES = gql`
+  mutation DeleteCategoriesNew($ids: [Int!]!) {
+    deleteCategoriesNew(ids: $ids)
+  }
+`;
+
 export const MOVE_CATEGORY = gql`
   ${UPDATE_CATEGORY_OUTPUT_FIELDS}
   mutation MoveCategory($id: Int!, $newParentId: Int) {

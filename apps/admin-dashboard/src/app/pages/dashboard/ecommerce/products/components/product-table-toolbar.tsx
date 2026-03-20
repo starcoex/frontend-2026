@@ -2,9 +2,10 @@ import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
-import type { Product } from '@starcoex-frontend/products';
+import { Product, useProducts } from '@starcoex-frontend/products';
 import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
 import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
 const PRODUCT_STATUS_OPTIONS = [
   { value: 'active', label: '판매 중' },
@@ -18,6 +19,7 @@ interface ProductsTableToolbarProps {
 
 export function ProductsTableToolbar({ table }: ProductsTableToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteProducts, fetchProducts } = useProducts();
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -46,6 +48,13 @@ export function ProductsTableToolbar({ table }: ProductsTableToolbarProps) {
           <Cross2Icon className="ml-2 h-4 w-4" />
         </Button>
       )}
+
+      <BulkDeleteToolbar
+        table={table}
+        onDelete={deleteProducts}
+        onSuccess={fetchProducts}
+        itemLabel="제품"
+      />
 
       <div className="ml-auto">
         <DataTableViewOptions table={table} />

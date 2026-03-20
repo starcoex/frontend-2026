@@ -6,6 +6,8 @@ import { PlusIcon } from 'lucide-react';
 import type { InventoryRow } from './inventory-columns';
 import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
 import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
+import { useProducts } from '@starcoex-frontend/products';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
 const AVAILABILITY_OPTIONS = [
   { value: 'available', label: '판매 가능' },
@@ -15,10 +17,24 @@ const AVAILABILITY_OPTIONS = [
 interface InventoryToolbarProps {
   table: Table<InventoryRow>;
   onAddClick: () => void;
+  onRefresh?: () => void;
 }
 
-export function InventoryToolbar({ table, onAddClick }: InventoryToolbarProps) {
+export function InventoryToolbar({
+  table,
+  onAddClick,
+  onRefresh,
+}: InventoryToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteInventory } = useProducts();
+
+  // 다건 삭제: Promise.all로 병렬 처리
+  const handleBulkDelete = async (ids: number[]) => {
+    const results = await Promise.all(ids.map((id) => deleteInventory(id)));
+    const failed = results.find((r) => !r.success);
+    if (failed) return { success: false, error: failed.error };
+    return { success: true };
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -47,6 +63,13 @@ export function InventoryToolbar({ table, onAddClick }: InventoryToolbarProps) {
           <Cross2Icon className="ml-2 h-4 w-4" />
         </Button>
       )}
+
+      <BulkDeleteToolbar
+        table={table}
+        onDelete={handleBulkDelete}
+        onSuccess={onRefresh}
+        itemLabel="재고"
+      />
 
       <div className="ml-auto flex items-center gap-2">
         <DataTableViewOptions table={table} />

@@ -182,6 +182,7 @@ export interface IProductsService {
     input: UpdateProductInput
   ): Promise<ApiResponse<UpdateProductOutput>>;
   deleteProduct(id: number): Promise<ApiResponse<DeleteProductOutput>>;
+  deleteProducts(ids: number[]): Promise<ApiResponse<boolean>>;
   createProductInventory(
     input: CreateProductInventoryInput
   ): Promise<ApiResponse<ProductInventory>>;

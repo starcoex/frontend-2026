@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Order } from '@starcoex-frontend/orders';
+import { Order, useOrders } from '@starcoex-frontend/orders';
 import {
   ORDER_FULFILLMENT_OPTIONS,
   ORDER_PAYMENT_STATUS_OPTIONS,
@@ -12,6 +12,7 @@ import {
 } from '@/app/pages/dashboard/ecommerce/orders/data/order-data';
 import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/orders/components/data-table-faceted-filter';
 import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/orders/components/data-table-view-options';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
 interface OrderToolbarProps {
   table: Table<Order>;
@@ -19,6 +20,7 @@ interface OrderToolbarProps {
 
 export function OrderToolbar({ table }: OrderToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteOrders, fetchOrders } = useOrders();
 
   return (
     <div className="space-y-3">
@@ -81,6 +83,14 @@ export function OrderToolbar({ table }: OrderToolbarProps) {
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}
+
+        <BulkDeleteToolbar
+          table={table}
+          onDelete={deleteOrders}
+          onSuccess={fetchOrders}
+          itemLabel="주문"
+          deleteDescription="선택한 주문은 CANCELLED 상태로 변경 후 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+        />
 
         <div className="ml-auto">
           <DataTableViewOptions table={table} />

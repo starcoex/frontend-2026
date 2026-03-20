@@ -189,6 +189,15 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             ],
           },
           {
+            title: '재고 관리', // ✅ StoreInventory 기반 신규
+            url: '/admin/inventory',
+            icon: IconBoxSeam,
+            items: [
+              { title: '재고 현황', url: '/admin/inventory' },
+              { title: '재고 부족', url: '/admin/inventory/low-stock' },
+            ],
+          },
+          {
             title: '주문 관리',
             url: '/admin/orders',
             icon: IconFileInvoice,
