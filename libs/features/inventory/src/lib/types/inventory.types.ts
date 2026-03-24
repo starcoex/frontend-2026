@@ -26,6 +26,9 @@ export type InventoryReason =
   | 'DAMAGE_OUT'
   | 'EXPIRE_OUT'
   | 'ADJUSTMENT_OUT'
+  | 'FUEL_DELIVERY_IN' // 신규: 난방유 입고
+  | 'FUEL_DISPENSED' // 신규: 주유 출고
+  | 'FUEL_ADJUSTMENT' // 신규: 연료 조정
   | 'ORDER_RESERVE'
   | 'ORDER_RELEASE'
   | 'ORDER_CONFIRM'
@@ -74,6 +77,16 @@ export interface InventoryTransaction {
   processedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  // computed fields (신규)
+  isInbound?: boolean;
+  isOutbound?: boolean;
+  isAdjustment?: boolean;
+  hasCosting?: boolean;
+  hasBatch?: boolean;
+  hasExpiry?: boolean;
+  isExpiringSoon?: boolean;
+  isProcessed?: boolean;
+  processingTime?: number | null;
 }
 
 export interface InventoryMovement {
@@ -104,6 +117,14 @@ export interface StoreInventory {
   currentStock: number;
   reservedStock: number;
   availableStock: number;
+  // 신규: 재고 단위 및 부피 관련
+  unit: string;
+  currentVolume?: number | null;
+  reservedVolume?: number | null;
+  availableVolume?: number | null;
+  minVolume?: number | null;
+  maxVolume?: number | null;
+  reorderVolume?: number | null;
   minStock: number;
   maxStock: number;
   reorderPoint: number;
@@ -128,6 +149,14 @@ export interface StoreInventory {
   isOverStock?: boolean | null;
   stockLevel?: number | null;
   totalValue?: number | null;
+  // 신규 computed fields
+  reservedPercentage?: number | null;
+  totalTransactions?: number | null;
+  lastTransactionAt?: string | null;
+  daysSinceLastCount?: number | null;
+  hasMinStockAlert?: boolean | null;
+  hasReorderAlert?: boolean | null;
+  hasExpiringItems?: boolean | null;
   // relations
   transactions?: InventoryTransaction[];
   movementsFrom?: InventoryMovement[];
@@ -159,6 +188,10 @@ export interface CreateStoreInventoryInput {
   isSellable?: boolean;
   location?: string;
   zone?: string;
+  unit?: string; // ← 추가
+  minVolume?: number; // ← 추가
+  maxVolume?: number; // ← 추가
+  reorderVolume?: number; // ← 추가
 }
 
 export interface CreateStoreInventoryOutput {
@@ -167,6 +200,79 @@ export interface CreateStoreInventoryOutput {
   inventory?: StoreInventory | null;
   creationMessage?: string | null;
   notificationMessage?: string | null;
+}
+
+// 신규: updateStoreInventory Input
+export interface UpdateStoreInventoryInput {
+  id: number;
+  minStock?: number;
+  maxStock?: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
+  costPrice?: number | null;
+  storePrice?: number | null;
+  isAvailable?: boolean;
+  isSellable?: boolean;
+  location?: string | null;
+  zone?: string | null;
+  unit?: string;
+  minVolume?: number | null;
+  maxVolume?: number | null;
+  reorderVolume?: number | null;
+}
+
+export interface AddStockInput {
+  productId: number;
+  storeId: number;
+  quantity: number;
+  notes?: string;
+}
+
+export interface AddStockOutput {
+  success: boolean;
+  message: string;
+  inventory?: StoreInventory | null;
+}
+
+// 신규: updateStoreInventory Output
+export interface UpdateStoreInventoryOutput {
+  success: boolean;
+  message: string;
+  inventory?: StoreInventory | null;
+}
+
+// 신규: 연료 재고 Input
+export interface AddFuelStockInput {
+  productId: number;
+  storeId: number;
+  volumeLiters: number;
+  deliveryId?: number; // ← optional로 변경
+  notes?: string; // ← 추가
+  idempotencyKey?: string;
+}
+
+export interface DispenseFuelInput {
+  productId: number;
+  storeId: number;
+  volumeLiters: number;
+  fuelWalkInId: number;
+  idempotencyKey?: string;
+}
+
+// 신규: 연료 재고 Output
+export interface FuelInventoryOutput {
+  success: boolean;
+  message: string;
+  inventory?: Pick<
+    StoreInventory,
+    | 'id'
+    | 'productId'
+    | 'storeId'
+    | 'currentVolume'
+    | 'availableVolume'
+    | 'reservedVolume'
+    | 'unit'
+  > | null;
 }
 
 // ============================================================================
@@ -186,12 +292,23 @@ export interface IInventoryService {
   createStoreInventory(
     input: CreateStoreInventoryInput
   ): Promise<ApiResponse<CreateStoreInventoryOutput>>;
+  updateStoreInventory( // 신규
+    input: UpdateStoreInventoryInput
+  ): Promise<ApiResponse<UpdateStoreInventoryOutput>>;
   deleteStoreInventory(id: number): Promise<ApiResponse<boolean>>;
   deleteStoreInventories(ids: number[]): Promise<ApiResponse<boolean>>;
+  // 신규
+  addFuelStock(
+    input: AddFuelStockInput
+  ): Promise<ApiResponse<FuelInventoryOutput>>;
+  dispenseFuel(
+    input: DispenseFuelInput
+  ): Promise<ApiResponse<FuelInventoryOutput>>;
+  addStock(input: AddStockInput): Promise<ApiResponse<AddStockOutput>>; // 신규
 }
 
 // ============================================================================
-// Context 상태 타입
+// Context 상태 타입 (기존과 동일)
 // ============================================================================
 
 export interface InventoryFilters {

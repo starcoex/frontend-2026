@@ -8,13 +8,8 @@ import { InventoryTable } from './components/inventory-table';
 import { useEffect } from 'react';
 
 export default function InventoryPage() {
-  const {
-    inventories,
-    isLoading,
-    error,
-    fetchStoreInventories,
-    fetchLowStockInventories,
-  } = useInventory();
+  const { inventories, isLoading, error, fetchStoreInventories } =
+    useInventory();
 
   useEffect(() => {
     fetchStoreInventories();
@@ -56,7 +51,7 @@ export default function InventoryPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => fetchLowStockInventories()}
+              onClick={() => fetchStoreInventories()}
               className="ml-4"
             >
               다시 시도

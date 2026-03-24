@@ -76,6 +76,9 @@ import {
   ChangeRoleInput,
   ChangeUserRoleMutation,
   CreateGuestUserByAdminMutation,
+  DeleteUsersByAdminMutation,
+  DeleteInvitationMutation,
+  DeleteInvitationsMutation,
 } from '@starcoex-frontend/graphql';
 import { ApiResponse } from './common.types';
 
@@ -210,6 +213,10 @@ export interface IAuthService {
   deleteUserByAdmin(
     id: number
   ): Promise<ApiResponse<DeleteUserByAdminMutation>>;
+  // ✅ 신규: 사용자 다건 삭제
+  deleteUsersByAdmin(
+    ids: number[]
+  ): Promise<ApiResponse<DeleteUsersByAdminMutation>>;
   inviteUser(input: InviteUserInput): Promise<ApiResponse<InviteUserMutation>>;
   cancelInvitation(
     invitationId: number
@@ -217,6 +224,13 @@ export interface IAuthService {
   resendInvitation(
     invitationId: number
   ): Promise<ApiResponse<ResendInvitationMutation>>;
+  // ✅ 신규: 초대 단건/다건 삭제
+  deleteInvitation(
+    invitationId: number
+  ): Promise<ApiResponse<DeleteInvitationMutation>>;
+  deleteInvitations(
+    ids: number[]
+  ): Promise<ApiResponse<DeleteInvitationsMutation>>;
   verifyInvitationToken(
     token: string
   ): Promise<ApiResponse<VerifyInvitationTokenQuery>>;

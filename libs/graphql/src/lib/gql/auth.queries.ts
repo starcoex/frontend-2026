@@ -1050,3 +1050,30 @@ export const CREATE_GUEST_USER_BY_ADMIN = gql`
     }
   }
 `;
+
+// ✅ 신규: 관리자 사용자 다건 삭제 (삭제된 수 반환)
+export const DELETE_USERS_BY_ADMIN = gql`
+  mutation DeleteUsersByAdmin($ids: [Int!]!) {
+    deleteUsersByAdmin(ids: $ids)
+  }
+`;
+
+// ✅ 신규: 초대 단건 삭제 (Hard Delete)
+export const DELETE_INVITATION = gql`
+  mutation DeleteInvitation($invitationId: Int!) {
+    deleteInvitation(invitationId: $invitationId) {
+      success
+      message
+    }
+  }
+`;
+
+// ✅ 신규: 초대 다건 삭제 (Hard Delete)
+export const DELETE_INVITATIONS = gql`
+  mutation DeleteInvitations($ids: [Int!]!) {
+    deleteInvitations(ids: $ids) {
+      success
+      deletedCount
+    }
+  }
+`;

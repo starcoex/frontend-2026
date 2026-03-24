@@ -43,7 +43,7 @@ import type { JusoApiAddress } from '@starcoex-frontend/graphql';
 import {
   CustomerSearch,
   type SelectedCustomer,
-} from '@/app/pages/dashboard/ecommerce/orders/components/customer-search';
+} from '@starcoex-frontend/common';
 
 // ─── 처리 방식 옵션 ────────────────────────────────────────────────────────────
 const FULFILLMENT_OPTIONS = [

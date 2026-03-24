@@ -28,9 +28,10 @@ import { DataTablePagination } from '@/app/pages/dashboard/users/components/data
 interface Props {
   columns: ColumnDef<UserInvitation>[];
   data: UserInvitation[];
+  onDeleted?: () => void; // ✅ 추가
 }
 
-export function InvitationsTable({ columns, data }: Props) {
+export function InvitationsTable({ columns, data, onDeleted }: Props) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -60,7 +61,7 @@ export function InvitationsTable({ columns, data }: Props) {
 
   return (
     <div className="space-y-4">
-      <InvitationsToolbar table={table} />
+      <InvitationsToolbar table={table} onDeleted={onDeleted} /> {/* ✅ 전달 */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

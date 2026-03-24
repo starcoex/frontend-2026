@@ -57,7 +57,21 @@ import { InventoryWithProvider } from '@/app/pages/dashboard/ecommerce/inventory
 import InventoryPage from '@/app/pages/dashboard/ecommerce/inventory/inventory-page';
 import LowStockPage from '@/app/pages/dashboard/ecommerce/inventory/low-stock-page';
 import InventoryDetailPage from '@/app/pages/dashboard/ecommerce/inventory/inventory-detail/inventory-detail-page';
-// ✅ 재고관리 (Inventory Service 기반)
+import { ReservationsWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/reservation-with-provider';
+import ReservationsPage from '@/app/pages/dashboard/ecommerce/reservations/reservation-page';
+import ReservationDetailPage from '@/app/pages/dashboard/ecommerce/reservations/reservation-detail/reservation-detail-page';
+import { WalkInsWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/walk-ins/walk-ins-with-provider';
+import { FuelWalkInsWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-with-provider';
+import ReservationCreatePage from '@/app/pages/dashboard/ecommerce/reservations/create/reservation-create-step5';
+import ReservationEditPage from '@/app/pages/dashboard/ecommerce/reservations/edit/reservation-edit-page';
+import HeatingOilDeliveriesPage from '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/heating-oil-deliveries-page';
+import HeatingOilDeliveryCreatePage from '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/create/heating-oil-delivery-create-page';
+import ReservationServicesPage from '@/app/pages/dashboard/ecommerce/reservations/services/reservation-service-page';
+import { HeatingOilDeliveriesWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/heating-oil-deliveries-with-provider';
+import WalkInsPage from '@/app/pages/dashboard/ecommerce/reservations/walk-ins/walk-ins-page';
+import FuelWalkInsPage from '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-page';
+import InventoryEditPage from '@/app/pages/dashboard/ecommerce/inventory/edit/inventory-edit-page';
+import InventoryCreatePage from '@/app/pages/dashboard/ecommerce/inventory/create/inventory-create-page';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -174,8 +188,44 @@ const router = createBrowserRouter([
         element: <InventoryWithProvider />,
         children: [
           { index: true, element: <InventoryPage /> },
+          { path: 'create', element: <InventoryCreatePage /> }, // ← 추가
           { path: 'low-stock', element: <LowStockPage /> },
           { path: ':id', element: <InventoryDetailPage /> },
+          { path: ':id/edit', element: <InventoryEditPage /> }, // 신규
+        ],
+      },
+
+      // ✅ 예약 관리
+      {
+        path: 'reservations',
+        element: <ReservationsWithProvider />,
+        children: [
+          { index: true, element: <ReservationsPage /> },
+          { path: 'create', element: <ReservationCreatePage /> },
+          { path: 'services', element: <ReservationServicesPage /> }, // ← 추가
+          { path: ':id', element: <ReservationDetailPage /> },
+          { path: ':id/edit', element: <ReservationEditPage /> },
+        ],
+      },
+      // ✅ 워크인 관리
+      {
+        path: 'walk-ins',
+        element: <WalkInsWithProvider />,
+        children: [{ index: true, element: <WalkInsPage /> }],
+      },
+      // ✅ 주유 워크인
+      {
+        path: 'fuel-walk-ins',
+        element: <FuelWalkInsWithProvider />,
+        children: [{ index: true, element: <FuelWalkInsPage /> }],
+      },
+      // ✅ 난방유 배달
+      {
+        path: 'heating-oil-deliveries',
+        element: <HeatingOilDeliveriesWithProvider />,
+        children: [
+          { index: true, element: <HeatingOilDeliveriesPage /> },
+          { path: 'create', element: <HeatingOilDeliveryCreatePage /> },
         ],
       },
 

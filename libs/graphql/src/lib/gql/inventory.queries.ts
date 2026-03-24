@@ -10,6 +10,13 @@ export const STORE_INVENTORY_FRAGMENT = gql`
     currentStock
     reservedStock
     availableStock
+    unit
+    currentVolume
+    reservedVolume
+    availableVolume
+    minVolume
+    maxVolume
+    reorderVolume
     minStock
     maxStock
     reorderPoint
@@ -31,6 +38,15 @@ export const STORE_INVENTORY_FRAGMENT = gql`
     isOutOfStock
     needsReorder
     isOverStock
+    stockLevel
+    reservedPercentage
+    totalValue
+    hasMinStockAlert
+    hasReorderAlert
+    hasExpiringItems
+    totalTransactions
+    lastTransactionAt
+    daysSinceLastCount
   }
 `;
 
@@ -53,6 +69,15 @@ export const INVENTORY_TRANSACTION_FRAGMENT = gql`
     createdById
     processedAt
     createdAt
+    isInbound
+    isOutbound
+    isAdjustment
+    hasCosting
+    hasBatch
+    hasExpiry
+    isExpiringSoon
+    isProcessed
+    processingTime
   }
 `;
 
@@ -119,6 +144,19 @@ export const CREATE_STORE_INVENTORY = gql`
   }
 `;
 
+export const UPDATE_STORE_INVENTORY = gql`
+  mutation UpdateStoreInventory($input: UpdateStoreInventoryInput!) {
+    updateStoreInventory(input: $input) {
+      success
+      message
+      inventory {
+        ...StoreInventoryFields
+      }
+    }
+  }
+  ${STORE_INVENTORY_FRAGMENT}
+`;
+
 export const DELETE_STORE_INVENTORY = gql`
   mutation DeleteStoreInventory($id: Int!) {
     deleteStoreInventory(id: $id)
@@ -128,5 +166,56 @@ export const DELETE_STORE_INVENTORY = gql`
 export const DELETE_STORE_INVENTORIES = gql`
   mutation DeleteStoreInventories($ids: [Int!]!) {
     deleteStoreInventories(ids: $ids)
+  }
+`;
+
+export const ADD_STOCK = gql`
+  mutation AddStock($input: AddStockInput!) {
+    addStock(input: $input) {
+      success
+      message
+      inventory {
+        ...StoreInventoryFields
+      }
+    }
+  }
+  ${STORE_INVENTORY_FRAGMENT}
+`;
+
+// ── 연료 재고 Mutations (신규) ─────────────────────────────────────────────────
+
+export const ADD_FUEL_STOCK = gql`
+  mutation AddFuelStock($input: AddFuelStockInput!) {
+    addFuelStock(input: $input) {
+      success
+      message
+      inventory {
+        id
+        productId
+        storeId
+        currentVolume
+        availableVolume
+        reservedVolume
+        unit
+      }
+    }
+  }
+`;
+
+export const DISPENSE_FUEL = gql`
+  mutation DispenseFuel($input: DispenseFuelInput!) {
+    dispenseFuel(input: $input) {
+      success
+      message
+      inventory {
+        id
+        productId
+        storeId
+        currentVolume
+        availableVolume
+        reservedVolume
+        unit
+      }
+    }
   }
 `;

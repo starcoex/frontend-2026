@@ -13,8 +13,11 @@ export default function LowStockPage() {
     useInventory();
 
   useEffect(() => {
-    fetchLowStockInventories();
-  }, [fetchLowStockInventories]);
+    // layout에서 이미 호출하지만, 직접 접근 시 데이터 없으면 재호출
+    if (lowStockInventories.length === 0) {
+      fetchLowStockInventories();
+    }
+  }, [fetchLowStockInventories, lowStockInventories.length]);
 
   if (isLoading) {
     return (

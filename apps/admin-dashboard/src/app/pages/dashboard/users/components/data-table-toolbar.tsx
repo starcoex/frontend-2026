@@ -1,17 +1,22 @@
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
+import { User } from '@starcoex-frontend/graphql';
 import { userTypes } from '../data/users-data';
 import { DataTableFacetedFilter } from './data-table-faceted-filter';
 import { DataTableViewOptions } from './data-table-view-options';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@starcoex-frontend/auth';
+import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
-interface Props<TData> {
-  table: Table<TData>;
+interface Props {
+  table: Table<User>;
+  onDeleted?: () => void;
 }
 
-export function DataTableToolbar<TData>({ table }: Props<TData>) {
+export function DataTableToolbar({ table, onDeleted }: Props) {
   const isFiltered = table.getState().columnFilters.length > 0;
+  const { deleteUsersByAdmin } = useAuth();
 
   return (
     <div className="flex items-center justify-between">
@@ -55,6 +60,14 @@ export function DataTableToolbar<TData>({ table }: Props<TData>) {
             <Cross2Icon className="ml-2 h-4 w-4" />
           </Button>
         )}
+        {/* ✅ 공통 BulkDeleteToolbar 사용 */}
+        <BulkDeleteToolbar
+          table={table}
+          onDelete={deleteUsersByAdmin}
+          onSuccess={onDeleted}
+          itemLabel="사용자"
+          deleteDescription="선택한 사용자를 삭제합니다. 이 작업은 되돌릴 수 없습니다."
+        />
       </div>
       <DataTableViewOptions table={table} />
     </div>

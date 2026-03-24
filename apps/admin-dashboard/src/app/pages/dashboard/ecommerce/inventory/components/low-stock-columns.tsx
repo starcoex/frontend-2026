@@ -2,9 +2,13 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { PackagePlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { StoreInventory } from '@starcoex-frontend/inventory';
 import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
 import { INVENTORY_ROUTES } from '@/app/constants/inventory-routes';
+import { InventoryAddStockDrawer } from '@/app/pages/dashboard/ecommerce/inventory/inventory-detail/components/inventory-add-stock-drawer';
 
 // 위험도 우선순위: 재고없음 > 재고부족 > 재주문필요
 const getUrgencyLevel = (inv: StoreInventory) => {
@@ -27,6 +31,35 @@ const URGENCY_CONFIG: Record<
   'low-stock': { label: '재고 부족', variant: 'warning', priority: 2 },
   'needs-reorder': { label: '재주문 필요', variant: 'outline', priority: 3 },
 };
+
+// 입고 버튼 — 행마다 독립적인 drawer 상태 관리
+function AddStockCell({ inventory }: { inventory: StoreInventory }) {
+  const [open, setOpen] = useState(false);
+
+  // FUEL 구역은 수동 입고 불가
+  if (inventory.zone === 'FUEL') {
+    return <span className="text-muted-foreground text-xs">-</span>;
+  }
+
+  return (
+    <>
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 px-2 text-xs"
+        onClick={() => setOpen(true)}
+      >
+        <PackagePlus className="mr-1 h-3 w-3" />
+        입고
+      </Button>
+      <InventoryAddStockDrawer
+        inventory={inventory}
+        open={open}
+        onOpenChange={setOpen}
+      />
+    </>
+  );
+}
 
 export const lowStockColumns: ColumnDef<StoreInventory>[] = [
   {
@@ -177,5 +210,10 @@ export const lowStockColumns: ColumnDef<StoreInventory>[] = [
           : '미실사'}
       </span>
     ),
+  },
+  {
+    id: 'actions',
+    enableHiding: false,
+    cell: ({ row }) => <AddStockCell inventory={row.original} />,
   },
 ];

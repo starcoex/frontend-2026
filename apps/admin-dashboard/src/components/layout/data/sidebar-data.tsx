@@ -2,6 +2,7 @@ import {
   IconBarbell,
   IconBoxSeam,
   IconBuildingStore,
+  IconCalendar,
   IconCar,
   IconCarCrane,
   IconCategory,
@@ -194,6 +195,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconBoxSeam,
             items: [
               { title: '재고 현황', url: '/admin/inventory' },
+              { title: '재고 추가', url: '/admin/inventory/create' }, // ← 추가
               { title: '재고 부족', url: '/admin/inventory/low-stock' },
             ],
           },
@@ -225,6 +227,32 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '매장 목록', url: '/admin/stores' },
               { title: '매장 추가', url: '/admin/stores/create' },
               { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
+            ],
+          },
+        ],
+      },
+      // ✅ 예약 관리 그룹 (신규)
+      {
+        title: '예약 관리',
+        items: [
+          {
+            title: '예약 관리',
+            url: '/admin/reservations',
+            icon: IconCalendar,
+            items: [
+              { title: '예약 목록', url: '/admin/reservations' },
+              { title: '예약 추가', url: '/admin/reservations/create' },
+              {
+                title: '서비스 설정',
+                url: '/admin/reservations/services',
+              },
+              { title: '워크인 관리', url: '/admin/walk-ins' },
+              { title: '주유 워크인', url: '/admin/fuel-walk-ins' },
+              { title: '난방유 배달', url: '/admin/heating-oil-deliveries' },
+              {
+                title: '배달 등록',
+                url: '/admin/heating-oil-deliveries/create',
+              },
             ],
           },
         ],

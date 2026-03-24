@@ -172,6 +172,12 @@ import {
   CHANGE_USER_ROLE,
   CREATE_GUEST_USER_BY_ADMIN,
   CreateGuestUserByAdminMutation,
+  DeleteUsersByAdminMutation,
+  DELETE_USERS_BY_ADMIN,
+  DeleteInvitationMutation,
+  DELETE_INVITATION,
+  DeleteInvitationsMutation,
+  DELETE_INVITATIONS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -691,6 +697,16 @@ export class AuthService implements IAuthService {
     >(DELETE_USER_BY_ADMIN, { id });
   }
 
+  // ✅ 신규: 관리자가 사용자 다건 삭제
+  async deleteUsersByAdmin(
+    ids: number[]
+  ): Promise<ApiResponse<DeleteUsersByAdminMutation>> {
+    return this.mutate<DeleteUsersByAdminMutation, { ids: number[] }>(
+      DELETE_USERS_BY_ADMIN,
+      { ids }
+    );
+  }
+
   // 사용자 초대
   async inviteUser(
     input: InviteUserInput
@@ -719,6 +735,26 @@ export class AuthService implements IAuthService {
       ResendInvitationMutation,
       ResendInvitationMutationVariables
     >(RESEND_INVITATION, { invitationId });
+  }
+
+  // ✅ 신규: 초대 단건 삭제 (Hard Delete)
+  async deleteInvitation(
+    invitationId: number
+  ): Promise<ApiResponse<DeleteInvitationMutation>> {
+    return this.mutate<DeleteInvitationMutation, { invitationId: number }>(
+      DELETE_INVITATION,
+      { invitationId }
+    );
+  }
+
+  // ✅ 신규: 초대 다건 삭제 (Hard Delete)
+  async deleteInvitations(
+    ids: number[]
+  ): Promise<ApiResponse<DeleteInvitationsMutation>> {
+    return this.mutate<DeleteInvitationsMutation, { ids: number[] }>(
+      DELETE_INVITATIONS,
+      { ids }
+    );
   }
 
   // ✅ 초대 토큰 검증 (공개 API)

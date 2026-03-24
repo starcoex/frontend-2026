@@ -79,6 +79,9 @@ import {
   ChangeRoleInput,
   ChangeUserRoleMutation,
   CreateGuestUserByAdminMutation,
+  DeleteUsersByAdminMutation,
+  DeleteInvitationMutation,
+  DeleteInvitationsMutation,
 } from '@starcoex-frontend/graphql';
 import type { ApiResponse, IAuthService } from '../types';
 
@@ -223,6 +226,10 @@ interface UseAuthReturn {
   deleteUserByAdmin(
     id: number
   ): Promise<ApiResponse<DeleteUserByAdminMutation>>;
+  // ✅ 신규
+  deleteUsersByAdmin(
+    ids: number[]
+  ): Promise<ApiResponse<DeleteUsersByAdminMutation>>;
   inviteUser(input: InviteUserInput): Promise<ApiResponse<InviteUserMutation>>;
   cancelInvitation(
     invitationId: number
@@ -230,6 +237,13 @@ interface UseAuthReturn {
   resendInvitation(
     invitationId: number
   ): Promise<ApiResponse<ResendInvitationMutation>>;
+  // ✅ 신규
+  deleteInvitation(
+    invitationId: number
+  ): Promise<ApiResponse<DeleteInvitationMutation>>;
+  deleteInvitations(
+    ids: number[]
+  ): Promise<ApiResponse<DeleteInvitationsMutation>>;
   verifyInvitationToken(
     token: string
   ): Promise<ApiResponse<VerifyInvitationTokenQuery>>;
@@ -845,6 +859,16 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
+  // ✅ 신규: 사용자 다건 삭제
+  const deleteUsersByAdmin = useCallback(
+    (ids: number[]) =>
+      withLoading(
+        () => getAuthService().deleteUsersByAdmin(ids),
+        '사용자 다건 삭제에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
   const inviteUser = useCallback(
     (input: InviteUserInput) =>
       withLoading(
@@ -871,6 +895,26 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         () => getAuthService().resendInvitation(invitationId),
         '초대 재발송에 실패했습니다'
         // ✅ preventDuplicate 없음 → 동시 재발송 가능
+      ),
+    [withLoading]
+  );
+
+  // ✅ 신규: 초대 단건 삭제
+  const deleteInvitation = useCallback(
+    (invitationId: number) =>
+      withLoading(
+        () => getAuthService().deleteInvitation(invitationId),
+        '초대 삭제에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
+  // ✅ 신규: 초대 다건 삭제
+  const deleteInvitations = useCallback(
+    (ids: number[]) =>
+      withLoading(
+        () => getAuthService().deleteInvitations(ids),
+        '초대 다건 삭제에 실패했습니다'
       ),
     [withLoading]
   );
@@ -986,9 +1030,12 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     getInvitations,
     updateUserByAdmin,
     deleteUserByAdmin,
+    deleteUsersByAdmin, // ✅ 신규
     inviteUser,
     cancelInvitation,
     resendInvitation,
+    deleteInvitation, // ✅ 신규
+    deleteInvitations, // ✅ 신규
     verifyInvitationToken,
     acceptInvitation,
 

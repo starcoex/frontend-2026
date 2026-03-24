@@ -25,9 +25,21 @@ import {
 const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [INVENTORY_ROUTES.LIST]: INVENTORY_BREADCRUMB_CONFIGS.LIST,
   [INVENTORY_ROUTES.LOW_STOCK]: INVENTORY_BREADCRUMB_CONFIGS.LOW_STOCK,
+  [INVENTORY_ROUTES.CREATE]: INVENTORY_BREADCRUMB_CONFIGS.CREATE, // ← 추가
 };
 
 const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
+  const editMatch = pathname.match(INVENTORY_ROUTE_PATTERNS.EDIT);
+  if (editMatch) {
+    return {
+      label: `재고 수정 #${editMatch[1]}`,
+      title: `재고 수정 #${editMatch[1]}`,
+      showInBreadcrumb: true,
+      showActions: false,
+      showStats: false,
+    };
+  }
+
   const detailMatch = pathname.match(INVENTORY_ROUTE_PATTERNS.DETAIL);
   if (detailMatch) {
     return {
@@ -43,11 +55,13 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
 
 export const InventoryLayout = () => {
   const location = useLocation();
-  const { inventories, fetchLowStockInventories } = useInventory();
+  const { inventories, fetchLowStockInventories, fetchStoreInventories } =
+    useInventory();
 
   useEffect(() => {
+    fetchStoreInventories();
     fetchLowStockInventories();
-  }, [fetchLowStockInventories]);
+  }, [fetchStoreInventories, fetchLowStockInventories]);
 
   const config = useMemo((): BreadcrumbConfig => {
     const pathname = location.pathname;

@@ -28,6 +28,13 @@ export function InventoryStats({
       (sum, inv) => sum + inv.availableStock,
       0
     );
+    // 신규: 알림 카운트
+    const hasAlertCount = inventories.filter(
+      (inv) => inv.hasMinStockAlert || inv.hasReorderAlert
+    ).length;
+    const hasExpiringCount = inventories.filter(
+      (inv) => inv.hasExpiringItems
+    ).length;
 
     return {
       totalItems,
@@ -35,6 +42,8 @@ export function InventoryStats({
       outOfStockCount,
       needsReorderCount,
       totalAvailableStock,
+      hasAlertCount,
+      hasExpiringCount,
     };
   }, [inventories]);
 
@@ -67,6 +76,15 @@ export function InventoryStats({
       badge:
         stats.needsReorderCount > 0
           ? { label: '조치 필요', variant: 'warning' as const }
+          : { label: '정상', variant: 'outline' as const },
+    },
+    {
+      label: '유통기한 임박',
+      value: stats.hasExpiringCount,
+      icon: AlertTriangle,
+      badge:
+        stats.hasExpiringCount > 0
+          ? { label: '확인 필요', variant: 'destructive' as const }
           : { label: '정상', variant: 'outline' as const },
     },
   ];

@@ -51,6 +51,7 @@ const FormSchema = z.object({
   storePrice: z.number().min(0).optional(),
   location: z.string().optional(),
   zone: z.string().optional(),
+  unit: z.string().optional(), // ← 추가
   isActive: z.boolean(),
   isAvailable: z.boolean(),
   isSellable: z.boolean(),
@@ -69,7 +70,7 @@ export function InventoryCreateDrawer({
   onOpenChange,
   defaultProductId,
 }: InventoryCreateDrawerProps) {
-  const { createInventory } = useInventory();
+  const { createInventory, fetchStoreInventories } = useInventory();
   const { stores, fetchStores } = useStores();
 
   useEffect(() => {
@@ -92,6 +93,7 @@ export function InventoryCreateDrawer({
       storePrice: undefined,
       location: '',
       zone: '',
+      unit: 'EA', // ← 추가
       isActive: true,
       isAvailable: true,
       isSellable: true,
@@ -112,6 +114,7 @@ export function InventoryCreateDrawer({
         storePrice: undefined,
         location: '',
         zone: '',
+        unit: 'EA', // ← 추가
         isActive: true,
         isAvailable: true,
         isSellable: true,
@@ -134,6 +137,7 @@ export function InventoryCreateDrawer({
       storePrice: data.storePrice,
       location: data.location || undefined,
       zone: data.zone || undefined,
+      unit: data.unit || undefined, // ← 추가
       isActive: data.isActive,
       isAvailable: data.isAvailable,
       isSellable: data.isSellable,
@@ -142,6 +146,8 @@ export function InventoryCreateDrawer({
     if (res.success) {
       toast.success('재고가 성공적으로 생성되었습니다.');
       onOpenChange(false);
+      // 서버 기준으로 목록 + 통계 동기화
+      await fetchStoreInventories();
     } else {
       toast.error(res.error?.message ?? '재고 생성에 실패했습니다.');
     }
@@ -407,6 +413,24 @@ export function InventoryCreateDrawer({
                 )}
               />
             </div>
+
+            {/* 재고 단위 */}
+            <FormField
+              control={form.control}
+              name="unit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>재고 단위</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="EA, LITER, KG 등" />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    예: EA(개), LITER(리터), KG(킬로그램)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* 상태 토글 */}
             <div className="space-y-3 rounded-lg border p-4">

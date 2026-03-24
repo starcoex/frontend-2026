@@ -36,9 +36,10 @@ declare module '@tanstack/react-table' {
 interface Props {
   columns: ColumnDef<User>[];
   data: User[];
+  onDeleted?: () => void; // ✅ 추가
 }
 
-export function UsersTable({ columns, data }: Props) {
+export function UsersTable({ columns, data, onDeleted }: Props) {
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -68,7 +69,7 @@ export function UsersTable({ columns, data }: Props) {
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar table={table} />
+      <DataTableToolbar table={table} onDeleted={onDeleted} /> {/* ✅ 전달 */}
       <div className="rounded-md border">
         <Table>
           <TableHeader>

@@ -81,6 +81,9 @@ export const INVENTORY_REASON_OPTIONS = [
   { value: 'ORDER_CONFIRM', label: '주문 확정', group: '예약' },
   // 기타
   { value: 'COUNT_ADJUSTMENT', label: '실사 조정', group: '기타' },
+  { value: 'FUEL_DELIVERY_IN', label: '난방유 입고' },
+  { value: 'FUEL_DISPENSED', label: '연료 출고 (주유)' },
+  { value: 'FUEL_ADJUSTMENT', label: '연료 재고 조정' },
 ] as const;
 
 export type InventoryReasonValue =

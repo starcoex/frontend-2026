@@ -21,6 +21,21 @@ export const INVENTORY_BREADCRUMB_CONFIGS = {
     showActions: false,
     showStats: false,
   },
+  CREATE: {
+    // ← 추가
+    label: '재고 추가',
+    title: '재고 추가',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
+  EDIT: {
+    label: '재고 수정',
+    title: '재고 수정',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
 } as const;
 
 export const DEFAULT_INVENTORY_BREADCRUMB_CONFIG: BreadcrumbConfig = {

@@ -12,6 +12,13 @@ import type {
   StoreInventory,
   CreateStoreInventoryInput,
   CreateStoreInventoryOutput,
+  AddFuelStockInput,
+  FuelInventoryOutput,
+  DispenseFuelInput,
+  UpdateStoreInventoryInput,
+  UpdateStoreInventoryOutput,
+  AddStockInput,
+  AddStockOutput,
 } from '../types';
 import {
   GET_INVENTORY_BY_ID,
@@ -21,6 +28,10 @@ import {
   GET_STORE_INVENTORIES,
   DELETE_STORE_INVENTORY,
   DELETE_STORE_INVENTORIES,
+  ADD_FUEL_STOCK,
+  DISPENSE_FUEL,
+  UPDATE_STORE_INVENTORY,
+  ADD_STOCK,
 } from '@starcoex-frontend/graphql';
 
 export class InventoryService implements IInventoryService {
@@ -174,6 +185,18 @@ export class InventoryService implements IInventoryService {
     return res as unknown as ApiResponse<CreateStoreInventoryOutput>;
   }
 
+  async updateStoreInventory(
+    input: UpdateStoreInventoryInput
+  ): Promise<ApiResponse<UpdateStoreInventoryOutput>> {
+    const res = await this.mutate<{
+      updateStoreInventory: UpdateStoreInventoryOutput;
+    }>(UPDATE_STORE_INVENTORY, { input });
+    if (res.success && res.data?.updateStoreInventory) {
+      return { success: true, data: res.data.updateStoreInventory };
+    }
+    return res as unknown as ApiResponse<UpdateStoreInventoryOutput>;
+  }
+
   async deleteStoreInventory(id: number): Promise<ApiResponse<boolean>> {
     const res = await this.mutate<{ deleteStoreInventory: boolean }>(
       DELETE_STORE_INVENTORY,
@@ -194,5 +217,41 @@ export class InventoryService implements IInventoryService {
       return { success: true, data: res.data.deleteStoreInventories };
     }
     return res as unknown as ApiResponse<boolean>;
+  }
+
+  async addStock(input: AddStockInput): Promise<ApiResponse<AddStockOutput>> {
+    const res = await this.mutate<{ addStock: AddStockOutput }>(ADD_STOCK, {
+      input,
+    });
+    if (res.success && res.data?.addStock) {
+      return { success: true, data: res.data.addStock };
+    }
+    return res as unknown as ApiResponse<AddStockOutput>;
+  }
+
+  async addFuelStock(
+    input: AddFuelStockInput
+  ): Promise<ApiResponse<FuelInventoryOutput>> {
+    const res = await this.mutate<{ addFuelStock: FuelInventoryOutput }>(
+      ADD_FUEL_STOCK,
+      { input }
+    );
+    if (res.success && res.data?.addFuelStock) {
+      return { success: true, data: res.data.addFuelStock };
+    }
+    return res as unknown as ApiResponse<FuelInventoryOutput>;
+  }
+
+  async dispenseFuel(
+    input: DispenseFuelInput
+  ): Promise<ApiResponse<FuelInventoryOutput>> {
+    const res = await this.mutate<{ dispenseFuel: FuelInventoryOutput }>(
+      DISPENSE_FUEL,
+      { input }
+    );
+    if (res.success && res.data?.dispenseFuel) {
+      return { success: true, data: res.data.dispenseFuel };
+    }
+    return res as unknown as ApiResponse<FuelInventoryOutput>;
   }
 }

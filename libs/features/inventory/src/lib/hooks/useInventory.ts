@@ -1,5 +1,11 @@
 import { useCallback, useRef } from 'react';
-import type { ApiResponse } from '../types';
+import type {
+  AddFuelStockInput,
+  AddStockInput,
+  ApiResponse,
+  DispenseFuelInput,
+  UpdateStoreInventoryInput,
+} from '../types';
 import { useInventoryContext } from '../context';
 import { getInventoryService } from '../services';
 import type { CreateStoreInventoryInput } from '../types';
@@ -136,6 +142,28 @@ export const useInventory = () => {
     [withLoading, addInventory]
   );
 
+  const updateStoreInventory = useCallback(
+    async (input: UpdateStoreInventoryInput) =>
+      withLoading(async () => {
+        const service = getInventoryService();
+        const res = await service.updateStoreInventory(input);
+        if (res.success && res.data?.inventory) {
+          updateInventoryInContext(input.id, res.data.inventory);
+          // currentInventory도 동기화
+          if (currentInventory?.id === input.id) {
+            setCurrentInventory(res.data.inventory);
+          }
+        }
+        return res;
+      }, '재고 수정에 실패했습니다.'),
+    [
+      withLoading,
+      updateInventoryInContext,
+      currentInventory,
+      setCurrentInventory,
+    ]
+  );
+
   const deleteStoreInventory = useCallback(
     async (id: number) =>
       withLoading(async () => {
@@ -178,6 +206,54 @@ export const useInventory = () => {
     ]
   );
 
+  const addStock = useCallback(
+    async (input: AddStockInput) =>
+      withLoading(async () => {
+        const service = getInventoryService();
+        const res = await service.addStock(input);
+        if (res.success && res.data?.inventory) {
+          updateInventoryInContext(res.data.inventory.id, res.data.inventory);
+          if (currentInventory?.id === res.data.inventory.id) {
+            setCurrentInventory(res.data.inventory);
+          }
+        }
+        return res;
+      }, '재고 입고 처리에 실패했습니다.'),
+    [
+      withLoading,
+      updateInventoryInContext,
+      currentInventory,
+      setCurrentInventory,
+    ]
+  );
+
+  const addFuelStock = useCallback(
+    async (input: AddFuelStockInput) =>
+      withLoading(async () => {
+        const service = getInventoryService();
+        const res = await service.addFuelStock(input);
+        // 성공 시 해당 inventory context 업데이트
+        if (res.success && res.data?.inventory) {
+          updateInventoryInContext(res.data.inventory.id, res.data.inventory);
+        }
+        return res;
+      }, '연료 입고 처리에 실패했습니다.'),
+    [withLoading, updateInventoryInContext]
+  );
+
+  const dispenseFuel = useCallback(
+    async (input: DispenseFuelInput) =>
+      withLoading(async () => {
+        const service = getInventoryService();
+        const res = await service.dispenseFuel(input);
+        if (res.success && res.data?.inventory) {
+          updateInventoryInContext(res.data.inventory.id, res.data.inventory);
+        }
+        return res;
+      }, '연료 출고 처리에 실패했습니다.'),
+    [withLoading, updateInventoryInContext]
+  );
+
   // ============================================================================
   // 필터링된 재고 목록 (클라이언트 사이드)
   // ============================================================================
@@ -213,8 +289,12 @@ export const useInventory = () => {
 
     // Mutations
     createInventory,
+    updateStoreInventory, // 신규
     deleteStoreInventory,
     deleteStoreInventories,
+    addFuelStock, // 신규
+    dispenseFuel, // 신규
+    addStock, // 신규
 
     // 편의 값
     inventories,

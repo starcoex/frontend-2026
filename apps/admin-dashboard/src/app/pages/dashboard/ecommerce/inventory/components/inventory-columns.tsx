@@ -76,6 +76,9 @@ export const inventoryColumns: ColumnDef<StoreInventory>[] = [
     cell: ({ row }) => (
       <span className="font-medium">
         {row.original.currentStock.toLocaleString()}
+        <span className="text-muted-foreground ml-1 text-xs">
+          {row.original.unit}
+        </span>
       </span>
     ),
   },
@@ -151,7 +154,17 @@ export const inventoryColumns: ColumnDef<StoreInventory>[] = [
     cell: ({ row }) => {
       const status = getStockStatus(row.original);
       const config = STOCK_STATUS_CONFIG[status];
-      return <Badge variant={config.variant}>{config.label}</Badge>;
+      const inv = row.original;
+      return (
+        <div className="flex flex-wrap gap-1">
+          <Badge variant={config.variant}>{config.label}</Badge>
+          {inv.hasExpiringItems && (
+            <Badge variant="destructive" className="text-xs">
+              유통기한 임박
+            </Badge>
+          )}
+        </div>
+      );
     },
     filterFn: (row, _, value: string[]) => {
       if (!value?.length) return true;
