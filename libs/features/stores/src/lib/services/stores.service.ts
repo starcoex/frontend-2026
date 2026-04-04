@@ -8,45 +8,87 @@ import {
   CREATE_STORE,
   UPDATE_STORE,
   DELETE_STORE,
+  DELETE_STORES,
   CREATE_BRAND,
   UPDATE_BRAND,
   DELETE_BRAND,
+  DELETE_BRANDS,
+  GET_STORE_STATISTICS,
+  LIST_BUSINESS_TYPES,
+  ADD_STORE_SERVICE,
+  REMOVE_STORE_SERVICE,
+  ADD_STORE_MANAGER,
+  REMOVE_STORE_MANAGER,
   ListStoresQuery,
   GetStoreByIdQuery,
   GetStoreByIdQueryVariables,
   ListBrandsQuery,
   GetBrandByIdQuery,
   GetBrandByIdQueryVariables,
+  ListBusinessTypesQuery,
   CreateStoreMutation,
   CreateStoreMutationVariables,
   UpdateStoreMutation,
   UpdateStoreMutationVariables,
   DeleteStoreMutation,
   DeleteStoreMutationVariables,
+  AddStoreServiceMutation,
+  AddStoreServiceMutationVariables,
+  RemoveStoreServiceMutation,
+  RemoveStoreServiceMutationVariables,
+  AddStoreManagerMutation,
+  AddStoreManagerMutationVariables,
+  RemoveStoreManagerMutation,
+  RemoveStoreManagerMutationVariables,
   CreateBrandMutation,
   CreateBrandMutationVariables,
   UpdateBrandMutation,
   UpdateBrandMutationVariables,
   DeleteBrandMutation,
   DeleteBrandMutationVariables,
+  GetStoreStatisticsQuery,
   CreateStoreInput,
   UpdateStoreInput,
   DeleteStoreInput,
+  AddStoreServiceInput,
+  RemoveStoreServiceInput,
+  AddStoreManagerInput,
+  RemoveStoreManagerInput,
   CreateBrandInput,
   UpdateBrandInput,
   DeleteBrandInput,
   Store,
   Brand,
+  BusinessType,
   CreateStoreOutput,
   UpdateStoreOutput,
   DeleteStoreOutput,
   CreateBrandOutput,
   UpdateBrandOutput,
   DeleteBrandOutput,
-  GetStoreStatisticsQuery,
-  GET_STORE_STATISTICS,
-  DELETE_STORES,
-  DELETE_BRANDS,
+  CreateBusinessTypeInput,
+  CreateBusinessTypeOutput,
+  CreateBusinessTypeMutation,
+  CREATE_BUSINESS_TYPE,
+  CreateBusinessTypeMutationVariables,
+  UpdateBusinessTypeInput,
+  UpdateBusinessTypeOutput,
+  UpdateBusinessTypeMutation,
+  UPDATE_BUSINESS_TYPE,
+  UpdateBusinessTypeMutationVariables,
+  CreateServiceTypeInput,
+  CreateServiceTypeOutput,
+  CreateServiceTypeMutation,
+  CREATE_SERVICE_TYPE,
+  CreateServiceTypeMutationVariables,
+  UpdateServiceTypeInput,
+  UpdateServiceTypeOutput,
+  UpdateServiceTypeMutation,
+  UpdateServiceTypeMutationVariables,
+  UPDATE_SERVICE_TYPE,
+  ServiceType,
+  ListServiceTypesQuery,
+  LIST_SERVICE_TYPES,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -54,12 +96,16 @@ import {
   apiErrorFromUnknown,
   createErrorResponse,
 } from '../errors';
-import { ApiResponse, IStoresService, StoreStatsOutput } from '../types';
+import {
+  ApiResponse,
+  IStoresService,
+  StoreStatsOutput,
+  AddStoreServiceOutput,
+} from '../types';
 
 export class StoresService implements IStoresService {
   constructor(private client: ApolloClient) {}
 
-  // 공통 mutation helper
   private async mutate<
     TData = any,
     TVars extends OperationVariables = OperationVariables
@@ -74,7 +120,6 @@ export class StoresService implements IStoresService {
         errorPolicy: 'all',
         fetchPolicy: 'network-only',
       });
-
       if (error) {
         const gqlError: GraphQLFormattedError = {
           message: error.message ?? '요청 처리 중 오류가 발생했습니다.',
@@ -82,19 +127,18 @@ export class StoresService implements IStoresService {
           path: undefined,
           extensions: (extensions ?? {}) as Record<string, unknown>,
         };
-        const apiError = apiErrorFromGraphQLErrors([gqlError]);
-        return createErrorResponse<TData>(apiError);
+        return createErrorResponse<TData>(
+          apiErrorFromGraphQLErrors([gqlError])
+        );
       }
-
       return { success: true, data: data as TData };
     } catch (e) {
-      const apiError =
-        e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e);
-      return createErrorResponse<TData>(apiError);
+      return createErrorResponse<TData>(
+        e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e)
+      );
     }
   }
 
-  // 공통 query helper
   private async query<
     TData = any,
     TVars extends OperationVariables = OperationVariables
@@ -106,13 +150,11 @@ export class StoresService implements IStoresService {
         errorPolicy: 'all',
         fetchPolicy: 'network-only',
       });
-
       const { data, error, extensions } = result as {
         data?: TData;
         error?: { message?: string };
         extensions?: Record<string, unknown>;
       };
-
       if (error) {
         const gqlError: GraphQLFormattedError = {
           message: error.message ?? '요청 처리 중 오류가 발생했습니다.',
@@ -120,15 +162,15 @@ export class StoresService implements IStoresService {
           path: undefined,
           extensions: extensions ?? {},
         };
-        const apiError = apiErrorFromGraphQLErrors([gqlError]);
-        return createErrorResponse<TData>(apiError);
+        return createErrorResponse<TData>(
+          apiErrorFromGraphQLErrors([gqlError])
+        );
       }
-
       return { success: true, data: data as TData };
     } catch (e) {
-      const apiError =
-        e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e);
-      return createErrorResponse<TData>(apiError);
+      return createErrorResponse<TData>(
+        e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e)
+      );
     }
   }
 
@@ -136,9 +178,8 @@ export class StoresService implements IStoresService {
 
   async listStores(): Promise<ApiResponse<Store[]>> {
     const res = await this.query<ListStoresQuery>(LIST_STORES);
-    if (res.success && res.data?.listStores) {
+    if (res.success && res.data?.listStores)
       return { success: true, data: res.data.listStores as Store[] };
-    }
     return res as unknown as ApiResponse<Store[]>;
   }
 
@@ -147,20 +188,18 @@ export class StoresService implements IStoresService {
       GET_STORE_BY_ID,
       { id }
     );
-    if (res.success && res.data?.getStoreById) {
+    if (res.success && res.data?.getStoreById)
       return { success: true, data: res.data.getStoreById as Store };
-    }
     return res as unknown as ApiResponse<Store>;
   }
 
   async getStoreStatistics(): Promise<ApiResponse<StoreStatsOutput>> {
     const res = await this.query<GetStoreStatisticsQuery>(GET_STORE_STATISTICS);
-    if (res.success && res.data?.getStoreStatistics) {
+    if (res.success && res.data?.getStoreStatistics)
       return {
         success: true,
         data: res.data.getStoreStatistics as StoreStatsOutput,
       };
-    }
     return res as unknown as ApiResponse<StoreStatsOutput>;
   }
 
@@ -168,9 +207,8 @@ export class StoresService implements IStoresService {
 
   async listBrands(): Promise<ApiResponse<Brand[]>> {
     const res = await this.query<ListBrandsQuery>(LIST_BRANDS);
-    if (res.success && res.data?.listBrands) {
+    if (res.success && res.data?.listBrands)
       return { success: true, data: res.data.listBrands as Brand[] };
-    }
     return res as unknown as ApiResponse<Brand[]>;
   }
 
@@ -179,10 +217,33 @@ export class StoresService implements IStoresService {
       GET_BRAND_BY_ID,
       { id }
     );
-    if (res.success && res.data?.getBrandById) {
+    if (res.success && res.data?.getBrandById)
       return { success: true, data: res.data.getBrandById as Brand };
-    }
     return res as unknown as ApiResponse<Brand>;
+  }
+
+  // ===== ServiceType Query ✅ 신규 =====
+
+  async listServiceTypes(): Promise<ApiResponse<ServiceType[]>> {
+    const res = await this.query<ListServiceTypesQuery>(LIST_SERVICE_TYPES);
+    if (res.success && res.data?.listServiceTypes)
+      return {
+        success: true,
+        data: res.data.listServiceTypes as ServiceType[],
+      };
+    return res as unknown as ApiResponse<ServiceType[]>;
+  }
+
+  // ===== BusinessType Queries ✅ 신규 =====
+
+  async listBusinessTypes(): Promise<ApiResponse<BusinessType[]>> {
+    const res = await this.query<ListBusinessTypesQuery>(LIST_BUSINESS_TYPES);
+    if (res.success && res.data?.listBusinessTypes)
+      return {
+        success: true,
+        data: res.data.listBusinessTypes as BusinessType[],
+      };
+    return res as unknown as ApiResponse<BusinessType[]>;
   }
 
   // ===== Store Mutations =====
@@ -194,12 +255,8 @@ export class StoresService implements IStoresService {
       CreateStoreMutation,
       CreateStoreMutationVariables
     >(CREATE_STORE, { input });
-    if (res.success && res.data?.createStore) {
-      return {
-        success: true,
-        data: res.data.createStore as CreateStoreOutput,
-      };
-    }
+    if (res.success && res.data?.createStore)
+      return { success: true, data: res.data.createStore as CreateStoreOutput };
     return res as ApiResponse<CreateStoreOutput>;
   }
 
@@ -210,12 +267,8 @@ export class StoresService implements IStoresService {
       UpdateStoreMutation,
       UpdateStoreMutationVariables
     >(UPDATE_STORE, { input });
-    if (res.success && res.data?.updateStore) {
-      return {
-        success: true,
-        data: res.data.updateStore as UpdateStoreOutput,
-      };
-    }
+    if (res.success && res.data?.updateStore)
+      return { success: true, data: res.data.updateStore as UpdateStoreOutput };
     return res as ApiResponse<UpdateStoreOutput>;
   }
 
@@ -226,12 +279,8 @@ export class StoresService implements IStoresService {
       DeleteStoreMutation,
       DeleteStoreMutationVariables
     >(DELETE_STORE, { input });
-    if (res.success && res.data?.deleteStore) {
-      return {
-        success: true,
-        data: res.data.deleteStore as DeleteStoreOutput,
-      };
-    }
+    if (res.success && res.data?.deleteStore)
+      return { success: true, data: res.data.deleteStore as DeleteStoreOutput };
     return res as ApiResponse<DeleteStoreOutput>;
   }
 
@@ -240,10 +289,73 @@ export class StoresService implements IStoresService {
       DELETE_STORES,
       { ids }
     );
-    if (res.success && res.data !== undefined) {
+    if (res.success && res.data !== undefined)
       return { success: true, data: res.data.deleteStores };
-    }
     return res as unknown as ApiResponse<boolean>;
+  }
+
+  // ===== StoreService Mutations ✅ 신규 =====
+
+  async addStoreService(
+    input: AddStoreServiceInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>> {
+    const res = await this.mutate<
+      AddStoreServiceMutation,
+      AddStoreServiceMutationVariables
+    >(ADD_STORE_SERVICE, { input });
+    if (res.success && res.data?.addStoreService)
+      return {
+        success: true,
+        data: res.data.addStoreService as AddStoreServiceOutput,
+      };
+    return res as ApiResponse<AddStoreServiceOutput>;
+  }
+
+  async removeStoreService(
+    input: RemoveStoreServiceInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>> {
+    const res = await this.mutate<
+      RemoveStoreServiceMutation,
+      RemoveStoreServiceMutationVariables
+    >(REMOVE_STORE_SERVICE, { input });
+    if (res.success && res.data?.removeStoreService)
+      return {
+        success: true,
+        data: res.data.removeStoreService as AddStoreServiceOutput,
+      };
+    return res as ApiResponse<AddStoreServiceOutput>;
+  }
+
+  // ===== StoreManager Mutations ✅ 신규 =====
+
+  async addStoreManager(
+    input: AddStoreManagerInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>> {
+    const res = await this.mutate<
+      AddStoreManagerMutation,
+      AddStoreManagerMutationVariables
+    >(ADD_STORE_MANAGER, { input });
+    if (res.success && res.data?.addStoreManager)
+      return {
+        success: true,
+        data: res.data.addStoreManager as AddStoreServiceOutput,
+      };
+    return res as ApiResponse<AddStoreServiceOutput>;
+  }
+
+  async removeStoreManager(
+    input: RemoveStoreManagerInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>> {
+    const res = await this.mutate<
+      RemoveStoreManagerMutation,
+      RemoveStoreManagerMutationVariables
+    >(REMOVE_STORE_MANAGER, { input });
+    if (res.success && res.data?.removeStoreManager)
+      return {
+        success: true,
+        data: res.data.removeStoreManager as AddStoreServiceOutput,
+      };
+    return res as ApiResponse<AddStoreServiceOutput>;
   }
 
   // ===== Brand Mutations =====
@@ -255,12 +367,8 @@ export class StoresService implements IStoresService {
       CreateBrandMutation,
       CreateBrandMutationVariables
     >(CREATE_BRAND, { input });
-    if (res.success && res.data?.createBrand) {
-      return {
-        success: true,
-        data: res.data.createBrand as CreateBrandOutput,
-      };
-    }
+    if (res.success && res.data?.createBrand)
+      return { success: true, data: res.data.createBrand as CreateBrandOutput };
     return res as ApiResponse<CreateBrandOutput>;
   }
 
@@ -271,12 +379,8 @@ export class StoresService implements IStoresService {
       UpdateBrandMutation,
       UpdateBrandMutationVariables
     >(UPDATE_BRAND, { input });
-    if (res.success && res.data?.updateBrand) {
-      return {
-        success: true,
-        data: res.data.updateBrand as UpdateBrandOutput,
-      };
-    }
+    if (res.success && res.data?.updateBrand)
+      return { success: true, data: res.data.updateBrand as UpdateBrandOutput };
     return res as ApiResponse<UpdateBrandOutput>;
   }
 
@@ -287,12 +391,8 @@ export class StoresService implements IStoresService {
       DeleteBrandMutation,
       DeleteBrandMutationVariables
     >(DELETE_BRAND, { input });
-    if (res.success && res.data?.deleteBrand) {
-      return {
-        success: true,
-        data: res.data.deleteBrand as DeleteBrandOutput,
-      };
-    }
+    if (res.success && res.data?.deleteBrand)
+      return { success: true, data: res.data.deleteBrand as DeleteBrandOutput };
     return res as ApiResponse<DeleteBrandOutput>;
   }
 
@@ -301,9 +401,72 @@ export class StoresService implements IStoresService {
       DELETE_BRANDS,
       { ids }
     );
-    if (res.success && res.data !== undefined) {
+    if (res.success && res.data !== undefined)
       return { success: true, data: res.data.deleteBrands };
-    }
     return res as unknown as ApiResponse<boolean>;
+  }
+
+  // ===== BusinessType Mutations (슈퍼 어드민) ✅ 신규 =====
+
+  async createBusinessType(
+    input: CreateBusinessTypeInput
+  ): Promise<ApiResponse<CreateBusinessTypeOutput>> {
+    const res = await this.mutate<
+      CreateBusinessTypeMutation,
+      CreateBusinessTypeMutationVariables
+    >(CREATE_BUSINESS_TYPE, { input });
+    if (res.success && res.data?.createBusinessType)
+      return {
+        success: true,
+        data: res.data.createBusinessType as CreateBusinessTypeOutput,
+      };
+    return res as unknown as ApiResponse<CreateBusinessTypeOutput>;
+  }
+
+  async updateBusinessType(
+    input: UpdateBusinessTypeInput
+  ): Promise<ApiResponse<UpdateBusinessTypeOutput>> {
+    const res = await this.mutate<
+      UpdateBusinessTypeMutation,
+      UpdateBusinessTypeMutationVariables
+    >(UPDATE_BUSINESS_TYPE, { input });
+    if (res.success && res.data?.updateBusinessType)
+      return {
+        success: true,
+        data: res.data.updateBusinessType as UpdateBusinessTypeOutput,
+      };
+    return res as unknown as ApiResponse<UpdateBusinessTypeOutput>;
+  }
+
+  // ===== ServiceType Mutations (슈퍼 어드민) ✅ 신규 =====
+
+  async createServiceType(
+    input: CreateServiceTypeInput
+  ): Promise<ApiResponse<CreateServiceTypeOutput>> {
+    const res = await this.mutate<
+      CreateServiceTypeMutation,
+      CreateServiceTypeMutationVariables
+    >(CREATE_SERVICE_TYPE, { input });
+    if (res.success && res.data?.createServiceType)
+      return {
+        success: true,
+        data: res.data.createServiceType as CreateServiceTypeOutput,
+      };
+    return res as unknown as ApiResponse<CreateServiceTypeOutput>;
+  }
+
+  async updateServiceType(
+    input: UpdateServiceTypeInput
+  ): Promise<ApiResponse<UpdateServiceTypeOutput>> {
+    const res = await this.mutate<
+      UpdateServiceTypeMutation,
+      UpdateServiceTypeMutationVariables
+    >(UPDATE_SERVICE_TYPE, { input });
+    if (res.success && res.data?.updateServiceType)
+      return {
+        success: true,
+        data: res.data.updateServiceType as UpdateServiceTypeOutput,
+      };
+    return res as unknown as ApiResponse<UpdateServiceTypeOutput>;
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useRef } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,6 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import SelectDropdown from '@/components/select-dropdown';
 import { useCategories } from '@starcoex-frontend/categories';
 import type { Category } from '@starcoex-frontend/categories';
+import { ColorThemePicker } from '@starcoex-frontend/common';
 
 interface Props {
   open: boolean;
@@ -48,9 +50,11 @@ const formSchema = z.object({
     ),
   description: z.string().optional(),
   parentId: z.number().optional(),
-  isActive: z.boolean(), // ← .default() 제거
-  // ✅ sortOrder 제거 - 드래그앤드롭으로 처리
-  // sortOrder: z.number().int().min(0), // ← z.coerce 제거, .default() 제거
+  isActive: z.boolean(),
+  sortOrder: z
+    .number({ message: '정렬 순서를 입력해주세요.' })
+    .int()
+    .min(1, '1 이상의 숫자를 입력해주세요.'),
   metadata: z
     .object({
       colorTheme: z.string().optional(),
@@ -60,7 +64,6 @@ const formSchema = z.object({
 
 type CategoryForm = z.infer<typeof formSchema>;
 
-// name → slug 자동 변환
 const toSlug = (name: string) =>
   name
     .toLowerCase()
@@ -75,22 +78,28 @@ export function CategoryMutateDrawer({
   currentRow,
 }: Props) {
   const isUpdate = !!currentRow;
-  const { createCategory, updateCategory, categoryTree } = useCategories();
+  const { createCategory, updateCategory, categoryTree, fetchCategoryTree } =
+    useCategories();
+  const isSlugManuallyEdited = useRef(false);
 
-  // ✅ categoryTree를 평면화하여 상위 카테고리 목록으로 사용
-  const flatCategories = useMemo(() => {
+  // ✅ service-type-manager 패턴 — useMemo 없이 직접 계산
+  const flatCategories = (() => {
     const flatten = (categories: Category[]): Category[] =>
       categories.reduce<Category[]>((acc, c) => {
         acc.push(c);
         if (c.children?.length) acc.push(...flatten(c.children));
         return acc;
       }, []);
+    return flatten(categoryTree);
+  })();
 
-    const rootCategories = categoryTree.filter(
-      (c) => c.parentId === null || c.parentId === undefined
-    );
-    return flatten(rootCategories);
-  }, [categoryTree]);
+  const usedSortOrders = new Set(flatCategories.map((c) => c.sortOrder ?? 0));
+
+  const nextSortOrder = (() => {
+    let n = 1;
+    while (usedSortOrders.has(n)) n++;
+    return n;
+  })();
 
   const form = useForm<CategoryForm>({
     resolver: zodResolver(formSchema),
@@ -99,24 +108,37 @@ export function CategoryMutateDrawer({
       slug: currentRow?.slug ?? '',
       description: currentRow?.description ?? '',
       parentId: currentRow?.parentId ?? undefined,
-      isActive: currentRow?.isActive ?? true, // ← defaultValues에서 기본값 처리
-      // sortOrder: currentRow?.sortOrder ?? 0, // ← defaultValues에서 기본값 처리
+      isActive: currentRow?.isActive ?? true,
+      sortOrder: currentRow?.sortOrder ?? nextSortOrder,
       metadata: {
         colorTheme: (currentRow?.metadata?.['colorTheme'] as string) ?? '',
       },
     },
   });
 
-  // name 변경 시 slug 자동 생성 (등록 모드에서만)
   const nameValue = form.watch('name');
   useEffect(() => {
-    if (!isUpdate) {
-      form.setValue('slug', toSlug(nameValue), { shouldValidate: true });
+    if (isUpdate || isSlugManuallyEdited.current) return;
+    const generated = toSlug(nameValue);
+    if (generated) {
+      form.setValue('slug', generated, { shouldValidate: true });
     }
   }, [nameValue, isUpdate, form]);
 
   const onSubmit = async (data: CategoryForm) => {
     if (isUpdate && currentRow) {
+      // 수정: 자기 자신 제외한 중복 sortOrder 방지
+      const otherSortOrders = new Set(
+        flatCategories
+          .filter((c) => c.id !== currentRow.id)
+          .map((c) => c.sortOrder ?? 0)
+      );
+      if (otherSortOrders.has(data.sortOrder)) {
+        form.setError('sortOrder', {
+          message: '이미 사용 중인 정렬 순서입니다.',
+        });
+        return;
+      }
       await updateCategory({
         id: currentRow.id,
         name: data.name,
@@ -124,29 +146,38 @@ export function CategoryMutateDrawer({
         description: data.description,
         parentId: data.parentId,
         isActive: data.isActive,
-        // sortOrder: data.sortOrder,
-        metadata: data.metadata, // ← colorTheme → metadata
+        sortOrder: data.sortOrder,
+        metadata: data.metadata,
       });
     } else {
+      // 등록: 중복 sortOrder 방지
+      if (usedSortOrders.has(data.sortOrder)) {
+        form.setError('sortOrder', {
+          message: '이미 사용 중인 정렬 순서입니다.',
+        });
+        return;
+      }
       await createCategory({
         name: data.name,
         slug: data.slug,
         description: data.description,
         parentId: data.parentId,
         isActive: data.isActive,
-        // sortOrder: data.sortOrder,
-        metadata: data.metadata, // ← colorTheme → metadata
+        sortOrder: data.sortOrder,
+        metadata: data.metadata,
       });
     }
+    await fetchCategoryTree();
     onOpenChange(false);
     form.reset();
+    isSlugManuallyEdited.current = false;
   };
 
   // 부모 카테고리 목록 (자기 자신 + 자신의 하위 카테고리 제외)
   const parentOptions = flatCategories
     .filter((c) => c.id !== currentRow?.id)
     .map((c) => ({
-      label: c.parentId ? `└ ${c.name}` : c.name, // ✅ 하위 카테고리 시각적 구분
+      label: c.parentId ? `└ ${c.name}` : c.name,
       value: String(c.id),
     }));
 
@@ -156,6 +187,7 @@ export function CategoryMutateDrawer({
       onOpenChange={(v) => {
         onOpenChange(v);
         form.reset();
+        isSlugManuallyEdited.current = false;
       }}
     >
       <SheetContent className="flex flex-col">
@@ -207,7 +239,14 @@ export function CategoryMutateDrawer({
                     </span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="예: electronic-devices" />
+                    <Input
+                      {...field}
+                      placeholder="예: electronic-devices"
+                      onChange={(e) => {
+                        isSlugManuallyEdited.current = true;
+                        field.onChange(e);
+                      }}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -263,7 +302,7 @@ export function CategoryMutateDrawer({
               )}
             />
 
-            {/* 색상 테마 - 컬러 피커 */}
+            {/* 색상 테마 */}
             <FormField
               control={form.control}
               name="metadata.colorTheme"
@@ -276,18 +315,40 @@ export function CategoryMutateDrawer({
                     </span>
                   </FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={field.value ?? '#000000'}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        className="h-9 w-12 cursor-pointer rounded-md border p-1"
-                      />
-                      <span className="text-muted-foreground font-mono text-sm">
-                        {field.value ?? '#000000'}
-                      </span>
-                    </div>
+                    <ColorThemePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 정렬 순서 */}
+            <FormField
+              control={form.control}
+              name="sortOrder"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>정렬 순서</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      min={1}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    사용 중:{' '}
+                    {usedSortOrders.size > 0
+                      ? Array.from(usedSortOrders)
+                          .sort((a, b) => a - b)
+                          .join(', ')
+                      : '없음'}
+                    {' · '}제안: <strong>{nextSortOrder}</strong>
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@starcoex-frontend/auth';
 import {
-  Badge,
   BarChart3,
   Fuel,
   LogOut,
@@ -13,8 +12,9 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { Button } from '@starcoex-frontend/common';
-import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 /**
  * 🔐 인증이 필요한 페이지들을 위한 보호된 레이아웃

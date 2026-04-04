@@ -1,11 +1,12 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { ProductInventory, Product } from '@starcoex-frontend/products';
+import type { StoreInventory } from '@starcoex-frontend/inventory';
+import type { Product } from '@starcoex-frontend/products';
 import { InventoryRowActions } from './inventory-row-actions';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 
-export type InventoryRow = ProductInventory & {
+export type InventoryRow = StoreInventory & {
   product?: Pick<Product, 'id' | 'name' | 'sku' | 'imageUrls'>;
 };
 
@@ -75,17 +76,17 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
     ),
   },
   {
-    accessorKey: 'stock',
+    accessorKey: 'currentStock', // ProductInventory.stock → StoreInventory.currentStock
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="현재 재고" />
     ),
     cell: ({ row }) => {
-      const { stock, minStock } = row.original;
-      const isLow = stock <= minStock;
+      const { currentStock, minStock } = row.original;
+      const isLow = currentStock <= minStock;
       return (
         <div className="flex items-center gap-2">
           <span className={isLow ? 'text-destructive font-semibold' : ''}>
-            {stock}
+            {currentStock}
           </span>
           {isLow && (
             <Badge variant="destructive" className="text-xs">
@@ -97,25 +98,43 @@ export const inventoryColumns: ColumnDef<InventoryRow>[] = [
     },
   },
   {
+    accessorKey: 'reservedStock',
+    header: '예약 재고',
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {row.original.reservedStock}
+      </span>
+    ),
+  },
+  {
+    accessorKey: 'availableStock',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="판매가능 재고" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm font-medium">{row.original.availableStock}</span>
+    ),
+  },
+  {
     accessorKey: 'minStock',
-    header: '최소 재고',
+    header: '최소',
     cell: ({ row }) => <span className="text-sm">{row.original.minStock}</span>,
   },
   {
     accessorKey: 'maxStock',
-    header: '최대 재고',
+    header: '최대',
     cell: ({ row }) => <span className="text-sm">{row.original.maxStock}</span>,
   },
   {
     accessorKey: 'storePrice',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="매장 가격" />
+      <DataTableColumnHeader column={column} title="매장가" />
     ),
     cell: ({ row }) => {
       const price = row.original.storePrice;
       return (
         <span className="text-sm">
-          {price != null ? `₩${price.toLocaleString()}` : '-'}
+          {price != null ? `₩${Number(price).toLocaleString()}` : '-'}
         </span>
       );
     },

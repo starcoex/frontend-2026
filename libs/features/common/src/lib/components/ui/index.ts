@@ -19,6 +19,7 @@ export * from './progress';
 export * from './textarea';
 export * from './select';
 export * from './dropdown-menu';
-export * from './command';
 export * from './popover';
 export * from './combobox';
+export * from './command';
+export * from './avatar';

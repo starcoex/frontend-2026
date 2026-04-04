@@ -18,11 +18,6 @@ export const ReservationEditSchema = z.object({
   specialRequests: z.string().optional(),
   vehicleId: z.number().optional(),
 
-  paymentType: z.enum(['PREPAID', 'DEPOSIT', 'POSTPAID', 'FREE']),
-  serviceAmount: z.number().min(0),
-  depositAmount: z.number().min(0).optional(),
-  additionalAmount: z.number().min(0).optional(),
-  totalAmount: z.number().min(0),
   status: z.enum([
     'PAYMENT_PENDING',
     'PAYMENT_FAILED',

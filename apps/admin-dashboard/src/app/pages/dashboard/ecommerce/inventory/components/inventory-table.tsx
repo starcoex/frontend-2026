@@ -23,7 +23,7 @@ import {
 import type { StoreInventory } from '@starcoex-frontend/inventory';
 import { inventoryColumns } from './inventory-columns';
 import { InventoryTableToolbar } from './inventory-table-toolbar';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/products/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface InventoryTableProps {
   data: StoreInventory[];

@@ -33,6 +33,10 @@ import { CouponsPage } from '@/app/pages/coupons/coupons-page';
 import { CouponDetailPage } from '@/app/pages/coupons/coupon-detail-page';
 import { CouponExchangePage } from '@/app/pages/coupons/coupon-excahange-page';
 import { CouponGiftPage } from '@/app/pages/coupons/coupon-gift-page';
+import OrdersPage from '@/app/pages/orders/orders-page';
+import OrderDetailPage from '@/app/pages/orders/orders-detail-page';
+import { NotificationsPage } from '@/app/pages/notifications/notifications-page';
+import { CartPage } from '@/app/pages/cart/cart-page';
 
 export const router = createBrowserRouter([
   // 🏠 메인 사이트 (공개)
@@ -55,11 +59,17 @@ export const router = createBrowserRouter([
       { path: 'services/:serviceId', element: <ServiceDetailPage /> },
       { path: 'fuel/car-wash-coupon', element: <CarWashPage /> },
 
+      { path: '/orders', element: <OrdersPage /> },
+      { path: '/orders/:id', element: <OrderDetailPage /> },
+
       // 회사 정보 메뉴
       { path: 'about', element: <AboutPage /> },
       { path: 'process', element: <ProcessPage /> },
       { path: 'faq', element: <FaqPage /> },
       { path: 'contact', element: <ContactPage /> },
+      // 🔔 알림 페이지 (로그인 사용자)
+      { path: 'notifications', element: <NotificationsPage /> },
+      { path: 'cart', element: <CartPage /> },
 
       // 🎁 선물 수령 페이지 (비로그인도 접근 가능, 수령 시 로그인 필요)
       { path: 'gift/claim', element: <GiftClaimPage /> },

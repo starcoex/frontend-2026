@@ -57,7 +57,7 @@ export default function InventoryEditPage() {
         og={{
           title: `재고 #${currentInventory.id} 수정 - ${COMPANY_INFO.name}`,
           description: '재고 정보를 수정하세요.',
-          image: '/images/og-inventory.jpg',
+          image: '/images/og-emails.jpg',
           type: 'website',
         }}
       />

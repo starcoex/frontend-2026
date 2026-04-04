@@ -15,7 +15,7 @@ import type {
   UpdateManualInput,
   PublishManualInput,
   ArchiveManualInput,
-  BusinessType,
+  NoticeBusinessType,
 } from '../types';
 
 export const useNotices = () => {
@@ -235,7 +235,7 @@ export const useNotices = () => {
   // ============================================================================
 
   const fetchManualCategories = useCallback(
-    async (targetBusiness?: BusinessType, targetApp?: string) =>
+    async (targetBusiness?: NoticeBusinessType, targetApp?: string) =>
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.getManualCategories(
@@ -326,7 +326,7 @@ export const useNotices = () => {
 
   const fetchPublishedManuals = useCallback(
     async (
-      targetBusiness: BusinessType,
+      targetBusiness: NoticeBusinessType,
       targetApp: string,
       categoryId?: number
     ) =>
@@ -411,6 +411,32 @@ export const useNotices = () => {
     [withLoading, removeManual, currentManual, setCurrentManual]
   );
 
+  const deleteManuals = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.deleteManuals(ids);
+        if (res.success) {
+          ids.forEach((id) => removeManual(id));
+          if (currentManual && ids.includes(currentManual.id)) {
+            setCurrentManual(null);
+          }
+        }
+        return res;
+      }, '매뉴얼 다건 삭제에 실패했습니다.'),
+    [withLoading, removeManual, currentManual, setCurrentManual]
+  );
+
+  const fetchManualHistories = useCallback(
+    async (manualId: number) =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.getManualHistories(manualId);
+        return res;
+      }, '매뉴얼 히스토리를 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
   return {
     ...context,
 
@@ -438,11 +464,13 @@ export const useNotices = () => {
     fetchManuals,
     fetchManualById,
     fetchPublishedManuals,
+    fetchManualHistories,
     createManual,
     updateManual,
     publishManual,
     archiveManual,
     deleteManual,
+    deleteManuals,
 
     // 편의 값
     notices,

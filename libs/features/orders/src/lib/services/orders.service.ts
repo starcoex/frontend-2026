@@ -195,8 +195,8 @@ export class OrdersService implements IOrdersService {
     const res = await this.mutate<{ deleteOrder: boolean }>(DELETE_ORDER, {
       id,
     });
-    if (res.success && res.data !== undefined) {
-      return { success: true, data: res.data.deleteOrder };
+    if (res.success) {
+      return { success: true, data: res.data?.deleteOrder ?? false };
     }
     return res as unknown as ApiResponse<boolean>;
   }
@@ -205,8 +205,8 @@ export class OrdersService implements IOrdersService {
     const res = await this.mutate<{ deleteOrders: boolean }>(DELETE_ORDERS, {
       ids,
     });
-    if (res.success && res.data !== undefined) {
-      return { success: true, data: res.data.deleteOrders };
+    if (res.success) {
+      return { success: true, data: res.data?.deleteOrders ?? false };
     }
     return res as unknown as ApiResponse<boolean>;
   }

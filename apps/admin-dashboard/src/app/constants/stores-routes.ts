@@ -4,6 +4,7 @@ export const STORE_ROUTES = {
   EDIT: '/admin/stores/:id/edit',
   DETAIL: '/admin/stores/:id',
   BRANDS: '/admin/stores/brands',
+  SETTINGS: '/admin/stores/settings', // ✅ 추가
 } as const;
 
 export const STORE_ROUTE_PATTERNS = {

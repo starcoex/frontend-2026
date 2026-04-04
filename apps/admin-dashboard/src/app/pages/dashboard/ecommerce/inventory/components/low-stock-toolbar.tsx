@@ -3,10 +3,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { StoreInventory, useInventory } from '@starcoex-frontend/inventory';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
 import { INVENTORY_ZONE_OPTIONS } from '@/app/pages/dashboard/ecommerce/inventory/data/inventory-data';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 
 const URGENCY_OPTIONS = [
   { value: 'out-of-stock', label: '재고 없음' },

@@ -24,6 +24,7 @@ import {
   PUBLISH_MANUAL,
   ARCHIVE_MANUAL,
   DELETE_MANUAL,
+  DELETE_MANUALS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -57,7 +58,7 @@ import type {
   UpdateManualInput,
   PublishManualInput,
   ArchiveManualInput,
-  BusinessType,
+  NoticeBusinessType,
 } from '../types';
 
 export class NoticesService implements INoticesService {
@@ -276,7 +277,7 @@ export class NoticesService implements INoticesService {
   // ============================================================================
 
   async getManualCategories(
-    targetBusiness?: BusinessType,
+    targetBusiness?: NoticeBusinessType,
     targetApp?: string
   ): Promise<ApiResponse<ManualCategory[]>> {
     const res = await this.query<{ manualCategories: ManualCategory[] }>(
@@ -349,7 +350,7 @@ export class NoticesService implements INoticesService {
   }
 
   async getPublishedManuals(
-    targetBusiness: BusinessType,
+    targetBusiness: NoticeBusinessType,
     targetApp: string,
     categoryId?: number
   ): Promise<ApiResponse<Manual[]>> {
@@ -434,6 +435,16 @@ export class NoticesService implements INoticesService {
     });
     if (res.success && res.data !== undefined) {
       return { success: true, data: res.data.deleteManual };
+    }
+    return res as unknown as ApiResponse<boolean>;
+  }
+
+  async deleteManuals(ids: number[]): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteManuals: boolean }>(DELETE_MANUALS, {
+      ids,
+    });
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteManuals };
     }
     return res as unknown as ApiResponse<boolean>;
   }

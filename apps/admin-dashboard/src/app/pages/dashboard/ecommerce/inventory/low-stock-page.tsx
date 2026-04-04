@@ -41,7 +41,7 @@ export default function LowStockPage() {
         og={{
           title: `재고 부족 현황 - ${COMPANY_INFO.name}`,
           description: '재고 부족 및 재주문 필요 항목 모니터링',
-          image: '/images/og-inventory.jpg',
+          image: '/images/og-emails.jpg',
           type: 'website',
         }}
       />

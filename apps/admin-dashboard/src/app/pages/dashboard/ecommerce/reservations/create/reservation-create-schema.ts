@@ -9,7 +9,7 @@ export const ReservationCreateSchema = z.object({
   timeSlotId: z.number().optional(),
   resourceId: z.number().optional(),
 
-  userId: z.number().min(1, '고객을 선택하세요.'), // ← 추가
+  userId: z.number().optional(), // ← Int? 이므로 optional
   customerName: z.string().min(1, '고객명을 입력하세요.'),
   customerPhone: z.string().min(1, '연락처를 입력하세요.'),
   guestEmail: z
@@ -21,12 +21,8 @@ export const ReservationCreateSchema = z.object({
   specialRequests: z.string().optional(),
   vehicleId: z.number().optional(),
 
-  paymentType: z.enum(['PREPAID', 'DEPOSIT', 'POSTPAID', 'FREE']),
-  serviceAmount: z.number().min(0, '금액을 입력하세요.'),
-  depositAmount: z.number().min(0).optional(),
-  totalAmount: z.number().min(0),
-  notes: z.string().optional(),
   confirmationType: z.enum(['AUTO', 'MANUAL']),
+  notes: z.string().optional(),
 });
 
 export type ReservationCreateFormValues = z.infer<

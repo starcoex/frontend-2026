@@ -3,7 +3,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { statusStyles, userTypes } from '../data/users-data';
 import { User } from '@starcoex-frontend/graphql'; // ✅ GraphQL 타입 사용
 import { Link } from 'react-router-dom';
-import { DataTableColumnHeader } from './data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 import { DataTableRowActions } from './data-table-row-actions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';

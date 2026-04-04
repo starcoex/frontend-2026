@@ -13,6 +13,9 @@ export const NOTICE_ERROR_INFO_FIELDS = gql`
 export const NOTICE_FIELDS = gql`
   fragment NoticeFields on Notice {
     id
+    deletedAt
+    createdAt
+    updatedAt
     title
     content
     status
@@ -32,29 +35,30 @@ export const NOTICE_FIELDS = gql`
     archivedBy
     sourceSuggestionId
     metadata
-    createdAt
-    updatedAt
-    deletedAt
   }
 `;
 
 export const MANUAL_HISTORY_FIELDS = gql`
   fragment ManualHistoryFields on ManualHistory {
     id
+    deletedAt
+    createdAt
+    updatedAt
     manualId
     version
     title
     content
     updatedBy
     changeLog
-    createdAt
-    updatedAt
   }
 `;
 
 export const MANUAL_CATEGORY_FIELDS = gql`
   fragment ManualCategoryFields on ManualCategory {
     id
+    deletedAt
+    createdAt
+    updatedAt
     name
     description
     slug
@@ -65,9 +69,6 @@ export const MANUAL_CATEGORY_FIELDS = gql`
     iconMediaId
     createdBy
     updatedBy
-    createdAt
-    updatedAt
-    deletedAt
   }
 `;
 
@@ -75,6 +76,9 @@ export const MANUAL_FIELDS = gql`
   ${MANUAL_CATEGORY_FIELDS}
   fragment ManualFields on Manual {
     id
+    deletedAt
+    createdAt
+    updatedAt
     title
     content
     categoryId
@@ -95,12 +99,24 @@ export const MANUAL_FIELDS = gql`
     metadata
     publishedAt
     archivedAt
-    createdAt
-    updatedAt
-    deletedAt
     category {
       ...ManualCategoryFields
     }
+  }
+`;
+
+export const MANUAL_CATEGORY_COMMAND_RESULT_FIELDS = gql`
+  ${NOTICE_ERROR_INFO_FIELDS}
+  ${MANUAL_CATEGORY_FIELDS}
+  fragment ManualCategoryCommandResultFields on ManualCategoryCommandResult {
+    success
+    error {
+      ...NoticeErrorInfoFields
+    }
+    category {
+      ...ManualCategoryFields
+    }
+    message
   }
 `;
 
@@ -170,6 +186,36 @@ export const GET_MANUALS_OUTPUT_FIELDS = gql`
     totalPages
     hasNext
     hasPrev
+  }
+`;
+
+export const CREATE_MANUAL_OUTPUT_FIELDS = gql`
+  ${NOTICE_ERROR_INFO_FIELDS}
+  ${MANUAL_FIELDS}
+  fragment CreateManualOutputFields on CreateManualOutput {
+    success
+    error {
+      ...NoticeErrorInfoFields
+    }
+    manual {
+      ...ManualFields
+    }
+    message
+  }
+`;
+
+export const UPDATE_MANUAL_OUTPUT_FIELDS = gql`
+  ${NOTICE_ERROR_INFO_FIELDS}
+  ${MANUAL_FIELDS}
+  fragment UpdateManualOutputFields on UpdateManualOutput {
+    success
+    error {
+      ...NoticeErrorInfoFields
+    }
+    manual {
+      ...ManualFields
+    }
+    updateMessage
   }
 `;
 
@@ -273,7 +319,10 @@ export const CREATE_NOTICE_FROM_SUGGESTION = gql`
 
 export const GET_MANUAL_CATEGORIES = gql`
   ${MANUAL_CATEGORY_FIELDS}
-  query GetManualCategories($targetBusiness: BusinessType, $targetApp: String) {
+  query GetManualCategories(
+    $targetBusiness: NoticeBusinessType
+    $targetApp: String
+  ) {
     manualCategories(targetBusiness: $targetBusiness, targetApp: $targetApp) {
       ...ManualCategoryFields
     }
@@ -281,35 +330,19 @@ export const GET_MANUAL_CATEGORIES = gql`
 `;
 
 export const CREATE_MANUAL_CATEGORY = gql`
-  ${NOTICE_ERROR_INFO_FIELDS}
-  ${MANUAL_CATEGORY_FIELDS}
+  ${MANUAL_CATEGORY_COMMAND_RESULT_FIELDS}
   mutation CreateManualCategory($input: CreateManualCategoryInput!) {
     createManualCategory(input: $input) {
-      success
-      error {
-        ...NoticeErrorInfoFields
-      }
-      category {
-        ...ManualCategoryFields
-      }
-      message
+      ...ManualCategoryCommandResultFields
     }
   }
 `;
 
 export const UPDATE_MANUAL_CATEGORY = gql`
-  ${NOTICE_ERROR_INFO_FIELDS}
-  ${MANUAL_CATEGORY_FIELDS}
+  ${MANUAL_CATEGORY_COMMAND_RESULT_FIELDS}
   mutation UpdateManualCategory($input: UpdateManualCategoryInput!) {
     updateManualCategory(input: $input) {
-      success
-      error {
-        ...NoticeErrorInfoFields
-      }
-      category {
-        ...ManualCategoryFields
-      }
-      message
+      ...ManualCategoryCommandResultFields
     }
   }
 `;
@@ -347,7 +380,7 @@ export const GET_MANUAL_BY_ID = gql`
 export const GET_PUBLISHED_MANUALS = gql`
   ${MANUAL_FIELDS}
   query GetPublishedManuals(
-    $targetBusiness: BusinessType!
+    $targetBusiness: NoticeBusinessType!
     $targetApp: String!
     $categoryId: Int
   ) {
@@ -371,69 +404,37 @@ export const GET_MANUAL_HISTORIES = gql`
 `;
 
 export const CREATE_MANUAL = gql`
-  ${NOTICE_ERROR_INFO_FIELDS}
-  ${MANUAL_FIELDS}
+  ${CREATE_MANUAL_OUTPUT_FIELDS}
   mutation CreateManual($input: CreateManualInput!) {
     createManual(input: $input) {
-      success
-      error {
-        ...NoticeErrorInfoFields
-      }
-      manual {
-        ...ManualFields
-      }
-      message
+      ...CreateManualOutputFields
     }
   }
 `;
 
 export const UPDATE_MANUAL = gql`
-  ${NOTICE_ERROR_INFO_FIELDS}
-  ${MANUAL_FIELDS}
+  ${UPDATE_MANUAL_OUTPUT_FIELDS}
   mutation UpdateManual($input: UpdateManualInput!) {
     updateManual(input: $input) {
-      success
-      error {
-        ...NoticeErrorInfoFields
-      }
-      manual {
-        ...ManualFields
-      }
-      updateMessage
+      ...UpdateManualOutputFields
     }
   }
 `;
 
 export const PUBLISH_MANUAL = gql`
-  ${NOTICE_ERROR_INFO_FIELDS}
-  ${MANUAL_FIELDS}
+  ${UPDATE_MANUAL_OUTPUT_FIELDS}
   mutation PublishManual($input: PublishManualInput!) {
     publishManual(input: $input) {
-      success
-      error {
-        ...NoticeErrorInfoFields
-      }
-      manual {
-        ...ManualFields
-      }
-      updateMessage
+      ...UpdateManualOutputFields
     }
   }
 `;
 
 export const ARCHIVE_MANUAL = gql`
-  ${NOTICE_ERROR_INFO_FIELDS}
-  ${MANUAL_FIELDS}
+  ${UPDATE_MANUAL_OUTPUT_FIELDS}
   mutation ArchiveManual($input: ArchiveManualInput!) {
     archiveManual(input: $input) {
-      success
-      error {
-        ...NoticeErrorInfoFields
-      }
-      manual {
-        ...ManualFields
-      }
-      updateMessage
+      ...UpdateManualOutputFields
     }
   }
 `;
@@ -441,5 +442,11 @@ export const ARCHIVE_MANUAL = gql`
 export const DELETE_MANUAL = gql`
   mutation DeleteManual($id: Int!) {
     deleteManual(id: $id)
+  }
+`;
+
+export const DELETE_MANUALS = gql`
+  mutation DeleteManuals($ids: [Int!]!) {
+    deleteManuals(ids: $ids)
   }
 `;

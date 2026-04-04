@@ -184,16 +184,18 @@ export default function AddOrderForm() {
       .filter((p) => p.isAvailable)
       .filter((p) => {
         if (!q) return true;
-        if (p.name.toLowerCase().includes(q)) return true;
+        if (p.name?.toLowerCase().includes(q)) return true;
 
         // category는 Category 객체 또는 배열일 수 있음
         const cat = p.category;
         if (!cat) return false;
         if (Array.isArray(cat)) {
-          return cat.some((c) => c.name.toLowerCase().includes(q));
+          return cat.some((c) => c.name?.toLowerCase().includes(q));
         }
         // 단일 Category 객체
-        return (cat as { name: string }).name.toLowerCase().includes(q);
+        return (cat as unknown as { name: string }).name
+          ?.toLowerCase()
+          .includes(q);
       });
   }, [products, productQuery]);
 

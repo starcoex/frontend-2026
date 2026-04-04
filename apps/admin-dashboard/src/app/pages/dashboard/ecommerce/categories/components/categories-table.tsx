@@ -16,7 +16,7 @@ import {
 } from '@tanstack/react-table';
 import type { Category } from '@starcoex-frontend/categories';
 import { CategoriesTableToolbar } from './categories-table-toolbar';
-import { DataTablePagination } from './data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 import {
   Table,
   TableBody,

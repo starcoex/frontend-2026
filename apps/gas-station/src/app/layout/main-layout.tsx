@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import React, { useEffect } from 'react';
-import { TooltipProvider } from '@radix-ui/react-tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip'; // ✅ shadcn 버전으로
 import { PageHead } from '@starcoex-frontend/common';
 import { APP_CONFIG } from '@/app/config/app.config';
 import { FuelDataProvider } from '@starcoex-frontend/vehicles';

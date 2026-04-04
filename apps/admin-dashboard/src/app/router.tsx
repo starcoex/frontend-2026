@@ -72,6 +72,27 @@ import WalkInsPage from '@/app/pages/dashboard/ecommerce/reservations/walk-ins/w
 import FuelWalkInsPage from '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-page';
 import InventoryEditPage from '@/app/pages/dashboard/ecommerce/inventory/edit/inventory-edit-page';
 import InventoryCreatePage from '@/app/pages/dashboard/ecommerce/inventory/create/inventory-create-page';
+import StoresSettingsPage from '@/app/pages/dashboard/ecommerce/stores/settings/stores-settings-page';
+import ProductSettingsPage from '@/app/pages/dashboard/ecommerce/products/settings/product-settings-page';
+import { PaymentsWithProvider } from '@/app/pages/dashboard/ecommerce/payments/payments-with-provider';
+import PaymentsPage from '@/app/pages/dashboard/ecommerce/payments/payments-page';
+import PaymentDetailPage from '@/app/pages/dashboard/ecommerce/payments/payment-detail/payment-detail-page';
+import PaymentStatsPage from '@/app/pages/dashboard/ecommerce/payments/payment-stats/payment-stats-page';
+import PaymentCreatePage from '@/app/pages/dashboard/ecommerce/payments/create/payment-create-page';
+import { NotificationsWithProvider } from '@/app/pages/dashboard/ecommerce/notifications/notifications-with-provider';
+import NotificationsPage from '@/app/pages/dashboard/ecommerce/notifications/notifications-page';
+import SendNotificationPage from '@/app/pages/dashboard/ecommerce/notifications/send/send-notification-page';
+import EmailsPage from '@/app/pages/dashboard/ecommerce/notifications/emails/emails-page';
+import ReservationCalendarPage from '@/app/pages/dashboard/ecommerce/reservations/calendar/reservation-calendar-page';
+import { CartWithProvider } from '@/app/pages/dashboard/ecommerce/cart/cart-with-provider';
+import CartPage from '@/app/pages/dashboard/ecommerce/cart/cart-page';
+import CartDetailPage from '@/app/pages/dashboard/ecommerce/cart/cart-detail/cart-detail-page';
+import { DeliveryWithProvider } from '@/app/pages/dashboard/ecommerce/delivery/delivery-with-provider';
+import DeliveryPage from '@/app/pages/dashboard/ecommerce/delivery/delivery-page';
+import DeliveryCreatePage from '@/app/pages/dashboard/ecommerce/delivery/create/delivery-create-page';
+import DeliveryDriversPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/delivery-drivers-page';
+import DeliveryTrackingPage from '@/app/pages/dashboard/ecommerce/delivery/tracking/delivery-tracking-page';
+import DeliveryDetailPage from '@/app/pages/dashboard/ecommerce/delivery/delivery-detail/delivery-detail-page';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -152,8 +173,15 @@ const router = createBrowserRouter([
       },
 
       // 알림
-      { path: 'notifications', element: <div>알림 관리 (구현 예정)</div> },
-
+      {
+        path: 'notifications',
+        element: <NotificationsWithProvider />,
+        children: [
+          { index: true, element: <NotificationsPage /> },
+          { path: 'send', element: <SendNotificationPage /> },
+          { path: 'emails', element: <EmailsPage /> },
+        ],
+      },
       // 매장
       {
         path: 'stores',
@@ -162,6 +190,7 @@ const router = createBrowserRouter([
           { index: true, element: <StoresPage /> },
           { path: 'create', element: <StoreCreatePage /> },
           { path: 'brands', element: <BrandsPage /> },
+          { path: 'settings', element: <StoresSettingsPage /> },
           { path: ':id', element: <StoreDetailPage /> },
           { path: ':id/edit', element: <StoreEditPage /> },
         ],
@@ -175,12 +204,16 @@ const router = createBrowserRouter([
           { index: true, element: <ProductsPage /> },
           { path: 'create', element: <ProductCreatePage /> },
           { path: 'inventory', element: <ProductInventoryPage /> }, // ProductInventory 기반
+          {
+            path: '/admin/products/settings',
+            element: <ProductSettingsPage />,
+          },
           { path: ':id', element: <ProductDetailPage /> },
           { path: ':id/edit', element: <ProductEditPage /> },
         ],
       },
       // 스캔 (독립 Provider)
-      { path: 'products/scan', element: <ProductScanWithProvider /> },
+      { path: 'products/send', element: <ProductScanWithProvider /> },
 
       // ✅ 재고 관리 (Inventory Service 기반 — 신규)
       {
@@ -203,8 +236,23 @@ const router = createBrowserRouter([
           { index: true, element: <ReservationsPage /> },
           { path: 'create', element: <ReservationCreatePage /> },
           { path: 'services', element: <ReservationServicesPage /> }, // ← 추가
+          {
+            path: 'calendar',
+            element: <ReservationCalendarPage />,
+          },
           { path: ':id', element: <ReservationDetailPage /> },
           { path: ':id/edit', element: <ReservationEditPage /> },
+        ],
+      },
+      // ✅ 결제 관리
+      {
+        path: 'payments',
+        element: <PaymentsWithProvider />,
+        children: [
+          { index: true, element: <PaymentsPage /> },
+          { path: 'create', element: <PaymentCreatePage /> },
+          { path: 'stats', element: <PaymentStatsPage /> },
+          { path: ':portOneId', element: <PaymentDetailPage /> },
         ],
       },
       // ✅ 워크인 관리
@@ -241,6 +289,30 @@ const router = createBrowserRouter([
           { path: 'history', element: <div>주문 히스토리 (구현 예정)</div> },
           { path: ':id', element: <OrderDetailPage /> },
           { path: ':id/edit', element: <OrderEditPage /> },
+        ],
+      },
+
+      // ✅ 장바구니 관리
+      {
+        path: 'cart',
+        element: <CartWithProvider />,
+        children: [
+          { index: true, element: <CartPage /> },
+          { path: ':userId', element: <CartDetailPage /> },
+        ],
+      },
+
+      // ✅ 배송 관리
+      {
+        path: 'delivery',
+        element: <DeliveryWithProvider />,
+        children: [
+          { index: true, element: <DeliveryPage /> },
+          { path: 'create', element: <DeliveryCreatePage /> },
+          { path: 'drivers', element: <DeliveryDriversPage /> },
+          { path: 'tracking', element: <DeliveryTrackingPage /> },
+          { path: ':id', element: <DeliveryDetailPage /> },
+          { path: ':id/edit', element: <div>배송 수정 (구현 예정)</div> },
         ],
       },
 
@@ -317,7 +389,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: '/inventory',
+    path: '/emails',
     element: <AdminLayout />,
     errorElement: <ErrorBoundary />,
     children: [

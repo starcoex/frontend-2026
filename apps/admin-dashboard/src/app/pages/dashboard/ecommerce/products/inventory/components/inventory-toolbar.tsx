@@ -4,11 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { PlusIcon } from 'lucide-react';
 import type { InventoryRow } from './inventory-columns';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
 import { useProducts } from '@starcoex-frontend/products';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
-
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 const AVAILABILITY_OPTIONS = [
   { value: 'available', label: '판매 가능' },
   { value: 'unavailable', label: '판매 불가' },

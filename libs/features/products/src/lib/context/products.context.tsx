@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
   useMemo,
   useCallback,
@@ -12,6 +13,7 @@ import type {
   ProductsContextValue,
   ProductFilters,
   Product,
+  ProductType,
 } from '../types';
 import { serviceRegistry, initProductsService } from '../services';
 
@@ -22,6 +24,7 @@ const ProductsContext = createContext<ProductsContextValue | undefined>(
 const initialState: ProductsState = {
   products: [],
   currentProduct: null,
+  productTypes: [],
   filters: {},
   isLoading: false,
   error: null,
@@ -32,28 +35,27 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const apolloClient = useApolloClient();
   const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     if (!serviceRegistry.isServiceInitialized('products')) {
       try {
         initProductsService(apolloClient);
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ NoticesService initialization failed:', error);
+        console.error('❌ PaymentsService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);
     }
   }, [apolloClient]);
 
+  // ── Product 액션 ────────────────────────────────────────────────────────────
+
   const setProducts = useCallback((products: Product[]) => {
     setState((prev) => ({ ...prev, products }));
   }, []);
 
   const addProduct = useCallback((product: Product) => {
-    setState((prev) => ({
-      ...prev,
-      products: [product, ...prev.products],
-    }));
+    setState((prev) => ({ ...prev, products: [product, ...prev.products] }));
   }, []);
 
   const updateProductInContext = useCallback(
@@ -83,11 +85,37 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
     setState((prev) => ({ ...prev, currentProduct: product }));
   }, []);
 
-  const setFilters = useCallback((filters: Partial<ProductFilters>) => {
+  // ── ProductType 액션 ────────────────────────────────────────────────────────
+
+  const setProductTypes = useCallback((productTypes: ProductType[]) => {
+    setState((prev) => ({ ...prev, productTypes }));
+  }, []);
+
+  const addProductType = useCallback((productType: ProductType) => {
     setState((prev) => ({
       ...prev,
-      filters: { ...prev.filters, ...filters },
+      productTypes: [...prev.productTypes, productType].sort(
+        (a, b) => a.sortOrder - b.sortOrder
+      ),
     }));
+  }, []);
+
+  const updateProductTypeInContext = useCallback(
+    (id: number, updates: Partial<ProductType>) => {
+      setState((prev) => ({
+        ...prev,
+        productTypes: prev.productTypes
+          .map((pt) => (pt.id === id ? { ...pt, ...updates } : pt))
+          .sort((a, b) => a.sortOrder - b.sortOrder),
+      }));
+    },
+    []
+  );
+
+  // ── 필터/공통 액션 ──────────────────────────────────────────────────────────
+
+  const setFilters = useCallback((filters: Partial<ProductFilters>) => {
+    setState((prev) => ({ ...prev, filters: { ...prev.filters, ...filters } }));
   }, []);
 
   const clearFilters = useCallback(() => {
@@ -118,6 +146,9 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
       updateProductInContext,
       removeProduct,
       setCurrentProduct,
+      setProductTypes,
+      addProductType,
+      updateProductTypeInContext,
       setFilters,
       clearFilters,
       setLoading,
@@ -132,6 +163,9 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
       updateProductInContext,
       removeProduct,
       setCurrentProduct,
+      setProductTypes,
+      addProductType,
+      updateProductTypeInContext,
       setFilters,
       clearFilters,
       setLoading,
@@ -142,7 +176,11 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   );
 
   if (!serviceInitialized) {
-    return <div>Initializing Products Service...</div>;
+    return (
+      <div aria-busy="true" aria-label="Products 서비스 초기화 중">
+        Initializing Products Service...
+      </div>
+    );
   }
 
   return (

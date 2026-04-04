@@ -149,7 +149,7 @@ export class CategoriesService implements ICategoriesService {
   ): Promise<ApiResponse<Category[]>> {
     const res = await this.query<{ findCategoryTree: Category[] }>(
       GET_CATEGORY_TREE,
-      { rootId, maxDepth }
+      { rootId, maxDepth: maxDepth ?? 3 }
     );
     if (res.success && res.data?.findCategoryTree) {
       return { success: true, data: res.data.findCategoryTree };

@@ -232,7 +232,7 @@ export const useInventory = () => {
       withLoading(async () => {
         const service = getInventoryService();
         const res = await service.addFuelStock(input);
-        // 성공 시 해당 inventory context 업데이트
+        // 성공 시 해당 emails context 업데이트
         if (res.success && res.data?.inventory) {
           updateInventoryInContext(res.data.inventory.id, res.data.inventory);
         }

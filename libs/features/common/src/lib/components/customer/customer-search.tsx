@@ -25,7 +25,7 @@ export interface SelectedCustomer {
 
 interface Props {
   onSelect: (customer: SelectedCustomer) => void;
-  onClear: () => void;
+  onClear?: () => void;
   selected: SelectedCustomer | null;
   enableCreate?: boolean;
 }

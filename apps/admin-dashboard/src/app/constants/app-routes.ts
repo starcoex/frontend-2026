@@ -3,7 +3,7 @@ export const APP_ROUTES = {
   DASHBOARD: '/admin',
   PROFILE: '/admin/settings/profile',
   SETTINGS: '/admin/settings',
-  NOTIFICATIONS: '/admin/settings/notifications',
+  NOTIFICATIONS: '/admin/settings/components',
   BILLING: '/admin/settings/billing',
   USERS: '/admin/users',
   SYSTEM: '/admin/settings', // 시스템 관리도 설정 페이지로 연결 (필요시 분리)

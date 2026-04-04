@@ -57,7 +57,7 @@ export default function InventoryDetailPage() {
         og={{
           title: `재고 #${currentInventory.id} - ${COMPANY_INFO.name}`,
           description: '재고 상세 정보 및 트랜잭션 이력',
-          image: '/images/og-inventory.jpg',
+          image: '/images/og-emails.jpg',
           type: 'website',
         }}
       />

@@ -10,6 +10,21 @@ export const PRODUCT_ERROR_INFO_FIELDS = gql`
   }
 `;
 
+export const PRODUCT_TYPE_FIELDS = gql`
+  fragment ProductTypeFields on ProductType {
+    id
+    code
+    name
+    description
+    isActive
+    sortOrder
+    metadataSchema
+    createdAt
+    updatedAt
+    deletedAt
+  }
+`;
+
 export const PRODUCT_INVENTORY_FIELDS = gql`
   fragment ProductInventoryFields on ProductInventory {
     id
@@ -18,16 +33,25 @@ export const PRODUCT_INVENTORY_FIELDS = gql`
     stock
     minStock
     maxStock
+    reorderPoint
+    reorderQuantity
     storePrice
+    costPrice
     isAvailable
+    createdById
+    updatedById
     createdAt
     updatedAt
     deletedAt
+    store {
+      id
+    }
   }
 `;
 
 export const PRODUCT_FIELDS = gql`
   ${PRODUCT_INVENTORY_FIELDS}
+  ${PRODUCT_TYPE_FIELDS}
   fragment ProductFields on Product {
     id
     name
@@ -35,6 +59,7 @@ export const PRODUCT_FIELDS = gql`
     description
     brandId
     categoryId
+    productTypeId
     metadata
     imageUrl
     imageUrls
@@ -60,11 +85,12 @@ export const PRODUCT_FIELDS = gql`
     }
     category {
       id
-      name
     }
     brand {
       id
-      name
+    }
+    productType {
+      ...ProductTypeFields
     }
   }
 `;
@@ -80,9 +106,7 @@ export const CREATE_PRODUCT_OUTPUT_FIELDS = gql`
     product {
       ...ProductFields
     }
-    creationMessage
-    notificationMessage
-    inventoryMessage
+    message
   }
 `;
 
@@ -114,7 +138,77 @@ export const UPDATE_PRODUCT_OUTPUT_FIELDS = gql`
   }
 `;
 
-// ─── Queries ─────────────────────────────────────────────────────────────────
+// ✅ 뮤테이션보다 먼저 정의
+export const CREATE_PRODUCT_TYPE_OUTPUT_FIELDS = gql`
+  ${PRODUCT_TYPE_FIELDS}
+  fragment CreateProductTypeOutputFields on CreateProductTypeOutput {
+    success
+    productType {
+      ...ProductTypeFields
+    }
+  }
+`;
+
+export const UPDATE_PRODUCT_TYPE_OUTPUT_FIELDS = gql`
+  ${PRODUCT_TYPE_FIELDS}
+  fragment UpdateProductTypeOutputFields on UpdateProductTypeOutput {
+    success
+    productType {
+      ...ProductTypeFields
+    }
+  }
+`;
+
+// ─── ProductType Queries ──────────────────────────────────────────────────────
+
+export const LIST_PRODUCT_TYPES = gql`
+  ${PRODUCT_TYPE_FIELDS}
+  query ListProductTypes {
+    listProductTypes {
+      ...ProductTypeFields
+    }
+  }
+`;
+
+export const GET_PRODUCT_TYPE_BY_ID = gql`
+  ${PRODUCT_TYPE_FIELDS}
+  query ProductTypeById($id: Int!) {
+    productTypeById(id: $id) {
+      ...ProductTypeFields
+    }
+  }
+`;
+
+export const GET_PRODUCT_TYPE_BY_CODE = gql`
+  ${PRODUCT_TYPE_FIELDS}
+  query ProductTypeByCode($code: String!) {
+    productTypeByCode(code: $code) {
+      ...ProductTypeFields
+    }
+  }
+`;
+
+// ─── ProductType Mutations ────────────────────────────────────────────────────
+
+export const CREATE_PRODUCT_TYPE = gql`
+  ${CREATE_PRODUCT_TYPE_OUTPUT_FIELDS}
+  mutation CreateProductType($input: CreateProductTypeInput!) {
+    createProductType(input: $input) {
+      ...CreateProductTypeOutputFields
+    }
+  }
+`;
+
+export const UPDATE_PRODUCT_TYPE = gql`
+  ${UPDATE_PRODUCT_TYPE_OUTPUT_FIELDS}
+  mutation UpdateProductType($input: UpdateProductTypeInput!) {
+    updateProductType(input: $input) {
+      ...UpdateProductTypeOutputFields
+    }
+  }
+`;
+
+// ─── Product Queries ──────────────────────────────────────────────────────────
 
 export const LIST_PRODUCTS = gql`
   ${PRODUCT_FIELDS}
@@ -143,7 +237,7 @@ export const GET_PRODUCT = gql`
   }
 `;
 
-// ─── Mutations ────────────────────────────────────────────────────────────────
+// ─── Product Mutations ────────────────────────────────────────────────────────
 
 export const CREATE_PRODUCT = gql`
   ${CREATE_PRODUCT_OUTPUT_FIELDS}

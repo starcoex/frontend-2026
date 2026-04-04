@@ -18,7 +18,7 @@ export interface Category {
   updatedAt: string;
   deletedAt?: string | null;
   parent?: Category | null;
-  children: Category[];
+  children?: Category[];
 }
 
 export interface ErrorInfo {

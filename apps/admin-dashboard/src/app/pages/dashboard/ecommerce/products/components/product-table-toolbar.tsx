@@ -3,9 +3,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Product, useProducts } from '@starcoex-frontend/products';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 
 const PRODUCT_STATUS_OPTIONS = [
   { value: 'active', label: '판매 중' },

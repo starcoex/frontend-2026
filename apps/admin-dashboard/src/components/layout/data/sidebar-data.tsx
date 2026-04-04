@@ -170,8 +170,13 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
           {
             title: '알림 관리',
-            url: '/admin/notifications', // ✅ /admin 추가
+            url: '/admin/notifications',
             icon: IconNotification,
+            items: [
+              { title: '알림 목록', url: '/admin/notifications' },
+              { title: '알림 전송', url: '/admin/notifications/send' },
+              { title: '이메일 관리', url: '/admin/notifications/emails' },
+            ],
           },
         ],
       },
@@ -180,6 +185,16 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         title: '커머스 관리',
         items: [
           {
+            title: '결제 관리',
+            url: '/admin/payments',
+            icon: IconCreditCard,
+            items: [
+              { title: '결제 목록', url: '/admin/payments' },
+              { title: '결제 추가', url: '/admin/payments/create' },
+              { title: '결제 통계', url: '/admin/payments/stats' },
+            ],
+          },
+          {
             title: '제품 관리',
             url: '/admin/products',
             icon: IconPackage,
@@ -187,6 +202,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '제품 목록', url: '/admin/products' },
               { title: '제품 추가', url: '/admin/products/create' },
               { title: '재고 현황', url: '/admin/products/inventory' },
+              { title: '제품 설정', url: '/admin/products/settings' }, // ✅ 추가
             ],
           },
           {
@@ -210,6 +226,24 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             ],
           },
           {
+            title: '장바구니 관리',
+            url: '/admin/cart',
+            icon: IconShoppingCart,
+            items: [{ title: '장바구니 목록', url: '/admin/cart' }],
+          },
+          // ✅ 배송 관리 추가
+          {
+            title: '배송 관리',
+            url: '/admin/delivery',
+            icon: IconTruck,
+            items: [
+              { title: '배송 목록', url: '/admin/delivery' },
+              { title: '배송 추가', url: '/admin/delivery/create' },
+              { title: '기사 관리', url: '/admin/delivery/drivers' },
+              { title: '배송 추적', url: '/admin/delivery/tracking' },
+            ],
+          },
+          {
             title: '카테고리 관리',
             url: '/admin/categories',
             icon: IconCategory,
@@ -227,10 +261,12 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '매장 목록', url: '/admin/stores' },
               { title: '매장 추가', url: '/admin/stores/create' },
               { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
+              { title: '매장 설정', url: '/admin/stores/settings' }, // ✅ 추가
             ],
           },
         ],
       },
+
       // ✅ 예약 관리 그룹 (신규)
       {
         title: '예약 관리',
@@ -245,6 +281,10 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               {
                 title: '서비스 설정',
                 url: '/admin/reservations/services',
+              },
+              {
+                title: '예약 캘린더',
+                url: '/admin/reservations/calendar',
               },
               { title: '워크인 관리', url: '/admin/walk-ins' },
               { title: '주유 워크인', url: '/admin/fuel-walk-ins' },
@@ -551,7 +591,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '매장 목록', url: '/admin/stores' },
               { title: '매장 추가', url: '/admin/stores/create' },
               { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
-              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
+              { title: '매장 설정', url: '/admin/stores/settings' }, // ✅ 추가
             ],
           },
           {
@@ -601,7 +641,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             url: '/suggestions',
             icon: IconChecklist,
             items: [
-              { title: '전체 건의사항', url: '/suggestions' }, // ✅ 추가
+              { title: '전체 건의사항', url: '/suggestions' },
               { title: '새 건의사항', url: '/suggestions/create' },
               { title: '내 건의사항', url: '/suggestions/my' },
               { title: '배달 경로', url: '/suggestions/routes' },
@@ -616,13 +656,30 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         title: '배달 관리',
         items: [
           {
+            title: '배송 관리',
+            url: '/admin/delivery',
+            icon: IconTruck,
+            items: [
+              { title: '배송 목록', url: '/admin/delivery' },
+              { title: '배송 추가', url: '/admin/delivery/create' },
+              { title: '배송 추적', url: '/admin/delivery/tracking' },
+            ],
+          },
+          {
+            title: '기사 관리',
+            url: '/admin/delivery/drivers',
+            icon: IconUser,
+            items: [{ title: '기사 목록', url: '/admin/delivery/drivers' }],
+          },
+          {
             title: '주문 관리',
-            url: '/orders',
+            url: '/admin/orders',
             icon: IconShoppingBag,
             items: [
-              { title: '실시간 주문', url: '/orders/live' },
-              { title: '주문 히스토리', url: '/orders/history' },
-              { title: '주문 통계', url: '/orders/stats' },
+              { title: '주문 목록', url: '/admin/orders' },
+              { title: '실시간 주문', url: '/admin/orders/live' },
+              { title: '주문 히스토리', url: '/admin/orders/history' },
+              { title: '주문 통계', url: '/admin/orders/stats' },
             ],
           },
           {
@@ -632,8 +689,8 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             items: [
               { title: '거점 목록', url: '/admin/stores' },
               { title: '거점 추가', url: '/admin/stores/create' },
-              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
-              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
+              { title: '브랜드 목록', url: '/admin/stores/brands' },
+              { title: '매장 설정', url: '/admin/stores/settings' },
             ],
           },
           {
@@ -647,32 +704,12 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             ],
           },
           {
-            title: '배달원 관리',
-            url: '/drivers',
-            icon: IconUser,
-            items: [
-              { title: '배달원 목록', url: '/drivers' },
-              { title: '배달원 등록', url: '/drivers/register' },
-              { title: '성과 관리', url: '/drivers/performance' },
-            ],
-          },
-          {
-            title: '배달 현황',
-            url: '/delivery-status',
-            icon: IconTruck,
-            items: [
-              { title: '실시간 추적', url: '/delivery-status/tracking' },
-              { title: '배달 완료', url: '/delivery-status/completed' },
-              { title: '배달 지연', url: '/delivery-status/delayed' },
-            ],
-          },
-          {
             title: '재고 관리',
-            url: '/inventory',
+            url: '/admin/inventory',
             icon: IconPackage,
             items: [
-              { title: '난방유 재고', url: '/inventory/oil' },
-              { title: '배달 용품', url: '/inventory/supplies' },
+              { title: '재고 현황', url: '/admin/inventory' },
+              { title: '난방유 재고', url: '/admin/inventory/low-stock' },
             ],
           },
         ],

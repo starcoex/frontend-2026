@@ -58,7 +58,7 @@ export const SettingsLayout = () => {
         label: 'Billing',
         title: 'Billing & Payments',
         description:
-          'Manage your subscription, payment methods, and billing history.',
+          'Manage your subscription, payments methods, and billing history.',
         showInBreadcrumb: true,
         showActions: true,
         showStats: true,
@@ -66,7 +66,7 @@ export const SettingsLayout = () => {
       '/settings/notifications': {
         label: 'Notifications',
         title: 'Notification Settings',
-        description: 'Configure how and when you receive notifications.',
+        description: 'Configure how and when you receive components.',
         showInBreadcrumb: true,
         showActions: true,
         showStats: false,

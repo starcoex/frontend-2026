@@ -59,7 +59,7 @@ export default function OrdersPage() {
         </Alert>
       )}
 
-      {!error && <OrderTable data={orders} />}
+      {!error && <OrderTable data={orders} onRefresh={fetchOrders} />}
     </>
   );
 }

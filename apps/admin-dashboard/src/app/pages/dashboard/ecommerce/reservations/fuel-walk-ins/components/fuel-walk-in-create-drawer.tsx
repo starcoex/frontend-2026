@@ -40,14 +40,9 @@ import {
   CustomerSearch,
   type SelectedCustomer,
 } from '@starcoex-frontend/common';
-import {
-  FUEL_PAYMENT_TYPE_LABELS,
-  FUEL_TYPE_LABELS,
-} from '@/app/pages/dashboard/ecommerce/reservations/data/fuel-walk-in-data';
+import { FUEL_TYPE_LABELS } from '@/app/pages/dashboard/ecommerce/reservations/data/fuel-walk-in-data';
 
 type RequestType = 'LITER' | 'AMOUNT' | 'FULL';
-
-const PREPAID_PAYMENT_TYPES = ['CARD_PRE', 'APP_PRE', 'CASH_PRE'];
 
 const FuelWalkInCreateSchema = z.object({
   storeId: z.number().min(1, '매장을 선택하세요.'),
@@ -55,20 +50,13 @@ const FuelWalkInCreateSchema = z.object({
   customerName: z.string().min(1),
   customerPhone: z.string().min(1),
   fuelType: z.enum(['GASOLINE', 'DIESEL', 'PREMIUM_GASOLINE', 'KEROSENE']),
-  paymentType: z.enum([
-    'CARD_PRE',
-    'APP_PRE',
-    'CASH_PRE',
-    'CARD_POST',
-    'CASH_POST',
-    'APP_POST',
-  ]),
   requestType: z.enum(['LITER', 'AMOUNT', 'FULL']),
   requestedLiters: z.number().min(0).optional(),
   requestedAmount: z.number().min(0).optional(),
   isPrepaid: z.boolean(),
   vehicleId: z.number().optional(),
   resourceId: z.number().optional(),
+  productId: z.number().optional(),
   notes: z.string().optional(),
 });
 
@@ -102,11 +90,13 @@ export function FuelWalkInCreateDrawer({
       customerName: '',
       customerPhone: '',
       fuelType: 'GASOLINE',
-      paymentType: 'CARD_POST',
       requestType: 'FULL',
       requestedLiters: undefined,
       requestedAmount: undefined,
       isPrepaid: false,
+      vehicleId: undefined,
+      resourceId: undefined,
+      productId: undefined,
       notes: '',
     },
   });
@@ -119,13 +109,7 @@ export function FuelWalkInCreateDrawer({
   }, [open, form]);
 
   const requestType = form.watch('requestType');
-  const paymentType = form.watch('paymentType');
   const isPrepaid = form.watch('isPrepaid');
-
-  // 결제 방식 → isPrepaid 자동 동기화
-  useEffect(() => {
-    form.setValue('isPrepaid', PREPAID_PAYMENT_TYPES.includes(paymentType));
-  }, [paymentType, form]);
 
   const handleSelectCustomer = (customer: SelectedCustomer) => {
     setSelectedCustomer(customer);
@@ -149,9 +133,9 @@ export function FuelWalkInCreateDrawer({
       const res = await createFuelWalkIn({
         storeId: data.storeId,
         fuelType: data.fuelType,
-        paymentType: data.paymentType,
         requestedAmount,
         isPrepaid: data.isPrepaid,
+        productId: data.productId,
         customerName: data.customerName || undefined,
         customerPhone: data.customerPhone || undefined,
         vehicleId: data.vehicleId,
@@ -309,6 +293,7 @@ export function FuelWalkInCreateDrawer({
               )}
             />
 
+            {/* 리터 지정 입력 — {…field} spread 없이 명시적 props */}
             {requestType === 'LITER' && (
               <FormField
                 control={form.control}
@@ -318,11 +303,14 @@ export function FuelWalkInCreateDrawer({
                     <FormLabel>요청 리터 (L) *</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
                         type="number"
                         min={0}
                         step={0.1}
                         placeholder="예: 30"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value ?? ''}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value
@@ -343,6 +331,7 @@ export function FuelWalkInCreateDrawer({
               />
             )}
 
+            {/* 금액 지정 입력 — {…field} spread 없이 명시적 props */}
             {requestType === 'AMOUNT' && (
               <FormField
                 control={form.control}
@@ -352,11 +341,14 @@ export function FuelWalkInCreateDrawer({
                     <FormLabel>요청 금액 (원) *</FormLabel>
                     <FormControl>
                       <Input
-                        {...field}
                         type="number"
                         min={0}
                         step={1000}
                         placeholder="예: 50000"
+                        name={field.name}
+                        ref={field.ref}
+                        onBlur={field.onBlur}
+                        value={field.value ?? ''}
                         onChange={(e) =>
                           field.onChange(
                             e.target.value
@@ -391,33 +383,7 @@ export function FuelWalkInCreateDrawer({
               결제 정보
             </p>
 
-            <FormField
-              control={form.control}
-              name="paymentType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>결제 방식 *</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(FUEL_PAYMENT_TYPE_LABELS).map(
-                          ([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* 결제 시점 표시 (읽기 전용) */}
             <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
               <span>결제 시점</span>
               <Badge variant={isPrepaid ? 'default' : 'secondary'}>
@@ -427,7 +393,7 @@ export function FuelWalkInCreateDrawer({
 
             <Separator />
 
-            {/* 차량 ID */}
+            {/* 차량 ID — {…field} spread 없이 명시적 props */}
             <FormField
               control={form.control}
               name="vehicleId"
@@ -436,9 +402,12 @@ export function FuelWalkInCreateDrawer({
                   <FormLabel>차량 ID</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
                       type="number"
                       placeholder="차량 ID (선택)"
+                      name={field.name}
+                      ref={field.ref}
+                      onBlur={field.onBlur}
+                      value={field.value ?? ''}
                       onChange={(e) =>
                         field.onChange(
                           e.target.value ? parseInt(e.target.value) : undefined

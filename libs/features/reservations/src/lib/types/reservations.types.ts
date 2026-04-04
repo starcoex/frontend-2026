@@ -22,25 +22,6 @@ export type ReservationStatus =
 
 export type ConfirmationType = 'AUTO' | 'MANUAL';
 
-export type ReservationPaymentType =
-  | 'PREPAID'
-  | 'DEPOSIT'
-  | 'POSTPAID'
-  | 'FREE';
-
-export type ReservationPaymentStatus =
-  | 'PENDING'
-  | 'PROCESSING'
-  | 'PARTIAL_PAID'
-  | 'FULLY_PAID'
-  | 'FAILED'
-  | 'EXPIRED'
-  | 'CANCELLED'
-  | 'REFUND_REQUESTED'
-  | 'REFUND_PROCESSING'
-  | 'REFUNDED'
-  | 'PARTIAL_REFUNDED';
-
 export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
 
 export type ResourceType =
@@ -67,41 +48,7 @@ export type WalkInStatus =
   | 'CANCELLED'
   | 'NO_SHOW';
 
-export type ReservationPaymentKind = 'PREPAID' | 'FINAL' | 'REFUND';
-
-export type PaymentsPaymentStatus =
-  | 'PENDING'
-  | 'PAID'
-  | 'FAILED'
-  | 'CANCELLED'
-  | 'PARTIAL_CANCELLED';
-
-export type ReservationPaymentReason =
-  | 'PREPAID'
-  | 'FINAL'
-  | 'REFUND'
-  | 'DEPOSIT'
-  | 'ADDITIONAL';
-
 export type FuelType = 'GASOLINE' | 'DIESEL' | 'PREMIUM_GASOLINE' | 'KEROSENE';
-
-export type FuelPaymentType =
-  | 'CARD_PRE'
-  | 'APP_PRE'
-  | 'CASH_PRE'
-  | 'CARD_POST'
-  | 'CASH_POST'
-  | 'APP_POST';
-
-export type FuelPaymentStatus =
-  | 'UNPAID'
-  | 'PENDING'
-  | 'PAID'
-  | 'PARTIAL_PAID'
-  | 'REFUNDING'
-  | 'REFUNDED'
-  | 'FAILED'
-  | 'CANCELLED';
 
 export type FuelWalkInStatus =
   | 'WAITING'
@@ -137,6 +84,22 @@ export type HeatingOilDeliveryStatus =
   | 'REFUND_REQUESTED'
   | 'REFUNDED';
 
+export type SlotGenerationType = 'AUTO' | 'MANUAL';
+
+export type ReservableServiceType =
+  | 'CAR_WASH'
+  | 'CAR_CARE'
+  | 'CAR_REPAIR'
+  | 'OIL_CHANGE'
+  | 'FUEL'
+  | 'EV_CHARGING'
+  | 'TABLE'
+  | 'ROOM'
+  | 'PICKUP'
+  | 'DELIVERY'
+  | 'CONSULTATION'
+  | 'EVENT';
+
 // ============================================================================
 // 공통 에러
 // ============================================================================
@@ -148,7 +111,7 @@ export interface ReservationErrorInfo {
 }
 
 // ============================================================================
-// Reservation 엔티티
+// Reservation 엔티티 (schema 기준)
 // ============================================================================
 
 export interface Reservation {
@@ -162,7 +125,7 @@ export interface Reservation {
   reservedDate: string;
   reservedStartTime: string;
   reservedEndTime: string;
-  paymentExpiresAt: string;
+  paymentExpiresAt?: string | null;
   autoCancel: boolean;
   userId?: number | null;
   guestEmail?: string | null;
@@ -172,27 +135,15 @@ export interface Reservation {
   isWalkIn: boolean;
   partySize: number;
   specialRequests?: string | null;
-  paymentType: ReservationPaymentType;
-  serviceAmount: number;
-  depositAmount: number;
-  additionalAmount: number;
-  totalAmount: number;
-  paidAmount: number;
-  refundAmount: number;
-  paymentStatus: ReservationPaymentStatus;
-  prepaidPaymentId?: number | null;
-  finalPaymentId?: number | null;
-  refundPaymentId?: number | null;
+  /** 결제 ID (단일) */
+  paymentId?: number | null;
+  paymentConfirmed: boolean;
   appliedRefundPolicy?: Record<string, any> | null;
-  refundCalculation?: Record<string, any> | null;
-  paymentCompletedAt?: string | null;
   confirmedAt?: string | null;
   checkedInAt?: string | null;
   serviceStartedAt?: string | null;
   completedAt?: string | null;
   cancelledAt?: string | null;
-  refundRequestedAt?: string | null;
-  refundCompletedAt?: string | null;
   notes?: string | null;
   metadata?: Record<string, any> | null;
   createdById?: number | null;
@@ -202,9 +153,6 @@ export interface Reservation {
   store?: { id: number } | null;
   user?: { id: number } | null;
   vehicle?: { id: number } | null;
-  prepaidPayment?: { id: number } | null;
-  finalPayment?: { id: number } | null;
-  refundPayment?: { id: number } | null;
 }
 
 export interface ReservationTimeSlot {
@@ -281,6 +229,8 @@ export interface WalkIn {
   customerPhone?: string | null;
   vehicleId?: number | null;
   packageId?: number | null;
+  /** 결제 확인 여부 (schema 기준) */
+  paymentConfirmed: boolean;
   status: WalkInStatus;
   waitingOrder: number;
   estimatedWaitMinutes?: number | null;
@@ -309,7 +259,7 @@ export interface ReservationApproval {
 }
 
 // ============================================================================
-// FuelWalkIn 엔티티
+// FuelWalkIn 엔티티 (schema 기준)
 // ============================================================================
 
 export interface FuelWalkIn {
@@ -320,17 +270,18 @@ export interface FuelWalkIn {
   customerName?: string | null;
   customerPhone?: string | null;
   vehicleId?: number | null;
-  fuelType: FuelType;
+  /** 상품 ID (apps/products 참조) */
+  productId?: number | null;
+  fuelType?: string | null;
   requestedAmount?: number | null;
   actualAmount?: number | null;
   literAmount?: number | null;
   unitPrice?: number | null;
-  paymentType: FuelPaymentType;
-  paymentStatus: FuelPaymentStatus;
-  paymentId?: number | null;
-  paidAmount?: number | null;
-  refundAmount?: number | null;
+  /** 선결제 여부 */
   isPrepaid: boolean;
+  /** 결제 ID (단일) */
+  paymentId?: number | null;
+  paymentConfirmed: boolean;
   packageId?: number | null;
   status: FuelWalkInStatus;
   arrivedAt: string;
@@ -355,15 +306,11 @@ export interface FuelWalkInPackage {
   includesFuel: boolean;
   includesWash: boolean;
   washServiceId?: number | null;
-  fuelAmount: number;
-  washAmount: number;
-  discountAmount: number;
-  totalAmount: number;
-  paidAmount: number;
-  paymentType: FuelPaymentType;
-  paymentStatus: FuelPaymentStatus;
-  paymentId?: number | null;
+  /** 선결제 여부 */
   isPrepaid: boolean;
+  /** 결제 ID (단일) */
+  paymentId?: number | null;
+  paymentConfirmed: boolean;
   status: PackageStatus;
   arrivedAt: string;
   completedAt?: string | null;
@@ -376,13 +323,15 @@ export interface FuelWalkInPackage {
 }
 
 // ============================================================================
-// HeatingOilDelivery 엔티티
+// HeatingOilDelivery 엔티티 (schema 기준)
 // ============================================================================
 
 export interface HeatingOilDelivery {
   id: number;
   storeId: number;
   deliveryNumber: string;
+  /** 상품 ID (apps/products 참조) */
+  productId?: number | null;
   userId?: number | null;
   customerName: string;
   customerPhone: string;
@@ -391,21 +340,16 @@ export interface HeatingOilDelivery {
   deliveryAddressDetail?: string | null;
   deliveryLatitude?: number | null;
   deliveryLongitude?: number | null;
-  fuelType: HeatingOilFuelType;
+  fuelType: string;
   orderType: HeatingOilOrderType;
   requestedLiters: number;
   actualLiters?: number | null;
   unitPrice?: number | null;
   tankCapacity?: number | null;
   tankCurrentLevel?: number | null;
-  serviceAmount: number;
-  deliveryFee: number;
-  urgentFee: number;
-  totalAmount: number;
-  paidAmount: number;
-  paymentType: ReservationPaymentType;
-  paymentStatus: ReservationPaymentStatus;
+  /** 결제 ID (단일) */
   paymentId?: number | null;
+  paymentConfirmed: boolean;
   status: HeatingOilDeliveryStatus;
   scheduledDate: string;
   scheduledTimeSlot: string;
@@ -419,9 +363,6 @@ export interface HeatingOilDelivery {
   arrivedAt?: string | null;
   completedAt?: string | null;
   cancelledAt?: string | null;
-  refundAmount?: number | null;
-  refundRequestedAt?: string | null;
-  refundCompletedAt?: string | null;
   notes?: string | null;
   metadata?: Record<string, any> | null;
   createdAt: string;
@@ -429,15 +370,20 @@ export interface HeatingOilDelivery {
   deletedAt?: string | null;
 }
 
+// ============================================================================
+// ReservableService 엔티티 (schema 기준)
+// ============================================================================
+
 export interface ReservableService {
   id: number;
   storeId: number;
   name: string;
-  type: string;
+  type: ReservableServiceType | string;
+  /** apps/stores ServiceType 코드 */
+  serviceTypeCode?: string | null;
   description?: string | null;
-  businessType: string;
-  confirmationType: string;
-  slotGenerationType: string;
+  confirmationType: ConfirmationType;
+  slotGenerationType: SlotGenerationType;
   requiresPayment: boolean;
   allowWalkIn: boolean;
   operatingHours: Record<string, any>;
@@ -487,7 +433,7 @@ export interface FindReservationsInput {
 export interface CreateReservationInput {
   storeId: number;
   serviceId: number;
-  serviceIds: number[]; // ← 추가
+  serviceIds: number[];
   timeSlotId?: number;
   reservedDate: string;
   reservedStartTime: string;
@@ -499,11 +445,6 @@ export interface CreateReservationInput {
   status?: ReservationStatus;
   partySize?: number;
   specialRequests?: string;
-  paymentType?: ReservationPaymentType;
-  serviceAmount: number;
-  depositAmount?: number;
-  additionalAmount?: number;
-  totalAmount: number;
   notes?: string;
   metadata?: Record<string, any>;
   createdById?: number;
@@ -519,7 +460,6 @@ export interface UpdateReservationStatusInput {
   reservedDate?: string;
   reservedStartTime?: string;
   reservedEndTime?: string;
-  paymentExpiresAt?: string;
   autoCancel?: boolean;
   userId?: number;
   guestEmail?: string;
@@ -527,11 +467,6 @@ export interface UpdateReservationStatusInput {
   status?: ReservationStatus;
   partySize?: number;
   specialRequests?: string;
-  paymentType?: ReservationPaymentType;
-  serviceAmount?: number;
-  depositAmount?: number;
-  additionalAmount?: number;
-  totalAmount?: number;
   notes?: string;
   metadata?: Record<string, any>;
   resourceId?: number;
@@ -606,7 +541,30 @@ export interface CreateScheduleBlockedDateInput {
   isFullDay?: boolean;
   blockedStartTime?: string;
   blockedEndTime?: string;
-  createdById: number;
+  // createdById: number;
+}
+
+// ← 신규 추가
+export interface UpdateScheduleBlockedDateInput {
+  id: number;
+  reason?: string;
+  isFullDay?: boolean;
+  blockedStartTime?: string;
+  blockedEndTime?: string;
+}
+
+// ← 신규 추가
+export interface FindScheduleBlockedDatesInput {
+  serviceId: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+// ← 신규 추가
+export interface FindScheduleBlockedDatesOutput {
+  success: boolean;
+  blockedDates: ScheduleBlockedDate[];
+  total: number;
 }
 
 export interface CreateServiceResourceInput {
@@ -628,19 +586,20 @@ export interface UpdateServiceResourceInput {
 }
 
 // ============================================================================
-// Input 타입 — FuelWalkIn
+// Input 타입 — FuelWalkIn (schema 기준)
 // ============================================================================
 
 export interface CreateFuelWalkInInput {
   storeId: number;
   resourceId?: number;
+  vehicleId?: number;
   userId?: number;
+  /** 상품 ID (apps/products 참조) */
+  productId?: number;
   customerName?: string;
   customerPhone?: string;
-  vehicleId?: number;
-  fuelType: FuelType;
+  fuelType?: string;
   requestedAmount?: number;
-  paymentType: FuelPaymentType;
   isPrepaid?: boolean;
   notes?: string;
   metadata?: Record<string, any>;
@@ -654,6 +613,8 @@ export interface AttachFuelPaymentInput {
 
 export interface CompleteFuelWalkInInput {
   fuelWalkInId: number;
+  /** 재고 차감용 상품 ID */
+  productId: number;
   actualAmount: number;
   literAmount: number;
   unitPrice: number;
@@ -673,11 +634,6 @@ export interface CreateFuelWalkInPackageInput {
   includesFuel?: boolean;
   includesWash?: boolean;
   washServiceId?: number;
-  fuelAmount: number;
-  washAmount?: number;
-  discountAmount?: number;
-  totalAmount: number;
-  paymentType: FuelPaymentType;
   isPrepaid?: boolean;
   notes?: string;
   metadata?: Record<string, any>;
@@ -695,27 +651,24 @@ export interface UpdatePackageStatusInput {
 }
 
 // ============================================================================
-// Input 타입 — HeatingOilDelivery
+// Input 타입 — HeatingOilDelivery (schema 기준)
 // ============================================================================
 
 export interface CreateHeatingOilDeliveryInput {
   storeId: number;
+  /** 상품 ID (apps/products 참조) */
+  productId?: number;
   userId?: number;
   customerName: string;
   customerPhone: string;
   guestEmail?: string;
   deliveryAddress: string;
   deliveryAddressDetail?: string;
-  fuelType: HeatingOilFuelType;
+  fuelType: string;
   orderType?: HeatingOilOrderType;
   requestedLiters: number;
   tankCapacity?: number;
   tankCurrentLevel?: number;
-  serviceAmount: number;
-  deliveryFee?: number;
-  urgentFee?: number;
-  totalAmount: number;
-  paymentType?: ReservationPaymentType;
   scheduledDate: string;
   scheduledTimeSlot: string;
   isUrgent?: boolean;
@@ -737,19 +690,25 @@ export interface UpdateHeatingOilDeliveryStatusInput {
 
 export interface CompleteHeatingOilDeliveryInput {
   deliveryId: number;
+  /** 재고 차감용 상품 ID */
+  productId: number;
   actualLiters: number;
   unitPrice: number;
   notes?: string;
 }
 
+// ============================================================================
+// Input 타입 — ReservableService (schema 기준)
+// ============================================================================
+
 export interface CreateReservableServiceInput {
   storeId: number;
   name: string;
-  type: string;
+  type: ReservableServiceType | string;
+  serviceTypeCode?: string;
   description?: string;
-  businessType?: string;
-  confirmationType?: string;
-  slotGenerationType?: string;
+  confirmationType?: ConfirmationType;
+  slotGenerationType?: SlotGenerationType;
   requiresPayment?: boolean;
   allowWalkIn?: boolean;
   operatingHours: Record<string, any>;
@@ -768,10 +727,11 @@ export interface CreateReservableServiceInput {
 export interface UpdateReservableServiceInput {
   id: number;
   name?: string;
-  type?: string;
+  type?: ReservableServiceType | string;
+  serviceTypeCode?: string;
   description?: string;
-  confirmationType?: string;
-  slotGenerationType?: string;
+  confirmationType?: ConfirmationType;
+  slotGenerationType?: SlotGenerationType;
   requiresPayment?: boolean;
   allowWalkIn?: boolean;
   operatingHours?: Record<string, any>;
@@ -780,7 +740,7 @@ export interface UpdateReservableServiceInput {
   minAdvanceHours?: number;
   basePrice?: number;
   depositRate?: number;
-  refundPolicyId?: number; // ← 추가
+  refundPolicyId?: number;
   isActive?: boolean;
   isAvailable?: boolean;
   updatedById: number;
@@ -796,6 +756,10 @@ export interface DeleteReservableServiceOutput {
   success: boolean;
   message: string;
 }
+
+// ============================================================================
+// RefundPolicy
+// ============================================================================
 
 export interface RefundPolicy {
   id: number;
@@ -857,6 +821,7 @@ export interface CreateReservationOutput {
   success?: boolean | null;
   error?: ReservationErrorInfo | null;
   reservation?: Reservation | null;
+  reservations?: Reservation[] | null;
   message?: string | null;
 }
 
@@ -997,16 +962,37 @@ export interface IReservationsService {
   findScheduleTemplates(
     serviceId: number
   ): Promise<ApiResponse<ScheduleTemplate[]>>;
+  findScheduleBlockedDates(
+    input: FindScheduleBlockedDatesInput // ← 인자 변경
+  ): Promise<ApiResponse<FindScheduleBlockedDatesOutput>>; // ← 반환 타입 변경
+  createScheduleBlockedDate(
+    input: CreateScheduleBlockedDateInput
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>>;
+  updateScheduleBlockedDate( // ← 신규
+    input: UpdateScheduleBlockedDateInput
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>>;
+  deleteScheduleBlockedDate(
+    id: number
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>>;
+  bulkDeleteScheduleBlockedDates( // ← 신규
+    ids: number[]
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>>;
   findWalkIns(input: {
     storeId?: number;
     serviceId?: number;
     status?: WalkInStatus;
   }): Promise<ApiResponse<{ walkIns?: WalkIn[]; total?: number }>>;
+  findReservableServices(
+    input: FindReservableServicesInput
+  ): Promise<ApiResponse<FindReservableServicesOutput>>;
+  findRefundPolicies(): Promise<ApiResponse<FindRefundPoliciesOutput>>;
+
   // ─── FuelWalkIn Queries ───
   findFuelWalkIns(input: {
     storeId?: number;
     status?: FuelWalkInStatus;
   }): Promise<ApiResponse<FindFuelWalkInsOutput>>;
+
   // ─── HeatingOilDelivery Queries ───
   findHeatingOilDeliveries(input: {
     storeId?: number;
@@ -1044,13 +1030,17 @@ export interface IReservationsService {
   createScheduleTemplate(
     input: CreateScheduleTemplateInput
   ): Promise<ApiResponse<ScheduleTemplateOutput>>;
+  createScheduleBlockedDate(
+    input: CreateScheduleBlockedDateInput
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>>;
   createServiceResource(
     input: CreateServiceResourceInput
   ): Promise<ApiResponse<ServiceResourceOutput>>;
   updateServiceResource(
     input: UpdateServiceResourceInput
   ): Promise<ApiResponse<ServiceResourceOutput>>;
-  // ─── Reservation 삭제 ───
+
+  // ─── Reservation 삭제/비활성화 ───
   deleteReservation(
     reservationId: number
   ): Promise<ApiResponse<DeleteReservationOutput>>;
@@ -1068,6 +1058,26 @@ export interface IReservationsService {
   deleteScheduleBlockedDate(
     id: number
   ): Promise<ApiResponse<ScheduleBlockedDateOutput>>;
+
+  // ─── ReservableService Mutations ───
+  createReservableService(
+    input: CreateReservableServiceInput
+  ): Promise<ApiResponse<ReservableServiceOutput>>;
+  updateReservableService(
+    input: UpdateReservableServiceInput
+  ): Promise<ApiResponse<ReservableServiceOutput>>;
+  deleteReservableService(
+    id: number
+  ): Promise<ApiResponse<DeleteReservableServiceOutput>>;
+
+  // ─── RefundPolicy Mutations ───
+  createRefundPolicy(
+    input: CreateRefundPolicyInput
+  ): Promise<ApiResponse<RefundPolicyOutput>>;
+  updateRefundPolicy(
+    input: UpdateRefundPolicyInput
+  ): Promise<ApiResponse<RefundPolicyOutput>>;
+  deleteRefundPolicy(id: number): Promise<ApiResponse<RefundPolicyOutput>>;
 
   // ─── FuelWalkIn Mutations ───
   createFuelWalkIn(

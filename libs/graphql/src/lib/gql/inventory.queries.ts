@@ -2,9 +2,20 @@ import { gql } from '@apollo/client';
 
 // ── Fragments ────────────────────────────────────────────────────────────────
 
+export const INVENTORY_ERROR_INFO_FIELDS = gql`
+  fragment InventoryErrorInfoFields on ErrorInfo {
+    code
+    message
+    details
+  }
+`;
+
 export const STORE_INVENTORY_FRAGMENT = gql`
   fragment StoreInventoryFields on StoreInventory {
     id
+    deletedAt
+    createdAt
+    updatedAt
     storeId
     productId
     currentStock
@@ -32,8 +43,6 @@ export const STORE_INVENTORY_FRAGMENT = gql`
     createdById
     updatedById
     lastCountedAt
-    createdAt
-    updatedAt
     isLowStock
     isOutOfStock
     needsReorder
@@ -53,6 +62,9 @@ export const STORE_INVENTORY_FRAGMENT = gql`
 export const INVENTORY_TRANSACTION_FRAGMENT = gql`
   fragment InventoryTransactionFields on InventoryTransaction {
     id
+    deletedAt
+    createdAt
+    updatedAt
     inventoryId
     type
     quantity
@@ -64,15 +76,16 @@ export const INVENTORY_TRANSACTION_FRAGMENT = gql`
     unitCost
     totalCost
     notes
+    metadata
     batchNumber
     expiryDate
     createdById
     processedAt
-    createdAt
     isInbound
     isOutbound
     isAdjustment
     hasCosting
+    averageCost
     hasBatch
     hasExpiry
     isExpiringSoon
@@ -126,6 +139,7 @@ export const GET_STORE_INVENTORIES = gql`
 // ── Mutations ─────────────────────────────────────────────────────────────────
 
 export const CREATE_STORE_INVENTORY = gql`
+  ${INVENTORY_ERROR_INFO_FIELDS}
   ${STORE_INVENTORY_FRAGMENT}
   mutation CreateStoreInventory($input: CreateStoreInventoryInput!) {
     createStoreInventory(input: $input) {
@@ -133,9 +147,7 @@ export const CREATE_STORE_INVENTORY = gql`
       creationMessage
       notificationMessage
       error {
-        code
-        message
-        details
+        ...InventoryErrorInfoFields
       }
       inventory {
         ...StoreInventoryFields
@@ -145,6 +157,7 @@ export const CREATE_STORE_INVENTORY = gql`
 `;
 
 export const UPDATE_STORE_INVENTORY = gql`
+  ${STORE_INVENTORY_FRAGMENT}
   mutation UpdateStoreInventory($input: UpdateStoreInventoryInput!) {
     updateStoreInventory(input: $input) {
       success
@@ -154,7 +167,6 @@ export const UPDATE_STORE_INVENTORY = gql`
       }
     }
   }
-  ${STORE_INVENTORY_FRAGMENT}
 `;
 
 export const DELETE_STORE_INVENTORY = gql`
@@ -170,6 +182,7 @@ export const DELETE_STORE_INVENTORIES = gql`
 `;
 
 export const ADD_STOCK = gql`
+  ${STORE_INVENTORY_FRAGMENT}
   mutation AddStock($input: AddStockInput!) {
     addStock(input: $input) {
       success
@@ -179,42 +192,31 @@ export const ADD_STOCK = gql`
       }
     }
   }
-  ${STORE_INVENTORY_FRAGMENT}
 `;
 
-// ── 연료 재고 Mutations (신규) ─────────────────────────────────────────────────
+// ── 연료 재고 Mutations ────────────────────────────────────────────────────────
 
 export const ADD_FUEL_STOCK = gql`
+  ${STORE_INVENTORY_FRAGMENT}
   mutation AddFuelStock($input: AddFuelStockInput!) {
     addFuelStock(input: $input) {
       success
       message
       inventory {
-        id
-        productId
-        storeId
-        currentVolume
-        availableVolume
-        reservedVolume
-        unit
+        ...StoreInventoryFields
       }
     }
   }
 `;
 
 export const DISPENSE_FUEL = gql`
+  ${STORE_INVENTORY_FRAGMENT}
   mutation DispenseFuel($input: DispenseFuelInput!) {
     dispenseFuel(input: $input) {
       success
       message
       inventory {
-        id
-        productId
-        storeId
-        currentVolume
-        availableVolume
-        reservedVolume
-        unit
+        ...StoreInventoryFields
       }
     }
   }

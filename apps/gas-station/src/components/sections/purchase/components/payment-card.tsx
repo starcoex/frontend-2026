@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import {
   CreditCard,
   Info,
+  Loader2,
   Star,
   Truck,
   Wallet,
@@ -18,18 +19,36 @@ import type {
 
 type PaymentMethod = 'online' | 'onsite';
 
+// ── Props 확장 ──────────────────────────────────────────────────────────────
 interface PaymentCardProps {
   selectedFuel: FuelType | null;
   quantityMode: QuantityMode;
   paymentInfo: PaymentInfo;
+  // 결제 핸들러 (purchase-page에서 주입)
+  onOnlinePayment?: () => Promise<void>;
+  onOnsiteReservation?: () => Promise<void>;
+  isProcessing?: boolean;
 }
 
 export const PaymentCard: React.FC<PaymentCardProps> = ({
   selectedFuel,
   quantityMode,
   paymentInfo,
+  onOnlinePayment,
+  onOnsiteReservation,
+  isProcessing = false,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('online');
+
+  const handlePayClick = async () => {
+    if (paymentMethod === 'online') {
+      await onOnlinePayment?.();
+    } else {
+      await onOnsiteReservation?.();
+    }
+  };
+
+  const isDisabled = !selectedFuel || isProcessing;
 
   return (
     <Card className="sticky top-8 border-primary/20 shadow-lg">
@@ -47,6 +66,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
               variant={paymentMethod === 'online' ? 'default' : 'outline'}
               onClick={() => setPaymentMethod('online')}
               className="h-auto py-3 flex flex-col items-center gap-1"
+              disabled={isProcessing}
             >
               <Wallet className="w-4 h-4" />
               <span className="text-xs">온라인 결제</span>
@@ -55,6 +75,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
               variant={paymentMethod === 'onsite' ? 'default' : 'outline'}
               onClick={() => setPaymentMethod('onsite')}
               className="h-auto py-3 flex flex-col items-center gap-1"
+              disabled={isProcessing}
             >
               <CreditCard className="w-4 h-4" />
               <span className="text-xs">현장 결제</span>
@@ -77,8 +98,6 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
               {selectedFuel?.name || '선택해주세요'}
             </span>
           </div>
-
-          {/* 주유량/배달량 */}
           <div className="flex justify-between">
             <span className="text-muted-foreground">
               {paymentInfo.isKerosene ? '배달량' : '주유량'}
@@ -93,23 +112,18 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
               )}
             </span>
           </div>
-
-          {/* 결제 기준 표시 */}
           <div className="flex justify-between">
             <span className="text-muted-foreground">결제 기준</span>
             <span className="font-medium">
               {quantityMode === 'amount' ? '금액 기준' : '리터 기준'}
             </span>
           </div>
-
           <div className="flex justify-between">
             <span className="text-muted-foreground">연료 금액</span>
             <span className="font-medium">
               {paymentInfo.basePrice.toLocaleString()}원
             </span>
           </div>
-
-          {/* 배달료 (등유인 경우) */}
           {paymentInfo.isKerosene && (
             <div className="flex justify-between">
               <span className="text-muted-foreground flex items-center gap-1">
@@ -129,10 +143,7 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
               </span>
             </div>
           )}
-
           <div className="h-px bg-border my-2" />
-
-          {/* 총 결제금액 */}
           <div className="flex justify-between items-center">
             <span className="font-bold text-lg">총 결제금액</span>
             <span className="text-2xl font-bold text-primary">
@@ -178,11 +189,19 @@ export const PaymentCard: React.FC<PaymentCardProps> = ({
         <Button
           size="lg"
           className="w-full text-lg h-14 font-bold"
-          disabled={!selectedFuel}
+          disabled={isDisabled}
+          onClick={handlePayClick}
         >
-          {paymentMethod === 'online'
-            ? `${paymentInfo.totalPrice.toLocaleString()}원 결제하기`
-            : '주문 예약하기'}
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              처리 중...
+            </>
+          ) : paymentMethod === 'online' ? (
+            `${paymentInfo.totalPrice.toLocaleString()}원 결제하기`
+          ) : (
+            '주문 예약하기'
+          )}
         </Button>
 
         {/* 안내 사항 */}

@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DataTableColumnHeader } from './data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 import { CategoryRowActions } from './category-row-actions';
 import type { Category } from '@starcoex-frontend/categories';
 

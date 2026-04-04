@@ -13,6 +13,8 @@ import {
   Store,
   Brand,
   StoreStatsOutput,
+  BusinessType,
+  ServiceType, // ✅ 신규
 } from '../types';
 import {
   getStoresService,
@@ -26,6 +28,8 @@ const StoresContext = createContext<StoresContextValue | undefined>(undefined);
 const initialState: StoresState = {
   stores: [],
   brands: [],
+  businessTypes: [], // ✅ 신규
+  serviceTypes: [], // ✅ 신규
   currentStore: null,
   currentBrand: null,
   statistics: null,
@@ -306,6 +310,78 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // =========================================================================
+  // 비즈니스 타입 불러오기 ✅ 신규
+  // =========================================================================
+
+  const loadBusinessTypes = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const service = getStoresService();
+      const response = await service.listBusinessTypes();
+      if (response.success && response.data) {
+        setState((prev) => ({
+          ...prev,
+          businessTypes: response.data ?? [],
+          isLoading: false,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error:
+            response.error?.message || '비즈니스 타입을 불러오지 못했습니다.',
+          isLoading: false,
+        }));
+      }
+    } catch {
+      setState((prev) => ({
+        ...prev,
+        error: '비즈니스 타입을 불러오는 중 오류가 발생했습니다.',
+        isLoading: false,
+      }));
+    }
+  }, []);
+
+  const setBusinessTypes = useCallback((businessTypes: BusinessType[]) => {
+    setState((prev) => ({ ...prev, businessTypes }));
+  }, []);
+
+  // =========================================================================
+  // 서비스 타입 불러오기 ✅ 신규
+  // =========================================================================
+
+  const loadServiceTypes = useCallback(async () => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const service = getStoresService();
+      const response = await service.listServiceTypes();
+      if (response.success && response.data) {
+        setState((prev) => ({
+          ...prev,
+          serviceTypes: response.data ?? [],
+          isLoading: false,
+        }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          error:
+            response.error?.message || '서비스 타입을 불러오지 못했습니다.',
+          isLoading: false,
+        }));
+      }
+    } catch {
+      setState((prev) => ({
+        ...prev,
+        error: '서비스 타입을 불러오는 중 오류가 발생했습니다.',
+        isLoading: false,
+      }));
+    }
+  }, []);
+
+  const setServiceTypes = useCallback((serviceTypes: ServiceType[]) => {
+    setState((prev) => ({ ...prev, serviceTypes }));
+  }, []);
+
+  // =========================================================================
   // 공통 액션
   // =========================================================================
 
@@ -354,6 +430,11 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
       // 필터 관련
       setFilters,
       clearFilters,
+      // 비즈니스 타입 관련 ✅ 신규
+      setBusinessTypes,
+      loadBusinessTypes,
+      setServiceTypes,
+      loadServiceTypes,
       // 공통
       setLoading,
       setError,
@@ -380,6 +461,8 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
       loadStatistics,
       setFilters,
       clearFilters,
+      setBusinessTypes,
+      loadBusinessTypes,
       setLoading,
       setError,
       clearError,

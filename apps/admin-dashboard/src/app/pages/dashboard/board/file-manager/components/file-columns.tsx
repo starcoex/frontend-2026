@@ -3,7 +3,7 @@ import { FileWithUrl } from '@starcoex-frontend/graphql';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { formatSize } from '@/app/utils/file-utils';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/orders/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 import { FileRowActions } from './file-row-actions';
 import { File, FileText, Film, Music, Archive, ImageIcon } from 'lucide-react';
 

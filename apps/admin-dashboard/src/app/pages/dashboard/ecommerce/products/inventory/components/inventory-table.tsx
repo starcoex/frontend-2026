@@ -23,17 +23,21 @@ import {
 import { InventoryToolbar } from './inventory-toolbar';
 import { inventoryColumns, type InventoryRow } from './inventory-columns';
 import { InventoryMutateDrawer } from './inventory-mutate-drawer';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/products/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface InventoryTableProps {
   data: InventoryRow[];
   defaultProductId?: number;
+  defaultProductName?: string; // ← 추가
+  basePrice?: number; // ← 추가
   onRefresh?: () => void;
 }
 
 export function InventoryTable({
   data,
   defaultProductId,
+  defaultProductName, // ← 추가
+  basePrice, // ← 추가
   onRefresh,
 }: InventoryTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -127,6 +131,9 @@ export function InventoryTable({
         open={addOpen}
         onOpenChange={setAddOpen}
         productId={defaultProductId}
+        productName={defaultProductName} // ← 추가
+        basePrice={basePrice} // ← 추가
+        existingInventories={data} // ← 이미 등록된 재고 전달 (매장 중복 방지)
       />
     </div>
   );

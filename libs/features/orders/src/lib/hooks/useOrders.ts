@@ -158,7 +158,7 @@ export const useOrders = () => {
       withLoading(async () => {
         const service = getOrdersService();
         const res = await service.deleteOrder(id);
-        if (res.success) {
+        if (res.success && res.data === true) {
           setOrders(orders.filter((o) => o.id !== id));
           if (currentOrder?.id === id) setCurrentOrder(null);
         }
@@ -172,7 +172,7 @@ export const useOrders = () => {
       withLoading(async () => {
         const service = getOrdersService();
         const res = await service.deleteOrders(ids);
-        if (res.success) {
+        if (res.success && res.data === true) {
           setOrders(orders.filter((o) => !ids.includes(o.id)));
           if (currentOrder && ids.includes(currentOrder.id)) {
             setCurrentOrder(null);

@@ -1,7 +1,10 @@
 import { useCallback, useRef } from 'react';
-import type { ApiResponse } from '../types';
 import { getReservationsService } from '../services';
+import { useFuelWalkInsContext } from '../context';
 import type {
+  ApiResponse,
+  FuelWalkIn,
+  FuelWalkInStatus,
   CreateFuelWalkInInput,
   AttachFuelPaymentInput,
   CompleteFuelWalkInInput,
@@ -9,9 +12,7 @@ import type {
   CreateFuelWalkInPackageInput,
   AttachPackagePaymentInput,
   UpdatePackageStatusInput,
-  FuelWalkInStatus,
 } from '../types';
-import { useFuelWalkInsContext } from '../context';
 
 export const useFuelWalkIns = () => {
   const context = useFuelWalkInsContext();
@@ -102,7 +103,10 @@ export const useFuelWalkIns = () => {
         const service = getReservationsService();
         const res = await service.attachFuelPayment(input);
         if (res.success && res.data?.fuelWalkIn) {
-          updateFuelWalkInInContext(input.fuelWalkInId, res.data.fuelWalkIn);
+          updateFuelWalkInInContext(
+            input.fuelWalkInId,
+            res.data.fuelWalkIn as FuelWalkIn
+          );
         }
         return res;
       }, '주유 결제 연결에 실패했습니다.'),
@@ -115,7 +119,10 @@ export const useFuelWalkIns = () => {
         const service = getReservationsService();
         const res = await service.completeFuelWalkIn(input);
         if (res.success && res.data?.fuelWalkIn) {
-          updateFuelWalkInInContext(input.fuelWalkInId, res.data.fuelWalkIn);
+          updateFuelWalkInInContext(
+            input.fuelWalkInId,
+            res.data.fuelWalkIn as FuelWalkIn
+          );
         }
         return res;
       }, '주유 완료 처리에 실패했습니다.'),
@@ -128,7 +135,10 @@ export const useFuelWalkIns = () => {
         const service = getReservationsService();
         const res = await service.updateFuelWalkInStatus(input);
         if (res.success && res.data?.fuelWalkIn) {
-          updateFuelWalkInInContext(input.fuelWalkInId, res.data.fuelWalkIn);
+          updateFuelWalkInInContext(
+            input.fuelWalkInId,
+            res.data.fuelWalkIn as FuelWalkIn
+          );
         }
         return res;
       }, '주유 워크인 상태 변경에 실패했습니다.'),

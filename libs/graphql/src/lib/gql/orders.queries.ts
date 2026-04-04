@@ -39,6 +39,7 @@ export const ORDER_STATUS_HISTORY_FIELDS = gql`
     createdById
     createdAt
     updatedAt
+    deletedAt
   }
 `;
 

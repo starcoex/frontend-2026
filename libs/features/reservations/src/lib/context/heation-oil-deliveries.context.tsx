@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -36,13 +37,13 @@ export const HeatingOilDeliveriesProvider = ({
   const apolloClient = useApolloClient();
   const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     if (!serviceRegistry.isServiceInitialized('reservations')) {
       try {
         initReservationsService(apolloClient);
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ ReservationsService initialization failed:', error);
+        console.error('❌ CartService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);

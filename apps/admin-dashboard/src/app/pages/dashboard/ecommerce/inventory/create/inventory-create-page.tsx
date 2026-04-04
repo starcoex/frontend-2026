@@ -12,7 +12,7 @@ export default function InventoryCreatePage() {
         og={{
           title: `재고 추가 - ${COMPANY_INFO.name}`,
           description: '새로운 매장 재고를 등록합니다.',
-          image: '/images/og-inventory.jpg',
+          image: '/images/og-emails.jpg',
           type: 'website',
         }}
       />

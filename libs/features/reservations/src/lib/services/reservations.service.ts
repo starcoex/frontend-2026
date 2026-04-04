@@ -28,6 +28,7 @@ import {
   DEACTIVATE_SERVICE_RESOURCE,
   DEACTIVATE_SCHEDULE_TEMPLATE,
   DELETE_SCHEDULE_BLOCKED_DATE,
+  CREATE_SCHEDULE_BLOCKED_DATE,
   DELETE_WALK_IN,
   BULK_DELETE_WALK_INS,
   FIND_FUEL_WALK_INS,
@@ -43,9 +44,6 @@ import {
   ASSIGN_DELIVERY_DRIVER,
   UPDATE_HEATING_OIL_DELIVERY_STATUS,
   COMPLETE_HEATING_OIL_DELIVERY,
-  CREATE_SCHEDULE_BLOCKED_DATE,
-  FindReservableServicesInput,
-  FindReservableServicesOutput,
   FIND_RESERVABLE_SERVICES,
   CREATE_RESERVABLE_SERVICE,
   UPDATE_RESERVABLE_SERVICE,
@@ -53,7 +51,10 @@ import {
   FIND_REFUND_POLICIES,
   CREATE_REFUND_POLICY,
   UPDATE_REFUND_POLICY,
-  DELETE_REFUND_POLICY, // ← 추가
+  DELETE_REFUND_POLICY,
+  FIND_SCHEDULE_BLOCKED_DATES,
+  UPDATE_SCHEDULE_BLOCKED_DATE,
+  BULK_DELETE_SCHEDULE_BLOCKED_DATES,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -78,7 +79,12 @@ import type {
   FindFuelWalkInsOutput,
   FindHeatingOilDeliveriesOutput,
   FindRefundPoliciesOutput,
+  FindReservableServicesInput,
+  FindReservableServicesOutput,
   FuelWalkInPackageOutput,
+  FuelWalkInStatus,
+  HeatingOilDeliveryOutput,
+  HeatingOilDeliveryStatus,
   RefundPolicyOutput,
   ReservableServiceOutput,
   UpdateFuelWalkInStatusInput,
@@ -86,14 +92,13 @@ import type {
   UpdatePackageStatusInput,
   UpdateRefundPolicyInput,
   UpdateReservableServiceInput,
-} from '../types';
-import type {
   IReservationsService,
   Reservation,
   ReservationTimeSlot,
   ServiceResource,
   ScheduleTemplate,
   WalkIn,
+  WalkInStatus,
   FindReservationsInput,
   FindReservationsOutput,
   CreateReservationInput,
@@ -118,11 +123,12 @@ import type {
   CreateServiceResourceInput,
   UpdateServiceResourceInput,
   ServiceResourceOutput,
-  WalkInStatus,
   DeleteReservationOutput,
   FuelWalkInOutput,
-  HeatingOilDeliveryOutput,
   ScheduleBlockedDateOutput,
+  UpdateScheduleBlockedDateInput,
+  FindScheduleBlockedDatesInput,
+  FindScheduleBlockedDatesOutput,
 } from '../types';
 
 export class ReservationsService implements IReservationsService {
@@ -202,7 +208,7 @@ export class ReservationsService implements IReservationsService {
   }
 
   // ============================================================================
-  // Queries
+  // Reservation Queries
   // ============================================================================
 
   async getReservationById(id: number): Promise<ApiResponse<Reservation>> {
@@ -268,7 +274,65 @@ export class ReservationsService implements IReservationsService {
     return res as unknown as ApiResponse<ScheduleTemplate[]>;
   }
 
-  // ─── ReservableService Queries ────────────────────────────────────────────
+  // ← 인자 및 반환 타입 변경
+  async findScheduleBlockedDates(
+    input: FindScheduleBlockedDatesInput
+  ): Promise<ApiResponse<FindScheduleBlockedDatesOutput>> {
+    const res = await this.query<{
+      findScheduleBlockedDates: FindScheduleBlockedDatesOutput;
+    }>(FIND_SCHEDULE_BLOCKED_DATES, { input });
+    if (res.success && res.data?.findScheduleBlockedDates) {
+      return { success: true, data: res.data.findScheduleBlockedDates };
+    }
+    return res as unknown as ApiResponse<FindScheduleBlockedDatesOutput>;
+  }
+
+  // ← 신규
+  async updateScheduleBlockedDate(
+    input: UpdateScheduleBlockedDateInput
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>> {
+    const res = await this.mutate<{
+      updateScheduleBlockedDate: ScheduleBlockedDateOutput;
+    }>(UPDATE_SCHEDULE_BLOCKED_DATE, { input });
+    if (res.success && res.data?.updateScheduleBlockedDate) {
+      return { success: true, data: res.data.updateScheduleBlockedDate };
+    }
+    return res as unknown as ApiResponse<ScheduleBlockedDateOutput>;
+  }
+
+  // ← 신규
+  async bulkDeleteScheduleBlockedDates(
+    ids: number[]
+  ): Promise<ApiResponse<ScheduleBlockedDateOutput>> {
+    const res = await this.mutate<{
+      bulkDeleteScheduleBlockedDates: ScheduleBlockedDateOutput;
+    }>(BULK_DELETE_SCHEDULE_BLOCKED_DATES, { ids });
+    if (res.success && res.data?.bulkDeleteScheduleBlockedDates) {
+      return { success: true, data: res.data.bulkDeleteScheduleBlockedDates };
+    }
+    return res as unknown as ApiResponse<ScheduleBlockedDateOutput>;
+  }
+
+  async findWalkIns(input: {
+    storeId?: number;
+    serviceId?: number;
+    status?: WalkInStatus;
+  }): Promise<ApiResponse<{ walkIns?: WalkIn[]; total?: number }>> {
+    const res = await this.query<{
+      findWalkIns: { walkIns?: WalkIn[]; total?: number };
+    }>(FIND_WALK_INS, { input });
+    if (res.success && res.data?.findWalkIns) {
+      return { success: true, data: res.data.findWalkIns };
+    }
+    return res as unknown as ApiResponse<{
+      walkIns?: WalkIn[];
+      total?: number;
+    }>;
+  }
+
+  // ============================================================================
+  // ReservableService Queries & Mutations
+  // ============================================================================
 
   async findReservableServices(
     input: FindReservableServicesInput
@@ -281,8 +345,6 @@ export class ReservationsService implements IReservationsService {
     }
     return res as unknown as ApiResponse<FindReservableServicesOutput>;
   }
-
-  // ─── ReservableService Mutations ─────────────────────────────────────────
 
   async createReservableService(
     input: CreateReservableServiceInput
@@ -320,24 +382,9 @@ export class ReservationsService implements IReservationsService {
     return res as unknown as ApiResponse<DeleteReservableServiceOutput>;
   }
 
-  async findWalkIns(input: {
-    storeId?: number;
-    serviceId?: number;
-    status?: WalkInStatus;
-  }): Promise<ApiResponse<{ walkIns?: WalkIn[]; total?: number }>> {
-    const res = await this.query<{
-      findWalkIns: { walkIns?: WalkIn[]; total?: number };
-    }>(FIND_WALK_INS, { input });
-    if (res.success && res.data?.findWalkIns) {
-      return { success: true, data: res.data.findWalkIns };
-    }
-    return res as unknown as ApiResponse<{
-      walkIns?: WalkIn[];
-      total?: number;
-    }>;
-  }
-
-  // ─── RefundPolicy ────────────────────────────────────────────────────────
+  // ============================================================================
+  // RefundPolicy Queries & Mutations
+  // ============================================================================
 
   async findRefundPolicies(): Promise<ApiResponse<FindRefundPoliciesOutput>> {
     const res = await this.query<{
@@ -352,9 +399,10 @@ export class ReservationsService implements IReservationsService {
   async createRefundPolicy(
     input: CreateRefundPolicyInput
   ): Promise<ApiResponse<RefundPolicyOutput>> {
-    const res = await this.mutate<{
-      createRefundPolicy: RefundPolicyOutput;
-    }>(CREATE_REFUND_POLICY, { input });
+    const res = await this.mutate<{ createRefundPolicy: RefundPolicyOutput }>(
+      CREATE_REFUND_POLICY,
+      { input }
+    );
     if (res.success && res.data?.createRefundPolicy) {
       return { success: true, data: res.data.createRefundPolicy };
     }
@@ -364,9 +412,10 @@ export class ReservationsService implements IReservationsService {
   async updateRefundPolicy(
     input: UpdateRefundPolicyInput
   ): Promise<ApiResponse<RefundPolicyOutput>> {
-    const res = await this.mutate<{
-      updateRefundPolicy: RefundPolicyOutput;
-    }>(UPDATE_REFUND_POLICY, { input });
+    const res = await this.mutate<{ updateRefundPolicy: RefundPolicyOutput }>(
+      UPDATE_REFUND_POLICY,
+      { input }
+    );
     if (res.success && res.data?.updateRefundPolicy) {
       return { success: true, data: res.data.updateRefundPolicy };
     }
@@ -376,9 +425,10 @@ export class ReservationsService implements IReservationsService {
   async deleteRefundPolicy(
     id: number
   ): Promise<ApiResponse<RefundPolicyOutput>> {
-    const res = await this.mutate<{
-      deleteRefundPolicy: RefundPolicyOutput;
-    }>(DELETE_REFUND_POLICY, { id });
+    const res = await this.mutate<{ deleteRefundPolicy: RefundPolicyOutput }>(
+      DELETE_REFUND_POLICY,
+      { id }
+    );
     if (res.success && res.data?.deleteRefundPolicy) {
       return { success: true, data: res.data.deleteRefundPolicy };
     }
@@ -386,7 +436,7 @@ export class ReservationsService implements IReservationsService {
   }
 
   // ============================================================================
-  // Mutations
+  // Reservation Mutations
   // ============================================================================
 
   async createReservation(
@@ -517,7 +567,7 @@ export class ReservationsService implements IReservationsService {
   ): Promise<ApiResponse<ScheduleBlockedDateOutput>> {
     const res = await this.mutate<{
       createScheduleBlockedDate: ScheduleBlockedDateOutput;
-    }>(CREATE_SCHEDULE_BLOCKED_DATE, { input }); // ← MUTATION 접미사 제거
+    }>(CREATE_SCHEDULE_BLOCKED_DATE, { input });
     if (res.success && res.data?.createScheduleBlockedDate) {
       return { success: true, data: res.data.createScheduleBlockedDate };
     }
@@ -576,54 +626,28 @@ export class ReservationsService implements IReservationsService {
     return res as unknown as ApiResponse<DeleteReservationOutput>;
   }
 
-  async deleteFuelWalkIn(
-    fuelWalkInId: number
-  ): Promise<ApiResponse<FuelWalkInOutput>> {
-    const res = await this.mutate<{ deleteFuelWalkIn: FuelWalkInOutput }>(
-      DELETE_FUEL_WALK_IN,
-      { fuelWalkInId }
+  async deleteWalkIn(walkInId: number): Promise<ApiResponse<WalkInOutput>> {
+    const res = await this.mutate<{ deleteWalkIn: WalkInOutput }>(
+      DELETE_WALK_IN,
+      { walkInId }
     );
-    if (res.success && res.data?.deleteFuelWalkIn) {
-      return { success: true, data: res.data.deleteFuelWalkIn };
+    if (res.success && res.data?.deleteWalkIn) {
+      return { success: true, data: res.data.deleteWalkIn };
     }
-    return res as unknown as ApiResponse<FuelWalkInOutput>;
+    return res as unknown as ApiResponse<WalkInOutput>;
   }
 
-  async bulkDeleteFuelWalkIns(
-    fuelWalkInIds: number[]
-  ): Promise<ApiResponse<FuelWalkInOutput>> {
-    const res = await this.mutate<{ bulkDeleteFuelWalkIns: FuelWalkInOutput }>(
-      BULK_DELETE_FUEL_WALK_INS,
-      { fuelWalkInIds }
+  async bulkDeleteWalkIns(
+    walkInIds: number[]
+  ): Promise<ApiResponse<WalkInOutput>> {
+    const res = await this.mutate<{ bulkDeleteWalkIns: WalkInOutput }>(
+      BULK_DELETE_WALK_INS,
+      { walkInIds }
     );
-    if (res.success && res.data?.bulkDeleteFuelWalkIns) {
-      return { success: true, data: res.data.bulkDeleteFuelWalkIns };
+    if (res.success && res.data?.bulkDeleteWalkIns) {
+      return { success: true, data: res.data.bulkDeleteWalkIns };
     }
-    return res as unknown as ApiResponse<FuelWalkInOutput>;
-  }
-
-  async deleteHeatingOilDelivery(
-    deliveryId: number
-  ): Promise<ApiResponse<HeatingOilDeliveryOutput>> {
-    const res = await this.mutate<{
-      deleteHeatingOilDelivery: HeatingOilDeliveryOutput;
-    }>(DELETE_HEATING_OIL_DELIVERY, { deliveryId });
-    if (res.success && res.data?.deleteHeatingOilDelivery) {
-      return { success: true, data: res.data.deleteHeatingOilDelivery };
-    }
-    return res as unknown as ApiResponse<HeatingOilDeliveryOutput>;
-  }
-
-  async bulkDeleteHeatingOilDeliveries(
-    deliveryIds: number[]
-  ): Promise<ApiResponse<HeatingOilDeliveryOutput>> {
-    const res = await this.mutate<{
-      bulkDeleteHeatingOilDeliveries: HeatingOilDeliveryOutput;
-    }>(BULK_DELETE_HEATING_OIL_DELIVERIES, { deliveryIds });
-    if (res.success && res.data?.bulkDeleteHeatingOilDeliveries) {
-      return { success: true, data: res.data.bulkDeleteHeatingOilDeliveries };
-    }
-    return res as unknown as ApiResponse<HeatingOilDeliveryOutput>;
+    return res as unknown as ApiResponse<WalkInOutput>;
   }
 
   async deactivateServiceResource(
@@ -662,37 +686,13 @@ export class ReservationsService implements IReservationsService {
     return res as unknown as ApiResponse<ScheduleBlockedDateOutput>;
   }
 
-  async deleteWalkIn(walkInId: number): Promise<ApiResponse<WalkInOutput>> {
-    const res = await this.mutate<{ deleteWalkIn: WalkInOutput }>(
-      DELETE_WALK_IN,
-      { walkInId }
-    );
-    if (res.success && res.data?.deleteWalkIn) {
-      return { success: true, data: res.data.deleteWalkIn };
-    }
-    return res as unknown as ApiResponse<WalkInOutput>;
-  }
-
-  async bulkDeleteWalkIns(
-    walkInIds: number[]
-  ): Promise<ApiResponse<WalkInOutput>> {
-    const res = await this.mutate<{ bulkDeleteWalkIns: WalkInOutput }>(
-      BULK_DELETE_WALK_INS,
-      { walkInIds }
-    );
-    if (res.success && res.data?.bulkDeleteWalkIns) {
-      return { success: true, data: res.data.bulkDeleteWalkIns };
-    }
-    return res as unknown as ApiResponse<WalkInOutput>;
-  }
-
   // ============================================================================
-  // FuelWalkIn Queries
+  // FuelWalkIn Queries & Mutations
   // ============================================================================
 
   async findFuelWalkIns(input: {
     storeId?: number;
-    status?: string;
+    status?: FuelWalkInStatus;
   }): Promise<ApiResponse<FindFuelWalkInsOutput>> {
     const res = await this.query<{ findFuelWalkIns: FindFuelWalkInsOutput }>(
       FIND_FUEL_WALK_INS,
@@ -703,10 +703,6 @@ export class ReservationsService implements IReservationsService {
     }
     return res as unknown as ApiResponse<FindFuelWalkInsOutput>;
   }
-
-  // ============================================================================
-  // FuelWalkIn Mutations
-  // ============================================================================
 
   async createFuelWalkIn(
     input: CreateFuelWalkInInput
@@ -760,6 +756,32 @@ export class ReservationsService implements IReservationsService {
     return res as unknown as ApiResponse<FuelWalkInOutput>;
   }
 
+  async deleteFuelWalkIn(
+    fuelWalkInId: number
+  ): Promise<ApiResponse<FuelWalkInOutput>> {
+    const res = await this.mutate<{ deleteFuelWalkIn: FuelWalkInOutput }>(
+      DELETE_FUEL_WALK_IN,
+      { fuelWalkInId }
+    );
+    if (res.success && res.data?.deleteFuelWalkIn) {
+      return { success: true, data: res.data.deleteFuelWalkIn };
+    }
+    return res as unknown as ApiResponse<FuelWalkInOutput>;
+  }
+
+  async bulkDeleteFuelWalkIns(
+    fuelWalkInIds: number[]
+  ): Promise<ApiResponse<FuelWalkInOutput>> {
+    const res = await this.mutate<{ bulkDeleteFuelWalkIns: FuelWalkInOutput }>(
+      BULK_DELETE_FUEL_WALK_INS,
+      { fuelWalkInIds }
+    );
+    if (res.success && res.data?.bulkDeleteFuelWalkIns) {
+      return { success: true, data: res.data.bulkDeleteFuelWalkIns };
+    }
+    return res as unknown as ApiResponse<FuelWalkInOutput>;
+  }
+
   async createFuelWalkInPackage(
     input: CreateFuelWalkInPackageInput
   ): Promise<ApiResponse<FuelWalkInPackageOutput>> {
@@ -797,12 +819,12 @@ export class ReservationsService implements IReservationsService {
   }
 
   // ============================================================================
-  // HeatingOilDelivery Queries
+  // HeatingOilDelivery Queries & Mutations
   // ============================================================================
 
   async findHeatingOilDeliveries(input: {
     storeId?: number;
-    status?: string;
+    status?: HeatingOilDeliveryStatus;
     isUrgent?: boolean;
     driverId?: number;
   }): Promise<ApiResponse<FindHeatingOilDeliveriesOutput>> {
@@ -814,10 +836,6 @@ export class ReservationsService implements IReservationsService {
     }
     return res as unknown as ApiResponse<FindHeatingOilDeliveriesOutput>;
   }
-
-  // ============================================================================
-  // HeatingOilDelivery Mutations
-  // ============================================================================
 
   async createHeatingOilDelivery(
     input: CreateHeatingOilDeliveryInput
@@ -863,6 +881,30 @@ export class ReservationsService implements IReservationsService {
     }>(COMPLETE_HEATING_OIL_DELIVERY, { input });
     if (res.success && res.data?.completeHeatingOilDelivery) {
       return { success: true, data: res.data.completeHeatingOilDelivery };
+    }
+    return res as unknown as ApiResponse<HeatingOilDeliveryOutput>;
+  }
+
+  async deleteHeatingOilDelivery(
+    deliveryId: number
+  ): Promise<ApiResponse<HeatingOilDeliveryOutput>> {
+    const res = await this.mutate<{
+      deleteHeatingOilDelivery: HeatingOilDeliveryOutput;
+    }>(DELETE_HEATING_OIL_DELIVERY, { deliveryId });
+    if (res.success && res.data?.deleteHeatingOilDelivery) {
+      return { success: true, data: res.data.deleteHeatingOilDelivery };
+    }
+    return res as unknown as ApiResponse<HeatingOilDeliveryOutput>;
+  }
+
+  async bulkDeleteHeatingOilDeliveries(
+    deliveryIds: number[]
+  ): Promise<ApiResponse<HeatingOilDeliveryOutput>> {
+    const res = await this.mutate<{
+      bulkDeleteHeatingOilDeliveries: HeatingOilDeliveryOutput;
+    }>(BULK_DELETE_HEATING_OIL_DELIVERIES, { deliveryIds });
+    if (res.success && res.data?.bulkDeleteHeatingOilDeliveries) {
+      return { success: true, data: res.data.bulkDeleteHeatingOilDeliveries };
     }
     return res as unknown as ApiResponse<HeatingOilDeliveryOutput>;
   }

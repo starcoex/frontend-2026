@@ -16,7 +16,7 @@ import {
 } from '@tanstack/react-table';
 import { User } from '@starcoex-frontend/graphql'; // ✅ GraphQL 타입 사용
 import { DataTableToolbar } from './data-table-toolbar';
-import { DataTablePagination } from './data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 import {
   Table,
   TableBody,

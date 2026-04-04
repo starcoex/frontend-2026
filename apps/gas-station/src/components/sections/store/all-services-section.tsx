@@ -1,11 +1,21 @@
-import { useState } from 'react';
-import { Search, ShoppingCart, CreditCard, Star, Eye } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import {
+  Search,
+  ShoppingCart,
+  CreditCard,
+  Star,
+  Eye,
+  Loader2,
+} from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCart } from '@starcoex-frontend/cart';
+import { toast } from 'sonner';
 
 // ... (데이터 및 인터페이스는 기존과 동일)
 interface ServiceItem {
@@ -82,6 +92,9 @@ const categories = ['All', '세차 서비스', '옵션 서비스'];
 export const AllServicesSection = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [addingId, setAddingId] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   const filteredServices = services.filter((service) => {
     const matchesCategory =
@@ -91,6 +104,35 @@ export const AllServicesSection = () => {
       .includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const handleAddToCart = useCallback(
+    async (service: ServiceItem, e: React.MouseEvent) => {
+      e.preventDefault(); // 카드 링크 이동 방지
+      setAddingId(service.id);
+      const res = await addToCart({ productId: service.id, quantity: 1 });
+      if (res.success) {
+        toast.success(`${service.name}을(를) 담았습니다.`, {
+          action: {
+            label: '장바구니 보기',
+            onClick: () => navigate('/cart'),
+          },
+        });
+      }
+      setAddingId(null);
+    },
+    [addToCart, navigate]
+  );
+
+  const handleBuyNow = useCallback(
+    async (service: ServiceItem, e: React.MouseEvent) => {
+      e.preventDefault();
+      setAddingId(service.id);
+      const res = await addToCart({ productId: service.id, quantity: 1 });
+      if (res.success) navigate('/cart');
+      setAddingId(null);
+    },
+    [addToCart, navigate]
+  );
 
   return (
     <section className="py-32">
@@ -146,90 +188,94 @@ export const AllServicesSection = () => {
 
         {/* 서비스 그리드 목록 */}
         <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition-all hover:shadow-lg hover:border-primary/20"
-            >
-              {/* 이미지 영역 (링크로 변경) */}
-              <a
-                href={`/services/${service.id}`} // 상세 페이지 링크 연결
-                className="relative block aspect-[4/3] overflow-hidden bg-muted cursor-pointer group/image"
+          {filteredServices.map((service) => {
+            const isAdding = addingId === service.id;
+            return (
+              <div
+                key={service.id}
+                className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card transition-all hover:shadow-lg hover:border-primary/20"
               >
-                <img
-                  src={service.image}
-                  alt={service.name}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover/image:scale-110"
-                />
-
-                {/* 호버 시 나타나는 오버레이 */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover/image:opacity-100 flex items-center justify-center">
-                  <div className="flex items-center gap-2 bg-white/90 text-black px-4 py-2 rounded-full font-semibold transform translate-y-4 transition-transform duration-300 group-hover/image:translate-y-0">
-                    <Eye className="size-4" />
-                    자세히 보기
+                {/* 이미지 영역 */}
+                <Link
+                  to={`/services/${service.id}`}
+                  className="relative block aspect-[4/3] overflow-hidden bg-muted cursor-pointer group/image"
+                >
+                  <img
+                    src={service.image}
+                    alt={service.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover/image:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-300 group-hover/image:opacity-100 flex items-center justify-center">
+                    <div className="flex items-center gap-2 bg-white/90 text-black px-4 py-2 rounded-full font-semibold transform translate-y-4 transition-transform duration-300 group-hover/image:translate-y-0">
+                      <Eye className="size-4" />
+                      자세히 보기
+                    </div>
                   </div>
-                </div>
+                  {service.best && (
+                    <div className="absolute top-4 left-4 z-10">
+                      <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white border-none px-3 py-1 text-xs font-bold uppercase tracking-wide shadow-md">
+                        BEST CHOICE
+                      </Badge>
+                    </div>
+                  )}
+                </Link>
 
-                {service.best && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white border-none px-3 py-1 text-xs font-bold uppercase tracking-wide shadow-md">
-                      BEST CHOICE
-                    </Badge>
+                {/* 컨텐츠 */}
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-md">
+                      {service.category}
+                    </span>
                   </div>
-                )}
-              </a>
-
-              {/* 컨텐츠 영역 */}
-              <div className="flex flex-1 flex-col p-6">
-                {/* 카테고리 */}
-                <div className="mb-2">
-                  <span className="text-xs font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-md">
-                    {service.category}
-                  </span>
-                </div>
-
-                {/* 별점 5개 표기 */}
-                <div className="flex items-center gap-0.5 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="size-4 fill-yellow-400 text-yellow-400"
-                    />
-                  ))}
-                </div>
-
-                <h3 className="text-xl font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors">
-                  <a href={`/services/${service.id}`}>{service.name}</a>
-                </h3>
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
-                  {service.description}
-                </p>
-
-                <Separator className="bg-border mb-4" />
-
-                <div className="flex items-end justify-between mb-6">
-                  <div className="text-2xl font-bold text-primary">
-                    {service.price.toLocaleString()}원
+                  <div className="flex items-center gap-0.5 mb-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="size-4 fill-yellow-400 text-yellow-400"
+                      />
+                    ))}
                   </div>
-                </div>
+                  <h3 className="text-xl font-bold mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                    <Link to={`/services/${service.id}`}>{service.name}</Link>
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1">
+                    {service.description}
+                  </p>
+                  <Separator className="bg-border mb-4" />
+                  <div className="flex items-end justify-between mb-6">
+                    <div className="text-2xl font-bold text-primary">
+                      {service.price.toLocaleString()}원
+                    </div>
+                  </div>
 
-                {/* 하단 버튼 그룹 */}
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary hover:border-primary"
-                  >
-                    <ShoppingCart className="size-4" />
-                    담기
-                  </Button>
-                  <Button className="w-full gap-2">
-                    <CreditCard className="size-4" />
-                    구매
-                  </Button>
+                  {/* 버튼 */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary hover:border-primary"
+                      onClick={(e) => handleAddToCart(service, e)}
+                      disabled={isAdding}
+                    >
+                      {isAdding ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="size-4" />
+                      )}
+                      담기
+                    </Button>
+                    <Button
+                      className="w-full gap-2"
+                      onClick={(e) => handleBuyNow(service, e)}
+                      disabled={isAdding}
+                    >
+                      <CreditCard className="size-4" />
+                      구매
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

@@ -28,6 +28,14 @@ export const STORE_BREADCRUMB_CONFIGS = {
     showActions: false,
     showStats: true,
   },
+  SETTINGS: {
+    // ✅ 추가
+    label: '매장 설정',
+    title: '매장 설정',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
 } as const;
 
 export const DEFAULT_STORE_BREADCRUMB_CONFIG: BreadcrumbConfig = {

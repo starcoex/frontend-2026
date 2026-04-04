@@ -52,6 +52,4 @@ export const RESERVATION_SORT_OPTIONS = [
   { value: 'createdAt_asc', label: '오래된순' },
   { value: 'reservedDate_asc', label: '예약일 오름차순' },
   { value: 'reservedDate_desc', label: '예약일 내림차순' },
-  { value: 'totalAmount_desc', label: '금액 높은순' },
-  { value: 'totalAmount_asc', label: '금액 낮은순' },
 ] as const;

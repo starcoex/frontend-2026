@@ -37,7 +37,7 @@ export const ServicesSection: React.FC = () => {
       },
     },
     {
-      id: 'smart-payment',
+      id: 'smart-payments',
       name: '스마트 결제',
       description: '다양한 결제 수단과 자동 정산 시스템',
       icon: CreditCard,

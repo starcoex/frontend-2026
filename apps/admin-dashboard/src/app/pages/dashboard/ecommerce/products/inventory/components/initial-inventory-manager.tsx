@@ -9,7 +9,10 @@ interface InventoryItem {
   stock: number;
   minStock: number;
   maxStock: number;
+  reorderPoint?: number;
+  reorderQuantity?: number;
   storePrice?: number;
+  costPrice?: number;
   isAvailable: boolean;
 }
 
@@ -33,7 +36,10 @@ export function InitialInventoryManager({
   const [stock, setStock] = useState(0);
   const [minStock, setMinStock] = useState(0);
   const [maxStock, setMaxStock] = useState(1000);
+  const [reorderPoint, setReorderPoint] = useState(10);
+  const [reorderQuantity, setReorderQuantity] = useState(50);
   const [storePrice, setStorePrice] = useState('');
+  const [costPrice, setCostPrice] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
 
   const usedStoreIds = value.map((v) => v.storeId);
@@ -48,7 +54,10 @@ export function InitialInventoryManager({
       stock,
       minStock,
       maxStock,
+      reorderPoint,
+      reorderQuantity,
       storePrice: storePrice !== '' ? parseFloat(storePrice) : undefined,
+      costPrice: costPrice !== '' ? parseFloat(costPrice) : undefined,
       isAvailable,
     };
 
@@ -59,7 +68,10 @@ export function InitialInventoryManager({
     setStock(0);
     setMinStock(0);
     setMaxStock(1000);
+    setReorderPoint(10);
+    setReorderQuantity(50);
     setStorePrice('');
+    setCostPrice('');
     setIsAvailable(true);
   };
 
@@ -171,6 +183,37 @@ export function InitialInventoryManager({
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  재주문 기준점
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={reorderPoint}
+                  onChange={(e) =>
+                    setReorderPoint(parseInt(e.target.value, 10) || 0)
+                  }
+                  placeholder="10"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  재주문 수량
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={reorderQuantity}
+                  onChange={(e) =>
+                    setReorderQuantity(parseInt(e.target.value, 10) || 0)
+                  }
+                  placeholder="50"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-2 items-center">
               <div>
                 <label className="text-xs text-muted-foreground">
@@ -185,21 +228,35 @@ export function InitialInventoryManager({
                   placeholder="기본가 사용"
                 />
               </div>
-              <div className="flex items-center gap-2 pt-4">
-                <input
-                  id="inv-isAvailable"
-                  type="checkbox"
-                  checked={isAvailable}
-                  onChange={(e) => setIsAvailable(e.target.checked)}
-                  className="size-4"
-                />
-                <label
-                  htmlFor="inv-isAvailable"
-                  className="text-sm cursor-pointer"
-                >
-                  판매 가능
+              <div>
+                <label className="text-xs text-muted-foreground">
+                  원가 (선택)
                 </label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={costPrice}
+                  onChange={(e) => setCostPrice(e.target.value)}
+                  placeholder="원가 입력"
+                />
               </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="inv-isAvailable"
+                type="checkbox"
+                checked={isAvailable}
+                onChange={(e) => setIsAvailable(e.target.checked)}
+                className="size-4"
+              />
+              <label
+                htmlFor="inv-isAvailable"
+                className="text-sm cursor-pointer"
+              >
+                판매 가능
+              </label>
             </div>
 
             <Button

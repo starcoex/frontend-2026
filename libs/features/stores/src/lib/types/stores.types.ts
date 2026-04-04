@@ -1,15 +1,13 @@
 import type { ApiResponse } from '../types';
 import {
-  // Inputs
   CreateStoreInput,
   UpdateStoreInput,
   DeleteStoreInput,
   CreateBrandInput,
   UpdateBrandInput,
   DeleteBrandInput,
-  StoreAddressInput, // ✅ 추가
-  StoreCoordinatesInput, // ✅ 추가
-  // Outputs
+  StoreAddressInput,
+  StoreCoordinatesInput,
   CreateStoreOutput,
   UpdateStoreOutput,
   DeleteStoreOutput,
@@ -17,70 +15,122 @@ import {
   UpdateBrandOutput,
   DeleteBrandOutput,
   StoreStatsOutput,
-  // Types
   Store,
   Brand,
+  BusinessType,
+  BrandBusinessType,
+  ServiceType,
+  StoreService,
+  StoreManager,
+  ManagerRole,
+  AddStoreServiceInput,
+  RemoveStoreServiceInput,
+  AddStoreManagerInput,
+  RemoveStoreManagerInput,
+  // ✅ 신규
+  CreateBusinessTypeInput,
+  UpdateBusinessTypeInput,
+  CreateServiceTypeInput,
+  UpdateServiceTypeInput,
 } from '@starcoex-frontend/graphql';
+
+export interface AddStoreServiceOutput {
+  success?: boolean | null;
+  message?: string | null;
+  error?: {
+    code?: string | null;
+    message: string;
+    details?: string | null;
+  } | null;
+}
+
+// ✅ 신규 Output 타입
+export interface CreateBusinessTypeOutput {
+  success: boolean;
+  businessType?: BusinessType | null;
+}
+
+export interface UpdateBusinessTypeOutput {
+  success: boolean;
+  businessType?: BusinessType | null;
+}
+
+export interface CreateServiceTypeOutput {
+  success: boolean;
+  serviceType?: ServiceType | null;
+}
+
+export interface UpdateServiceTypeOutput {
+  success: boolean;
+  serviceType?: ServiceType | null;
+}
 
 // ============================================================================
 // 서비스 인터페이스
 // ============================================================================
 export interface IStoresService {
-  // ===== Store Queries =====
   listStores(): Promise<ApiResponse<Store[]>>;
   getStoreById(id: number): Promise<ApiResponse<Store>>;
   getStoreStatistics(): Promise<ApiResponse<StoreStatsOutput>>;
-
-  // ===== Brand Queries =====
   listBrands(): Promise<ApiResponse<Brand[]>>;
   getBrandById(id: number): Promise<ApiResponse<Brand>>;
-
-  // ===== Store Mutations =====
+  listBusinessTypes(): Promise<ApiResponse<BusinessType[]>>;
+  listServiceTypes(): Promise<ApiResponse<ServiceType[]>>; // ✅ 신규
   createStore(input: CreateStoreInput): Promise<ApiResponse<CreateStoreOutput>>;
   updateStore(input: UpdateStoreInput): Promise<ApiResponse<UpdateStoreOutput>>;
   deleteStore(input: DeleteStoreInput): Promise<ApiResponse<DeleteStoreOutput>>;
   deleteStores(ids: number[]): Promise<ApiResponse<boolean>>;
-
-  // ===== Brand Mutations =====
+  addStoreService(
+    input: AddStoreServiceInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>>;
+  removeStoreService(
+    input: RemoveStoreServiceInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>>;
+  addStoreManager(
+    input: AddStoreManagerInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>>;
+  removeStoreManager(
+    input: RemoveStoreManagerInput
+  ): Promise<ApiResponse<AddStoreServiceOutput>>;
   createBrand(input: CreateBrandInput): Promise<ApiResponse<CreateBrandOutput>>;
   updateBrand(input: UpdateBrandInput): Promise<ApiResponse<UpdateBrandOutput>>;
   deleteBrand(input: DeleteBrandInput): Promise<ApiResponse<DeleteBrandOutput>>;
   deleteBrands(ids: number[]): Promise<ApiResponse<boolean>>;
+  // ✅ 신규
+  createBusinessType(
+    input: CreateBusinessTypeInput
+  ): Promise<ApiResponse<CreateBusinessTypeOutput>>;
+  updateBusinessType(
+    input: UpdateBusinessTypeInput
+  ): Promise<ApiResponse<UpdateBusinessTypeOutput>>;
+  createServiceType(
+    input: CreateServiceTypeInput
+  ): Promise<ApiResponse<CreateServiceTypeOutput>>;
+  updateServiceType(
+    input: UpdateServiceTypeInput
+  ): Promise<ApiResponse<UpdateServiceTypeOutput>>;
 }
 
 // ============================================================================
 // Context 상태 타입
 // ============================================================================
 export interface StoresState {
-  // 매장 목록
   stores: Store[];
-
-  // 브랜드 목록
   brands: Brand[];
-
-  // 현재 선택된 매장
+  businessTypes: BusinessType[];
+  serviceTypes: ServiceType[]; // ✅ 신규
   currentStore: Store | null;
-
-  // 현재 선택된 브랜드
   currentBrand: Brand | null;
-
-  // 매장 통계
   statistics: StoreStatsOutput | null;
-
-  // 필터/검색
   filters: StoreFilters;
-
-  // 공통 로딩/에러
   isLoading: boolean;
   error: string | null;
 }
 
-// ============================================================================
-// 필터 타입
-// ============================================================================
 export interface StoreFilters {
   search?: string;
   brandId?: number;
+  businessTypeId?: number;
   location?: string;
   isActive?: boolean;
   isVisible?: boolean;
@@ -88,11 +138,7 @@ export interface StoreFilters {
   minRating?: number;
 }
 
-// ============================================================================
-// Context 액션 타입
-// ============================================================================
 export interface StoresContextActions {
-  // 매장 관련
   setStores: (stores: Store[]) => void;
   addStore: (store: Store) => void;
   updateStore: (id: number, updates: Partial<Store>) => void;
@@ -100,8 +146,6 @@ export interface StoresContextActions {
   setCurrentStore: (store: Store | null) => void;
   loadStores: () => Promise<void>;
   loadStoreById: (id: number) => Promise<void>;
-
-  // 브랜드 관련
   setBrands: (brands: Brand[]) => void;
   addBrand: (brand: Brand) => void;
   updateBrand: (id: number, updates: Partial<Brand>) => void;
@@ -109,28 +153,32 @@ export interface StoresContextActions {
   setCurrentBrand: (brand: Brand | null) => void;
   loadBrands: () => Promise<void>;
   loadBrandById: (id: number) => Promise<void>;
-  // 통계 관련
+  setBusinessTypes: (businessTypes: BusinessType[]) => void;
+  loadBusinessTypes: () => Promise<void>;
+  // ✅ 신규
+  setServiceTypes: (serviceTypes: ServiceType[]) => void;
+  loadServiceTypes: () => Promise<void>;
   setStatistics: (statistics: StoreStatsOutput | null) => void;
   loadStatistics: () => Promise<void>;
-
-  // 필터 관련
   setFilters: (filters: Partial<StoreFilters>) => void;
   clearFilters: () => void;
-
-  // 공통
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   reset: () => void;
 }
 
-// Context 전체 타입
 export type StoresContextValue = StoresState & StoresContextActions;
 
-// Re-export for convenience
 export type {
   Store,
   Brand,
+  BusinessType,
+  BrandBusinessType,
+  ServiceType,
+  StoreService,
+  StoreManager,
+  ManagerRole,
   CreateStoreInput,
   UpdateStoreInput,
   DeleteStoreInput,
@@ -140,10 +188,19 @@ export type {
   CreateStoreOutput,
   UpdateStoreOutput,
   DeleteStoreOutput,
-  StoreAddressInput, // ✅ 추가
-  StoreCoordinatesInput, // ✅ 추가
+  StoreAddressInput,
+  StoreCoordinatesInput,
   CreateBrandOutput,
   UpdateBrandOutput,
   DeleteBrandOutput,
   StoreStatsOutput,
+  AddStoreServiceInput,
+  RemoveStoreServiceInput,
+  AddStoreManagerInput,
+  RemoveStoreManagerInput,
+  // ✅ 신규
+  CreateBusinessTypeInput,
+  UpdateBusinessTypeInput,
+  CreateServiceTypeInput,
+  UpdateServiceTypeInput,
 };

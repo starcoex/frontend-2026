@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreHorizontal, Eye, Copy, XCircle } from 'lucide-react';
+import { MoreHorizontal, Eye, Copy, XCircle, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,14 @@ export function ReservationRowActions({
           >
             <Eye className="mr-2 h-4 w-4" />
             상세 보기
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() =>
+              navigate(`/admin/reservations/${reservation.id}/edit`)
+            }
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            수정
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleCopyNumber}>
             <Copy className="mr-2 h-4 w-4" />

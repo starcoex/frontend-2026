@@ -3,6 +3,7 @@ import { ProductsProvider } from '@starcoex-frontend/products';
 import { MediaProvider } from '@starcoex-frontend/media';
 import { StoresProvider } from '@starcoex-frontend/stores';
 import { CategoriesProvider } from '@starcoex-frontend/categories';
+import { InventoryProvider } from '@starcoex-frontend/inventory';
 
 export const ProductsWithProvider = () => {
   return (
@@ -10,7 +11,9 @@ export const ProductsWithProvider = () => {
       <CategoriesProvider>
         <StoresProvider>
           <ProductsProvider>
-            <ProductsLayout />
+            <InventoryProvider>
+              <ProductsLayout />
+            </InventoryProvider>
           </ProductsProvider>
         </StoresProvider>
       </CategoriesProvider>

@@ -64,6 +64,7 @@ export interface OrderStatusHistory {
   createdById?: number | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null; // ← 추가
 }
 
 export interface Order {

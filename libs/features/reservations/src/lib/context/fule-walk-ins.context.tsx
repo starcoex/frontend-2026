@@ -3,13 +3,14 @@ import {
   useContext,
   useState,
   ReactNode,
+  useEffect,
   useMemo,
   useCallback,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { serviceRegistry, initReservationsService } from '../services';
-import { FuelWalkIn } from '@starcoex-frontend/graphql';
-import {
+import type {
+  FuelWalkIn,
   FuelWalkInFilters,
   FuelWalkInsContextValue,
   FuelWalkInsState,
@@ -32,13 +33,13 @@ export const FuelWalkInsProvider = ({ children }: { children: ReactNode }) => {
   const apolloClient = useApolloClient();
   const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useEffect(() => {
     if (!serviceRegistry.isServiceInitialized('reservations')) {
       try {
         initReservationsService(apolloClient);
         setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ ReservationsService initialization failed:', error);
+        console.error('❌ CartService initialization failed:', error);
       }
     } else {
       setServiceInitialized(true);

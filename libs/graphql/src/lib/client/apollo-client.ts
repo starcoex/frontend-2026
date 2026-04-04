@@ -69,6 +69,18 @@ const createCache = (): InMemoryCache =>
       Query: {
         fields: {
           getLoggedInUser: { merge: false },
+          // ✅ findCategoryTree: 항상 incoming으로 교체 (network-only 사용 중이므로)
+          findCategoryTree: {
+            merge(_existing, incoming) {
+              return incoming;
+            },
+          },
+          // ✅ listCategories도 동일하게 처리
+          listCategories: {
+            merge(_existing, incoming) {
+              return incoming;
+            },
+          },
         },
       },
     },
@@ -151,11 +163,20 @@ const createRetryLink = (): RetryLink =>
     delay: { initial: 300, max: 3000, jitter: true },
     attempts: {
       max: 2,
-      retryIf: (error) => {
-        const isNetworkError =
-          (error as any).response && !(error as any).graphQLErrors;
+      retryIf: (error: any) => {
+        // GraphQL 에러(서버가 정상 처리한 비즈니스 에러)는 재시도하지 않음
+        if (error?.result?.errors?.length > 0) return false;
 
-        return isNetworkError || error.message.includes('fetch failed');
+        // 실제 네트워크/서버 에러만 재시도
+        const message: string = error?.message ?? '';
+        const statusCode: number = error?.statusCode ?? 0;
+
+        return (
+          message.includes('fetch failed') ||
+          message.includes('Failed to fetch') ||
+          message.includes('NetworkError') ||
+          statusCode >= 500
+        );
       },
     },
   });

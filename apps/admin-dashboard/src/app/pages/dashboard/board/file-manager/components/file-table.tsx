@@ -23,7 +23,7 @@ import {
 import { FileWithUrl } from '@starcoex-frontend/graphql';
 import { FileToolbar } from './file-toolbar';
 import { fileColumns } from './file-columns';
-import { DataTablePagination } from '@/app/pages/dashboard/board/file-manager/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface FileTableProps {
   data: FileWithUrl[];

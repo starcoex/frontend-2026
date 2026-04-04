@@ -1,26 +1,17 @@
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { PageHead } from '@starcoex-frontend/common';
+import {
+  ErrorAlert,
+  LoadingSpinner,
+  PageHead,
+} from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
 import { useProducts } from '@starcoex-frontend/products';
 import { ProductsTable } from '@/app/pages/dashboard/ecommerce/products/components/product-table';
-import { ProductPrimaryActions } from '@/app/pages/dashboard/ecommerce/products/components/product-primary-actions';
 
 export default function ProductsPage() {
   const { products, isLoading, error, fetchProducts } = useProducts();
 
   if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="text-primary h-8 w-8 animate-spin" />
-          <p className="text-muted-foreground text-sm">
-            제품 데이터를 불러오는 중...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner message="제품 데이터를 불러오는 중..." />;
   }
 
   return (
@@ -37,29 +28,7 @@ export default function ProductsPage() {
         }}
       />
 
-      {/* 헤더 */}
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">제품 관리</h1>
-        <ProductPrimaryActions />
-      </div>
-
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>데이터 로딩 실패</AlertTitle>
-          <AlertDescription className="flex items-center justify-between">
-            <span>{error}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fetchProducts()}
-              className="ml-4"
-            >
-              다시 시도
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+      {error && <ErrorAlert error={error} onRetry={() => fetchProducts()} />}
 
       {!error && <ProductsTable data={products} />}
     </>

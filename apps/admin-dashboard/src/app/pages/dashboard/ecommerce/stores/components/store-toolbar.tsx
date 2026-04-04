@@ -3,8 +3,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Store, useStores } from '@starcoex-frontend/stores';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-view-options';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+} from '@starcoex-frontend/common';
 import { BulkDeleteToolbar } from '@starcoex-frontend/common';
 
 const STORE_STATUS_OPTIONS = [

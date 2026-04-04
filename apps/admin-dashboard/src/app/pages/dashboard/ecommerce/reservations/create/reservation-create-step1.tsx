@@ -34,7 +34,7 @@ import { Store, Wrench, ChevronsUpDown, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ReservationCreateFormValues } from './reservation-create-schema';
 import { useStores } from '@starcoex-frontend/stores';
-import { useReservations } from '@starcoex-frontend/reservations'; // ← useProducts 대신
+import { useReservations } from '@starcoex-frontend/reservations'; // ← usePayments 대신
 import { useEffect, useMemo, useState } from 'react';
 
 interface Step1Props {
@@ -84,13 +84,8 @@ export function ReservationCreateStep1({ form }: Step1Props) {
       ? current.filter((id) => id !== serviceId)
       : [...current, serviceId];
     form.setValue('serviceIds', next, { shouldValidate: true });
-
-    // 서비스 금액 자동 반영
-    const newTotal = reservableServices
-      .filter((s) => next.includes(s.id))
-      .reduce((sum, s) => sum + (s.basePrice ?? 0), 0);
-    form.setValue('serviceAmount', newTotal);
-    form.setValue('totalAmount', newTotal);
+    // serviceAmount, totalAmount는 폼 스키마에 없으므로 제거
+    // totalServiceAmount useMemo로 자동 계산됨
   };
 
   const removeService = (serviceId: number) => {
@@ -120,8 +115,7 @@ export function ReservationCreateStep1({ form }: Step1Props) {
                     onValueChange={(v) => {
                       field.onChange(Number(v));
                       form.setValue('serviceIds', []);
-                      form.setValue('serviceAmount', 0);
-                      form.setValue('totalAmount', 0);
+                      // serviceAmount, totalAmount 제거
                     }}
                   >
                     <SelectTrigger className="w-full">

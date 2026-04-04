@@ -16,10 +16,13 @@ import {
   Crown,
   Ticket,
   Droplets,
+  ShoppingBag,
 } from 'lucide-react';
 import { MobileMenu } from './mobile-menu';
 import {
+  CartHeaderBadge,
   ContactButton,
+  HeaderServicesDropdown,
   StarOilLogo,
   ThemeToggle,
   UserMenuData,
@@ -31,20 +34,17 @@ import {
 } from '@starcoex-frontend/common';
 import { useAuth } from '@starcoex-frontend/auth';
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { HeaderServicesDropdown } from '@/components/header/components/header-services-dropdown';
 import { STARCOEX_SERVICES } from '@/app/utils/brand-constants';
 import { Button } from '@/components/ui/button';
 import { CardDescription, CardTitle } from '@/components/ui/card';
+import { NotificationBell } from '@starcoex-frontend/common';
 
-// 타입 정의
 interface NavigationItem {
   label: string;
   href: string;
@@ -58,10 +58,8 @@ interface MenuItem {
   description: string;
 }
 
-// User를 UserMenuData로 변환하는 함수
 const convertToUserMenuData = (user: any): UserMenuData | null => {
   if (!user) return null;
-
   return {
     id: user.id?.toString() || '',
     email: user.email || '',
@@ -79,23 +77,19 @@ export const Header: React.FC = () => {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // User를 UserMenuData로 변환
   const userMenuData = convertToUserMenuData(currentUser);
 
-  // 모바일 메뉴 열려있을 때 스크롤 방지
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.classList.add('overflow-hidden');
     } else {
       document.body.classList.remove('overflow-hidden');
     }
-
     return () => {
       document.body.classList.remove('overflow-hidden');
     };
   }, [isMobileMenuOpen]);
 
-  // 메뉴 데이터 정의
   const navigationItems: NavigationItem[] = [
     { label: '홈', href: '/', icon: Home },
     { label: '실시간 유가', href: '/prices', icon: TrendingUp },
@@ -130,7 +124,6 @@ export const Header: React.FC = () => {
     },
   ];
 
-  // 구매 메뉴 아이템 정의
   const purchaseMenuItems: MenuItem[] = [
     {
       title: '연료 구매',
@@ -153,9 +146,7 @@ export const Header: React.FC = () => {
   ];
 
   const isActivePath = (path: string) => {
-    if (path === '/') {
-      return location.pathname === path;
-    }
+    if (path === '/') return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
@@ -186,128 +177,90 @@ export const Header: React.FC = () => {
             </div>
           </Link>
 
-          {/* 데스크톱 네비게이션 */}
+          {/* 데스크톱 네비게이션 — NavigationMenu 완전 제거, 모두 DropdownMenu 사용 */}
           <div className="hidden lg:flex items-center space-x-1">
-            {/* 주요 메뉴들 */}
-            <NavigationMenu>
-              <NavigationMenuList>
-                {navigationItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = isActivePath(item.href);
+            {/* 주요 메뉴 — 단순 Link 버튼 */}
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = isActivePath(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    'bg-transparent hover:bg-accent flex flex-row items-center px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md whitespace-nowrap',
+                    isActive
+                      ? 'bg-accent text-accent-foreground shadow-sm'
+                      : 'text-foreground hover:text-accent-foreground'
+                  )}
+                >
+                  <Icon className="w-4 h-4 mr-1" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
 
-                  return (
-                    <NavigationMenuItem key={item.href}>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          to={item.href}
-                          className={cn(
-                            'bg-transparent hover:bg-accent flex flex-row items-center px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md border-0 whitespace-nowrap',
-                            isActive
-                              ? 'bg-accent text-accent-foreground shadow-sm'
-                              : 'text-foreground hover:text-accent-foreground'
-                          )}
-                        >
-                          <Icon className="w-4 h-4 mr-1" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  );
-                })}
-
-                {/* [NEW] 구매 드롭다운 메뉴 추가 */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent hover:bg-accent text-foreground hover:text-accent-foreground">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    구매
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid gap-3 p-4 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]">
-                      <li className="row-span-3">
-                        <NavigationMenuLink asChild>
-                          <a
-                            className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                            href="/membership"
-                          >
-                            <Crown className="h-6 w-6 mb-3" />
-                            <div className="mb-2 mt-4 text-lg font-medium">
-                              회원 등급 안내
-                            </div>
-                            <p className="text-sm leading-tight text-muted-foreground">
-                              WELCOME, GREEN, GOLD 등급별 특별한 혜택을
-                              확인하세요.
-                            </p>
-                          </a>
-                        </NavigationMenuLink>
-                      </li>
-                      {purchaseMenuItems.map((item) => (
-                        <li key={item.title}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to={item.href}
-                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                            >
-                              <div className="flex items-center gap-2 text-sm font-medium leading-none">
-                                <item.icon className="h-4 w-4" />
-                                {item.title}
-                              </div>
-                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground pl-6">
-                                {item.description}
-                              </p>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+            {/* 구매 드롭다운 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  구매
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                {purchaseMenuItems.map((item) => (
+                  <DropdownMenuItem key={item.title} asChild>
+                    <Link
+                      to={item.href}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.title}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* 회사 정보 드롭다운 */}
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground border-0">
-                    <Building2 className="w-4 h-4 mr-2" />
-                    회사 정보
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent className="bg-background border-border">
-                    <div className="w-[400px] p-3">
-                      <ul className="space-y-1">
-                        {companyMenuItems.map((item) => (
-                          <li key={item.title}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                to={item.href}
-                                className="group flex select-none items-start gap-3 rounded-md p-3 leading-none no-underline outline-none transition-colors bg-transparent hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                              >
-                                <item.icon className="mt-1 h-4 w-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
-                                <div className="space-y-1">
-                                  <div className="text-sm font-medium text-foreground group-hover:text-accent-foreground transition-colors">
-                                    {item.title}
-                                  </div>
-                                  <p className="line-clamp-2 text-sm text-muted-foreground group-hover:text-accent-foreground transition-colors">
-                                    {item.description}
-                                  </p>
-                                </div>
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="text-foreground bg-transparent hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Building2 className="w-4 h-4 mr-2" />
+                  회사 정보
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start">
+                {companyMenuItems.map((item) => (
+                  <DropdownMenuItem key={item.title} asChild>
+                    <Link
+                      to={item.href}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <div>
+                        <div className="text-sm font-medium">{item.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.description}
+                        </div>
+                      </div>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            {/* 다른 서비스 드롭다운 */}
+            {/* 다른 서비스 — DropdownMenu 기반 */}
             <HeaderServicesDropdown
               services={STARCOEX_SERVICES}
               onServiceClick={(service) => {
-                // 커스텀 클릭 핸들러 (선택사항)
-                console.log(`${service.title} 클릭됨`);
                 window.open(service.href, '_blank');
               }}
             />
@@ -315,20 +268,7 @@ export const Header: React.FC = () => {
 
           {/* 우측 액션 영역 */}
           <div className="flex items-center space-x-3">
-            {/* 알림 드롭다운 - Provider Context 사용 */}
-            {/*{isAuthenticated && (*/}
-            {/*  <NotificationDropdown*/}
-            {/*    onViewAll={() => navigate('/notifications')}*/}
-            {/*    onSettings={() => navigate('/notification-settings')}*/}
-            {/*  />*/}
-            {/*)}*/}
-
-            {/* 장바구니 드롭다운 - Provider Context 사용 */}
-            {/*{isAuthenticated && (*/}
-            {/*  <CartDropdown onViewCart={() => navigate('/cart')} />*/}
-            {/*)}*/}
-
-            {/* 연락처 버튼 - 공통 컴포넌트 사용 */}
+            {/* 연락처 버튼 — 자체 TooltipProvider 포함 */}
             <ContactButton
               variant="outline"
               className="hidden md:flex"
@@ -337,7 +277,23 @@ export const Header: React.FC = () => {
               textBreakpoint="always"
             />
 
-            {/* 사용자 메뉴 */}
+            {/* 알림 벨 — 내부에서 useAuth로 userId 직접 획득 */}
+            {isAuthenticated && (
+              <NotificationBell
+                onViewAll={() => navigate('/notifications')}
+                onSettings={() => navigate('/notification-settings')}
+                onNotificationClick={(notification) => {
+                  if (notification.actionUrl) {
+                    navigate(notification.actionUrl);
+                  }
+                }}
+              />
+            )}
+
+            {/* 장바구니 뱃지 */}
+            <CartHeaderBadge />
+
+            {/* 사용자 메뉴 — DropdownMenu 기반 */}
             <div className="hidden lg:block bg-transparent">
               <UserMenuProvider
                 user={userMenuData}
@@ -348,14 +304,14 @@ export const Header: React.FC = () => {
                   <UserMenuItem icon={BarChart3} href="/dashboard">
                     마이페이지
                   </UserMenuItem>
+                  <UserMenuItem icon={ShoppingBag} href="/orders">
+                    주문 내역
+                  </UserMenuItem>
                   <UserMenuItem icon={User} href="/profile">
                     프로필
                   </UserMenuItem>
                   <UserMenuItem icon={Settings} href="/settings">
                     설정
-                  </UserMenuItem>
-                  <UserMenuItem icon={Settings} href="/settings">
-                    2fa
                   </UserMenuItem>
                   <UserMenuSeparator />
                   <UserMenuLogout />
@@ -395,7 +351,7 @@ export const Header: React.FC = () => {
             icon: item.icon,
             description: item.description,
           }))}
-          starcoexServices={STARCOEX_SERVICES} // otherServices 대신 starcoexServices 사용
+          starcoexServices={STARCOEX_SERVICES}
           isActivePath={isActivePath}
           user={userMenuData}
           isAuthenticated={isAuthenticated}

@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { CalendarCheck, CircleDollarSign, Clock, XCircle } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { CalendarCheck, Clock, XCircle, CircleDollarSign } from 'lucide-react';
 import {
   Card,
   CardAction,
@@ -14,6 +14,21 @@ interface ReservationStatsProps {
   reservations: Reservation[];
 }
 
+type BadgeVariant =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'destructive'
+  | 'outline'
+  | 'secondary';
+
+interface StatItem {
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+  badge: { label: string; variant: BadgeVariant } | null;
+}
+
 export function ReservationStats({ reservations }: ReservationStatsProps) {
   const stats = useMemo(() => {
     const confirmed = reservations.filter((r) =>
@@ -25,17 +40,15 @@ export function ReservationStats({ reservations }: ReservationStatsProps) {
     const cancelled = reservations.filter((r) =>
       ['CANCELLED', 'NO_SHOW'].includes(r.status)
     ).length;
-    const totalRevenue = reservations
-      .filter((r) => r.status === 'COMPLETED')
-      .reduce((sum, r) => sum + r.paidAmount, 0);
+    const paidCount = reservations.filter((r) => r.paymentConfirmed).length;
 
-    return { confirmed, pending, cancelled, totalRevenue };
+    return { confirmed, pending, cancelled, paidCount };
   }, [reservations]);
 
-  const statItems = [
+  const statItems: StatItem[] = [
     {
-      label: '완료 매출',
-      value: `₩${stats.totalRevenue.toLocaleString()}`,
+      label: '결제 완료',
+      value: stats.paidCount,
       icon: CircleDollarSign,
       badge: null,
     },
@@ -44,18 +57,14 @@ export function ReservationStats({ reservations }: ReservationStatsProps) {
       value: stats.confirmed,
       icon: CalendarCheck,
       badge:
-        stats.confirmed > 0
-          ? { label: '진행 중', variant: 'success' as const }
-          : null,
+        stats.confirmed > 0 ? { label: '진행 중', variant: 'success' } : null,
     },
     {
       label: '대기 중',
       value: stats.pending,
       icon: Clock,
       badge:
-        stats.pending > 0
-          ? { label: '처리 필요', variant: 'warning' as const }
-          : null,
+        stats.pending > 0 ? { label: '처리 필요', variant: 'warning' } : null,
     },
     {
       label: '취소 / 노쇼',
@@ -63,8 +72,8 @@ export function ReservationStats({ reservations }: ReservationStatsProps) {
       icon: XCircle,
       badge:
         stats.cancelled > 0
-          ? { label: '확인 필요', variant: 'destructive' as const }
-          : { label: '정상', variant: 'outline' as const },
+          ? { label: '확인 필요', variant: 'destructive' }
+          : { label: '정상', variant: 'outline' },
     },
   ];
 

@@ -66,7 +66,6 @@ export const CORE_USER_FIELDS = gql`
       emailChangeNewEmail
       emailChangeExpiresAt
       deletedAt
-      createdAt
     }
     avatar {
       userId
@@ -475,9 +474,6 @@ export const REGISTER_USER = gql`
       error {
         ...ErrorInfoFields
       }
-      user {
-        ...CoreUserFields
-      }
     }
   }
 `;
@@ -507,9 +503,6 @@ export const RESEND_ACTIVATION_CODE = gql`
       message
       error {
         ...ErrorInfoFields
-      }
-      user {
-        ...CoreUserFields
       }
     }
   }

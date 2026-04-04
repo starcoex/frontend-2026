@@ -7,8 +7,6 @@ import { FuelWalkInRowActions } from './fuel-walk-in-row-actions';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import {
-  FUEL_PAYMENT_STATUS_CONFIG,
-  FUEL_PAYMENT_TYPE_LABELS,
   FUEL_TYPE_LABELS,
   FUEL_WALK_IN_STATUS_CONFIG,
 } from '@/app/pages/dashboard/ecommerce/reservations/data/fuel-walk-in-data';
@@ -68,27 +66,25 @@ export const fuelWalkInColumns: ColumnDef<FuelWalkIn>[] = [
     header: '유종',
     cell: ({ row }) => (
       <Badge variant="outline">
-        {FUEL_TYPE_LABELS[row.original.fuelType] ?? row.original.fuelType}
+        {FUEL_TYPE_LABELS[row.original.fuelType ?? ''] ?? row.original.fuelType}
       </Badge>
     ),
   },
   {
     id: 'amount',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="금액" />
+      <DataTableColumnHeader column={column} title="주유량" />
     ),
     cell: ({ row }) => {
       const f = row.original;
       return (
         <div className="flex flex-col">
-          {f.paidAmount != null && (
-            <span className="text-sm font-medium">
-              ₩{f.paidAmount.toLocaleString()}
-            </span>
-          )}
           {f.literAmount != null && (
+            <span className="text-sm font-medium">{f.literAmount}L</span>
+          )}
+          {f.requestedAmount != null && (
             <span className="text-muted-foreground text-xs">
-              {f.literAmount}L
+              요청 ₩{f.requestedAmount.toLocaleString()}
             </span>
           )}
         </div>
@@ -96,26 +92,13 @@ export const fuelWalkInColumns: ColumnDef<FuelWalkIn>[] = [
     },
   },
   {
-    accessorKey: 'paymentType',
-    header: '결제 방식',
+    id: 'payment',
+    header: '결제',
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs">
-        {FUEL_PAYMENT_TYPE_LABELS[row.original.paymentType] ??
-          row.original.paymentType}
-      </span>
+      <Badge variant={row.original.paymentConfirmed ? 'default' : 'outline'}>
+        {row.original.paymentConfirmed ? '결제완료' : '미결제'}
+      </Badge>
     ),
-  },
-  {
-    accessorKey: 'paymentStatus',
-    header: '결제 상태',
-    cell: ({ row }) => {
-      const config = FUEL_PAYMENT_STATUS_CONFIG[row.original.paymentStatus];
-      return config ? (
-        <Badge variant={config.variant}>{config.label}</Badge>
-      ) : (
-        <Badge variant="outline">{row.original.paymentStatus}</Badge>
-      );
-    },
   },
   {
     accessorKey: 'status',

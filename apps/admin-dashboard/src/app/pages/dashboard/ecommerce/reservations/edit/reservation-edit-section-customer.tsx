@@ -11,10 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User } from 'lucide-react';
 import { ReservationEditFormValues } from '@/app/pages/dashboard/ecommerce/reservations/edit/reservation-edit-schema';
-import {
-  CustomerSearch,
-  SelectedCustomer,
-} from '@/app/pages/dashboard/ecommerce/orders/components/customer-search';
+import { CustomerSearch, SelectedCustomer } from '@starcoex-frontend/common';
 import { useState } from 'react';
 
 interface Props {

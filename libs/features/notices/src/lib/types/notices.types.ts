@@ -11,7 +11,7 @@ export type NoticeType =
   | 'MAINTENANCE'
   | 'EVENT'
   | 'URGENT';
-export type BusinessType =
+export type NoticeBusinessType =
   | 'ZERAGAE_CARCARE'
   | 'SINHAN_NETWORKS'
   | 'STAR_GAS_STATION'
@@ -51,15 +51,15 @@ export interface Notice {
 
 export interface ManualHistory {
   id: number;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
   manualId: number;
   version: string;
   title: string;
   content: string;
   updatedBy: number;
   changeLog?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt?: string | null;
 }
 
 export interface ManualCategory {
@@ -67,7 +67,7 @@ export interface ManualCategory {
   name: string;
   description?: string | null;
   slug: string;
-  targetBusiness: BusinessType;
+  targetBusiness: NoticeBusinessType;
   targetApp: string;
   order: number;
   isVisible: boolean;
@@ -87,7 +87,7 @@ export interface Manual {
   categoryId: number;
   status: ManualStatus;
   version: string;
-  targetBusiness: BusinessType;
+  targetBusiness: NoticeBusinessType;
   targetApp: string;
   tags: string[];
   summary?: string | null;
@@ -242,7 +242,7 @@ export interface GetManualsInput {
   limit?: number;
   categoryId?: number;
   status?: ManualStatus;
-  targetBusiness?: BusinessType;
+  targetBusiness?: NoticeBusinessType;
   targetApp?: string;
   search?: string;
   sortBy?: string;
@@ -252,7 +252,7 @@ export interface GetManualsInput {
 export interface CreateManualCategoryInput {
   name: string;
   slug: string;
-  targetBusiness: BusinessType;
+  targetBusiness: NoticeBusinessType;
   targetApp: string;
   description?: string;
   order?: number;
@@ -265,7 +265,7 @@ export interface UpdateManualCategoryInput {
   name?: string;
   slug?: string;
   description?: string;
-  targetBusiness?: BusinessType;
+  targetBusiness?: NoticeBusinessType;
   targetApp?: string;
   order?: number;
   isVisible?: boolean;
@@ -276,7 +276,7 @@ export interface CreateManualInput {
   title: string;
   content: string;
   categoryId: number;
-  targetBusiness: BusinessType;
+  targetBusiness: NoticeBusinessType;
   targetApp: string;
   tags?: string[];
   summary?: string;
@@ -293,7 +293,7 @@ export interface UpdateManualInput {
   title?: string;
   content?: string;
   categoryId?: number;
-  targetBusiness?: BusinessType;
+  targetBusiness?: NoticeBusinessType;
   targetApp?: string;
   tags?: string[];
   summary?: string;
@@ -345,7 +345,7 @@ export interface INoticesService {
   ): Promise<ApiResponse<CreateNoticeOutput>>;
   // Manual Category
   getManualCategories(
-    targetBusiness?: BusinessType,
+    targetBusiness?: NoticeBusinessType,
     targetApp?: string
   ): Promise<ApiResponse<ManualCategory[]>>;
   createManualCategory(
@@ -359,7 +359,7 @@ export interface INoticesService {
   getManuals(input: GetManualsInput): Promise<ApiResponse<GetManualsOutput>>;
   getManualById(id: number): Promise<ApiResponse<Manual>>;
   getPublishedManuals(
-    targetBusiness: BusinessType,
+    targetBusiness: NoticeBusinessType,
     targetApp: string,
     categoryId?: number
   ): Promise<ApiResponse<Manual[]>>;
@@ -377,6 +377,7 @@ export interface INoticesService {
     input: ArchiveManualInput
   ): Promise<ApiResponse<UpdateManualOutput>>;
   deleteManual(id: number): Promise<ApiResponse<boolean>>;
+  deleteManuals(ids: number[]): Promise<ApiResponse<boolean>>;
 }
 
 // ============================================================================
@@ -395,7 +396,7 @@ export interface ManualFilters {
   search?: string;
   categoryId?: number;
   status?: ManualStatus;
-  targetBusiness?: BusinessType;
+  targetBusiness?: NoticeBusinessType;
   targetApp?: string;
 }
 

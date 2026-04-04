@@ -68,18 +68,22 @@ export function CategoryTreeItem({
           style={{ paddingLeft: `${depth * 24 + 16}px` }}
         >
           {/* 드래그 핸들 */}
-          <button
-            className="text-muted-foreground hover:text-foreground cursor-grab touch-none"
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground h-7 w-7 cursor-grab touch-none"
             {...attributes}
             {...listeners}
           >
             <GripVertical className="h-4 w-4" />
-          </button>
+          </Button>
 
           {/* 펼치기/접기 */}
-          <button
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground h-7 w-7"
             onClick={() => setIsExpanded((prev) => !prev)}
-            className="text-muted-foreground hover:text-foreground"
             disabled={!hasChildren}
           >
             {hasChildren ? (
@@ -91,7 +95,7 @@ export function CategoryTreeItem({
             ) : (
               <span className="w-4" />
             )}
-          </button>
+          </Button>
 
           {/* 폴더 아이콘 */}
           {hasChildren ? (
@@ -116,12 +120,13 @@ export function CategoryTreeItem({
 
           {/* 카테고리 정보 */}
           <div className="flex flex-1 items-center gap-2 overflow-hidden">
-            <button
-              className="hover:text-primary truncate font-medium transition-colors"
+            <Button
+              variant="ghost"
+              className="hover:text-primary h-auto truncate p-0 text-sm font-medium transition-colors"
               onClick={() => setOpen('detail')}
             >
               {category.name}
-            </button>
+            </Button>
             <span className="text-muted-foreground hidden truncate text-xs sm:block">
               {category.slug}
             </span>
@@ -149,11 +154,11 @@ export function CategoryTreeItem({
         {/* 하위 카테고리 재귀 렌더링 */}
         {hasChildren && isExpanded && (
           <SortableContext
-            items={category.children.map((c) => c.id)}
+            items={(category.children ?? []).map((c) => c.id)}
             strategy={verticalListSortingStrategy}
           >
             <ul>
-              {category.children
+              {(category.children ?? [])
                 .filter((child) => !visibleIds || visibleIds.has(child.id))
                 .map((child) => (
                   <CategoryTreeItem

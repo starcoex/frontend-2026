@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import LongText from '@/components/long-text';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/users/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 
 // ✅ 타입을 문자열 리터럴로 변경
 type InvitationStatusType = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'CANCELLED';

@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Link } from 'react-router-dom';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { DataTableColumnHeader } from './data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 import { SuggestionRowActions } from './suggestion-row-actions';
 import {
   suggestionCategories,

@@ -8,12 +8,6 @@ import {
   Navigation,
   MapPin,
 } from 'lucide-react';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { supportsTelephone } from '@starcoex-frontend/common';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,32 +59,26 @@ const PhoneSection: React.FC<PhoneSectionProps> = ({ phone }) => (
     <div className="flex-1 min-w-0 text-left">
       <div className="font-medium text-foreground mb-1">전화번호</div>
       <div className="text-sm text-muted-foreground mb-2">{phone}</div>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="sm"
-              variant="outline"
-              className={`w-full justify-center ${
-                !supportsTelephone() ? 'cursor-not-allowed opacity-60' : ''
-              }`}
-              onClick={() => {
-                if (supportsTelephone()) {
-                  window.location.href = `tel:${phone}`;
-                }
-              }}
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              전화걸기
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {supportsTelephone()
-              ? `${phone}로 전화걸기`
-              : '모바일에서 이용 가능합니다'}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button
+        size="sm"
+        variant="outline"
+        title={
+          supportsTelephone()
+            ? `${phone}로 전화걸기`
+            : '모바일에서 이용 가능합니다'
+        }
+        className={`w-full justify-center ${
+          !supportsTelephone() ? 'cursor-not-allowed opacity-60' : ''
+        }`}
+        onClick={() => {
+          if (supportsTelephone()) {
+            window.location.href = `tel:${phone}`;
+          }
+        }}
+      >
+        <Phone className="w-4 h-4 mr-2" />
+        전화걸기
+      </Button>
     </div>
   </div>
 );
@@ -320,7 +308,7 @@ export const ContactSidebar: React.FC = () => {
     <div className="lg:sticky lg:top-8 lg:self-start space-y-6">
       <ContactCard contactInfo={CONTACT_INFO} />
       <OperatingHoursCard hours={OPERATING_HOURS} />
-      {/*<ReviewCard />*/}
+      <ReviewCard />
     </div>
   );
 };

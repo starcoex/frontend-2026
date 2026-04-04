@@ -6,6 +6,14 @@ import {
   CreateBrandInput,
   UpdateBrandInput,
   DeleteBrandInput,
+  AddStoreServiceInput,
+  RemoveStoreServiceInput,
+  AddStoreManagerInput,
+  RemoveStoreManagerInput,
+  CreateBusinessTypeInput,
+  UpdateBusinessTypeInput,
+  CreateServiceTypeInput,
+  UpdateServiceTypeInput,
 } from '@starcoex-frontend/graphql';
 import type { ApiResponse } from '../types';
 import { useStoresContext } from '../context';
@@ -15,7 +23,6 @@ export const useStores = () => {
   const context = useStoresContext();
 
   const {
-    // 매장 관련
     setStores,
     addStore,
     updateStore: updateStoreInContext,
@@ -23,7 +30,6 @@ export const useStores = () => {
     setCurrentStore,
     stores,
     currentStore,
-    // 브랜드 관련
     setBrands,
     addBrand,
     updateBrand: updateBrandInContext,
@@ -31,12 +37,13 @@ export const useStores = () => {
     setCurrentBrand,
     brands,
     currentBrand,
-    // 통계 관련
+    businessTypes,
+    setBusinessTypes, // ✅ 신규
+    serviceTypes,
+    setServiceTypes, // ✅ 신규
     statistics,
     setStatistics,
-    // 필터 관련
     filters,
-    // 공통
     setLoading,
     clearError,
     setError,
@@ -53,16 +60,13 @@ export const useStores = () => {
       defaultErrorMessage: string
     ): Promise<ApiResponse<T>> => {
       try {
-        if (!isLoadingRef.current) {
-          setLoading(true);
-        }
+        if (!isLoadingRef.current) setLoading(true);
         clearError();
 
         const res = await operation();
 
         if (!res.success) {
-          const msg = res.error?.message ?? defaultErrorMessage;
-          setError(msg);
+          setError(res.error?.message ?? defaultErrorMessage);
         }
 
         return res;
@@ -79,52 +83,34 @@ export const useStores = () => {
 
   // ===== Store Queries =====
 
-  /**
-   * 매장 목록 조회
-   */
   const fetchStores = useCallback(
     async () =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.listStores();
-
-        if (res.success && res.data) {
-          setStores(res.data);
-        }
+        if (res.success && res.data) setStores(res.data);
         return res;
       }, '매장 목록을 불러오는데 실패했습니다.'),
     [withLoading, setStores]
   );
 
-  /**
-   * 매장 상세 조회
-   */
   const fetchStoreById = useCallback(
     async (id: number) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.getStoreById(id);
-
-        if (res.success && res.data) {
-          setCurrentStore(res.data);
-        }
+        if (res.success && res.data) setCurrentStore(res.data);
         return res;
       }, '매장 정보를 불러오는데 실패했습니다.'),
     [withLoading, setCurrentStore]
   );
 
-  /**
-   * 매장 통계 조회
-   */
   const fetchStatistics = useCallback(
     async () =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.getStoreStatistics();
-
-        if (res.success && res.data) {
-          setStatistics(res.data);
-        }
+        if (res.success && res.data) setStatistics(res.data);
         return res;
       }, '통계를 불러오는데 실패했습니다.'),
     [withLoading, setStatistics]
@@ -132,97 +118,126 @@ export const useStores = () => {
 
   // ===== Brand Queries =====
 
-  /**
-   * 브랜드 목록 조회
-   */
   const fetchBrands = useCallback(
     async () =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.listBrands();
-
-        if (res.success && res.data) {
-          setBrands(res.data);
-        }
+        if (res.success && res.data) setBrands(res.data);
         return res;
       }, '브랜드 목록을 불러오는데 실패했습니다.'),
     [withLoading, setBrands]
   );
 
-  /**
-   * 브랜드 상세 조회
-   */
   const fetchBrandById = useCallback(
     async (id: number) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.getBrandById(id);
-
-        if (res.success && res.data) {
-          setCurrentBrand(res.data);
-        }
+        if (res.success && res.data) setCurrentBrand(res.data);
         return res;
       }, '브랜드 정보를 불러오는데 실패했습니다.'),
     [withLoading, setCurrentBrand]
   );
 
+  // ===== ServiceType Query ✅ 신규 =====
+
+  const fetchServiceTypes = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.listServiceTypes();
+        if (res.success && res.data) setServiceTypes(res.data);
+        return res;
+      }, '서비스 타입 목록을 불러오는데 실패했습니다.'),
+    [withLoading, setServiceTypes]
+  );
+
+  // ===== BusinessType Queries ✅ 신규 =====
+
+  const fetchBusinessTypes = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.listBusinessTypes();
+        if (res.success && res.data) setBusinessTypes(res.data);
+        return res;
+      }, '비즈니스 타입 목록을 불러오는데 실패했습니다.'),
+    [withLoading, setBusinessTypes]
+  );
+
   // ===== Store Mutations =====
 
-  /**
-   * 매장 생성
-   */
+  const addStoreService = useCallback(
+    async (input: AddStoreServiceInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.addStoreService(input);
+        // 성공 시 해당 매장 재조회하여 storeServices 갱신
+        if (res.success) {
+          const storeRes = await service.getStoreById(input.storeId);
+          if (storeRes.success && storeRes.data) {
+            updateStoreInContext(input.storeId, storeRes.data);
+            if (currentStore?.id === input.storeId)
+              setCurrentStore(storeRes.data);
+          }
+        }
+        return res;
+      }, '서비스 추가에 실패했습니다.'),
+    [withLoading, updateStoreInContext, currentStore, setCurrentStore]
+  );
+
+  const removeStoreService = useCallback(
+    async (input: RemoveStoreServiceInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.removeStoreService(input);
+        if (res.success) {
+          const storeRes = await service.getStoreById(input.storeId);
+          if (storeRes.success && storeRes.data) {
+            updateStoreInContext(input.storeId, storeRes.data);
+            if (currentStore?.id === input.storeId)
+              setCurrentStore(storeRes.data);
+          }
+        }
+        return res;
+      }, '서비스 삭제에 실패했습니다.'),
+    [withLoading, updateStoreInContext, currentStore, setCurrentStore]
+  );
+
   const createStore = useCallback(
     async (input: CreateStoreInput) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.createStore(input);
-
-        if (res.success && res.data?.store) {
-          addStore(res.data.store);
-        }
+        if (res.success && res.data?.store) addStore(res.data.store);
         return res;
       }, '매장 생성에 실패했습니다.'),
     [withLoading, addStore]
   );
 
-  /**
-   * 매장 수정
-   */
   const updateStore = useCallback(
     async (input: UpdateStoreInput) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.updateStore(input);
-
         if (res.success && res.data?.store) {
           updateStoreInContext(input.id, res.data.store);
-
-          // 현재 매장이 수정된 매장이면 업데이트
-          if (currentStore?.id === input.id) {
-            setCurrentStore(res.data.store);
-          }
+          if (currentStore?.id === input.id) setCurrentStore(res.data.store);
         }
         return res;
       }, '매장 수정에 실패했습니다.'),
     [withLoading, updateStoreInContext, currentStore, setCurrentStore]
   );
 
-  /**
-   * 매장 삭제
-   */
   const deleteStore = useCallback(
     async (input: DeleteStoreInput) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.deleteStore(input);
-
         if (res.success && res.data?.storeId) {
           removeStore(res.data.storeId);
-
-          // 현재 매장이 삭제된 매장이면 초기화
-          if (currentStore?.id === res.data.storeId) {
-            setCurrentStore(null);
-          }
+          if (currentStore?.id === res.data.storeId) setCurrentStore(null);
         }
         return res;
       }, '매장 삭제에 실패했습니다.'),
@@ -236,72 +251,87 @@ export const useStores = () => {
         const res = await service.deleteStores(ids);
         if (res.success) {
           ids.forEach((id) => removeStore(id));
-          if (currentStore && ids.includes(currentStore.id)) {
+          if (currentStore && ids.includes(currentStore.id))
             setCurrentStore(null);
-          }
         }
         return res;
       }, '매장 다건 삭제에 실패했습니다.'),
     [withLoading, removeStore, currentStore, setCurrentStore]
   );
 
+  // ===== StoreManager Mutations ✅ 신규 =====
+
+  const addStoreManager = useCallback(
+    async (input: AddStoreManagerInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.addStoreManager(input);
+        if (res.success) {
+          const storeRes = await service.getStoreById(input.storeId);
+          if (storeRes.success && storeRes.data) {
+            updateStoreInContext(input.storeId, storeRes.data);
+            if (currentStore?.id === input.storeId)
+              setCurrentStore(storeRes.data);
+          }
+        }
+        return res;
+      }, '관리자 추가에 실패했습니다.'),
+    [withLoading, updateStoreInContext, currentStore, setCurrentStore]
+  );
+
+  const removeStoreManager = useCallback(
+    async (input: RemoveStoreManagerInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.removeStoreManager(input);
+        if (res.success) {
+          const storeRes = await service.getStoreById(input.storeId);
+          if (storeRes.success && storeRes.data) {
+            updateStoreInContext(input.storeId, storeRes.data);
+            if (currentStore?.id === input.storeId)
+              setCurrentStore(storeRes.data);
+          }
+        }
+        return res;
+      }, '관리자 삭제에 실패했습니다.'),
+    [withLoading, updateStoreInContext, currentStore, setCurrentStore]
+  );
+
   // ===== Brand Mutations =====
 
-  /**
-   * 브랜드 생성
-   */
   const createBrand = useCallback(
     async (input: CreateBrandInput) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.createBrand(input);
-
-        if (res.success && res.data?.brand) {
-          addBrand(res.data.brand);
-        }
+        if (res.success && res.data?.brand) addBrand(res.data.brand);
         return res;
       }, '브랜드 생성에 실패했습니다.'),
     [withLoading, addBrand]
   );
 
-  /**
-   * 브랜드 수정
-   */
   const updateBrand = useCallback(
     async (input: UpdateBrandInput) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.updateBrand(input);
-
         if (res.success && res.data?.brand) {
           updateBrandInContext(input.id, res.data.brand);
-
-          // 현재 브랜드가 수정된 브랜드이면 업데이트
-          if (currentBrand?.id === input.id) {
-            setCurrentBrand(res.data.brand);
-          }
+          if (currentBrand?.id === input.id) setCurrentBrand(res.data.brand);
         }
         return res;
       }, '브랜드 수정에 실패했습니다.'),
     [withLoading, updateBrandInContext, currentBrand, setCurrentBrand]
   );
 
-  /**
-   * 브랜드 삭제
-   */
   const deleteBrand = useCallback(
     async (input: DeleteBrandInput) =>
       withLoading(async () => {
         const service = getStoresService();
         const res = await service.deleteBrand(input);
-
         if (res.success && res.data?.brandId) {
           removeBrand(res.data.brandId);
-
-          // 현재 브랜드가 삭제된 브랜드이면 초기화
-          if (currentBrand?.id === res.data.brandId) {
-            setCurrentBrand(null);
-          }
+          if (currentBrand?.id === res.data.brandId) setCurrentBrand(null);
         }
         return res;
       }, '브랜드 삭제에 실패했습니다.'),
@@ -315,29 +345,92 @@ export const useStores = () => {
         const res = await service.deleteBrands(ids);
         if (res.success) {
           ids.forEach((id) => removeBrand(id));
-          if (currentBrand && ids.includes(currentBrand.id)) {
+          if (currentBrand && ids.includes(currentBrand.id))
             setCurrentBrand(null);
-          }
         }
         return res;
       }, '브랜드 다건 삭제에 실패했습니다.'),
     [withLoading, removeBrand, currentBrand, setCurrentBrand]
   );
 
+  // ===== BusinessType Mutations (슈퍼 어드민) ✅ 신규 =====
+
+  const createBusinessType = useCallback(
+    async (input: CreateBusinessTypeInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.createBusinessType(input);
+        if (res.success && res.data?.businessType) {
+          // businessTypes 목록에 추가
+          setBusinessTypes([...context.businessTypes, res.data.businessType]);
+        }
+        return res;
+      }, '비즈니스 타입 생성에 실패했습니다.'),
+    [withLoading, context.businessTypes, setBusinessTypes]
+  );
+
+  const updateBusinessType = useCallback(
+    async (input: UpdateBusinessTypeInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.updateBusinessType(input);
+        if (res.success && res.data?.businessType) {
+          const updated = res.data.businessType;
+          setBusinessTypes(
+            context.businessTypes.map((bt) =>
+              bt.id === updated.id ? updated : bt
+            )
+          );
+        }
+        return res;
+      }, '비즈니스 타입 수정에 실패했습니다.'),
+    [withLoading, context.businessTypes, setBusinessTypes]
+  );
+
+  // ===== ServiceType Mutations (슈퍼 어드민) ✅ 신규 =====
+
+  // createServiceType / updateServiceType 에서 fetchBusinessTypes 대신
+  // fetchServiceTypes도 함께 호출
+  const createServiceType = useCallback(
+    async (input: CreateServiceTypeInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.createServiceType(input);
+        if (res.success) {
+          await Promise.all([fetchBusinessTypes(), fetchServiceTypes()]);
+        }
+        return res;
+      }, '서비스 타입 생성에 실패했습니다.'),
+    [withLoading, fetchBusinessTypes, fetchServiceTypes]
+  );
+
+  const updateServiceType = useCallback(
+    async (input: UpdateServiceTypeInput) =>
+      withLoading(async () => {
+        const service = getStoresService();
+        const res = await service.updateServiceType(input);
+        if (res.success) {
+          await Promise.all([fetchBusinessTypes(), fetchServiceTypes()]);
+        }
+        return res;
+      }, '서비스 타입 수정에 실패했습니다.'),
+    [withLoading, fetchBusinessTypes, fetchServiceTypes]
+  );
+
   // =========================================================================
-  // 필터링된 매장 목록 (클라이언트 사이드)
+  // 클라이언트 사이드 필터링
   // =========================================================================
 
   const filteredStores = useCallback(() => {
     let result = [...stores];
 
     if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
+      const q = filters.search.toLowerCase();
       result = result.filter(
         (s) =>
-          s.name.toLowerCase().includes(searchLower) ||
-          s.location.toLowerCase().includes(searchLower) ||
-          s.slug.toLowerCase().includes(searchLower)
+          s.name.toLowerCase().includes(q) ||
+          s.location.toLowerCase().includes(q) ||
+          s.slug.toLowerCase().includes(q)
       );
     }
 
@@ -345,11 +438,16 @@ export const useStores = () => {
       result = result.filter((s) => s.brandId === filters.brandId);
     }
 
-    if (filters.location) {
-      const locationLower = filters.location.toLowerCase();
-      result = result.filter((s) =>
-        s.location.toLowerCase().includes(locationLower)
+    // businessTypeId 필터 (Store.businessTypeId 기준)
+    if (filters.businessTypeId !== undefined) {
+      result = result.filter(
+        (s) => s.businessTypeId === filters.businessTypeId
       );
+    }
+
+    if (filters.location) {
+      const q = filters.location.toLowerCase();
+      result = result.filter((s) => s.location.toLowerCase().includes(q));
     }
 
     if (filters.isActive !== undefined) {
@@ -376,29 +474,23 @@ export const useStores = () => {
   // =========================================================================
 
   const computedValues = {
-    // 전체 매장 수
     totalStores: stores.length,
-    // 필터링된 매장 수
     filteredStoresCount: filteredStores().length,
-    // 활성화된 매장 수
     activeStores: stores.filter((s) => s.isActive).length,
-    // 노출 가능한 매장 수
     visibleStores: stores.filter((s) => s.isVisible).length,
-    // 픽업 가능한 매장 수
     pickupEnabledStores: stores.filter((s) => s.pickupEnabled).length,
-
-    // 전체 브랜드 수
     totalBrands: brands.length,
-    // 활성화된 브랜드 수
     activeBrands: brands.filter((b) => b.isActive).length,
-
-    // 통계 (명시적으로 포함)
     statistics,
   };
 
   return {
     ...context,
     ...computedValues,
+
+    // BusinessType Queries ✅ 신규
+    fetchBusinessTypes,
+    businessTypes,
 
     // Store Queries
     fetchStores,
@@ -415,6 +507,24 @@ export const useStores = () => {
     updateStore,
     deleteStore,
     deleteStores,
+
+    // StoreService Mutations ✅ 신규
+    addStoreService,
+    removeStoreService,
+
+    // StoreManager Mutations ✅ 신규
+    addStoreManager,
+    removeStoreManager,
+
+    // BusinessType/ServiceType Mutations ✅ 신규
+    createBusinessType,
+    updateBusinessType,
+    createServiceType,
+    updateServiceType,
+
+    // ServiceType Query ✅ 신규
+    fetchServiceTypes,
+    serviceTypes,
 
     // Brand Mutations
     createBrand,

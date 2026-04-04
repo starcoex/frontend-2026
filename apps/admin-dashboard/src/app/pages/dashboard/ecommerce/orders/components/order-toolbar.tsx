@@ -10,17 +10,25 @@ import {
   ORDER_STATUS_OPTIONS,
   ORDER_TAB_OPTIONS,
 } from '@/app/pages/dashboard/ecommerce/orders/data/order-data';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/orders/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/orders/components/data-table-view-options';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 
 interface OrderToolbarProps {
   table: Table<Order>;
+  onRefresh?: () => void;
 }
 
-export function OrderToolbar({ table }: OrderToolbarProps) {
+export function OrderToolbar({ table, onRefresh }: OrderToolbarProps) {
   const isFiltered = table.getState().columnFilters.length > 0;
-  const { deleteOrders, fetchOrders } = useOrders();
+  const { deleteOrders } = useOrders();
+
+  const handleDeleteSuccess = async () => {
+    table.resetRowSelection(); // ← 체크박스 선택 초기화
+    onRefresh?.(); // ← 서버에서 최신 목록 재조회
+  };
 
   return (
     <div className="space-y-3">
@@ -87,7 +95,7 @@ export function OrderToolbar({ table }: OrderToolbarProps) {
         <BulkDeleteToolbar
           table={table}
           onDelete={deleteOrders}
-          onSuccess={fetchOrders}
+          onSuccess={handleDeleteSuccess}
           itemLabel="주문"
           deleteDescription="선택한 주문은 CANCELLED 상태로 변경 후 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
         />

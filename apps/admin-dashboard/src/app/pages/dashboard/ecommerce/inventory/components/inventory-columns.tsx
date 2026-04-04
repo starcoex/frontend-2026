@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { StoreInventory } from '@starcoex-frontend/inventory';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 import { InventoryRowActions } from './inventory-row-actions';
 
 const getStockStatus = (inv: StoreInventory) => {

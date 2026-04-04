@@ -23,7 +23,7 @@ import {
 import type { StoreInventory } from '@starcoex-frontend/inventory';
 import { lowStockColumns } from './low-stock-columns';
 import { LowStockToolbar } from './low-stock-toolbar';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/products/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface LowStockTableProps {
   data: StoreInventory[];

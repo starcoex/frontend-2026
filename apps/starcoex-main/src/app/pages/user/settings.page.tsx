@@ -95,7 +95,7 @@ export const SettingsPage: React.FC = () => {
             </Link>
 
             {/* 추후 알림 설정 등 추가 가능 */}
-            {/* <Link to="/settings/notifications" ... /> */}
+            {/* <Link to="/settings/components" ... /> */}
           </CardContent>
         </Card>
 

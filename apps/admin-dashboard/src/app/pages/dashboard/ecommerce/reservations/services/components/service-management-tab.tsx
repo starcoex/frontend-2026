@@ -18,19 +18,26 @@ import {
   Settings2,
   RefreshCw,
   Plus,
+  BanIcon,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { format, parseISO } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { ServiceCard } from './service-card';
 import { ServiceTemplateDialog } from './service-template-dialog';
 import { ServiceGenerateSlotsDialog } from './service-generate-slots-dialog';
 import { ServiceCreateDialog } from '@/app/pages/dashboard/ecommerce/reservations/services/create/service-create-dialog';
 import { ServiceEditDialog } from '@/app/pages/dashboard/ecommerce/reservations/services/edit/service-edit-dialog';
+import { BlockedDateCreateDialog } from '@/app/pages/dashboard/ecommerce/reservations/components/blocked-data-create-dialog';
 
 export function ServiceManagementTab() {
   const {
     fetchReservableServices,
     fetchScheduleTemplates,
+    fetchScheduleBlockedDates,
     deleteReservableService,
+    deleteScheduleBlockedDate,
     isLoading,
   } = useReservations();
   const { stores, fetchStores } = useStores();
@@ -41,10 +48,12 @@ export function ServiceManagementTab() {
     null
   );
   const [templates, setTemplates] = useState<any[]>([]);
+  const [blockedDates, setBlockedDates] = useState<any[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [editingService, setEditingService] = useState<any | null>(null);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [slotsOpen, setSlotsOpen] = useState(false);
+  const [blockedDateOpen, setBlockedDateOpen] = useState(false);
 
   useEffect(() => {
     fetchStores();
@@ -69,9 +78,18 @@ export function ServiceManagementTab() {
     });
   };
 
+  const loadBlockedDates = (serviceId: number) => {
+    fetchScheduleBlockedDates({ serviceId }).then((res) => {
+      if (res.success && res.data?.blockedDates) {
+        setBlockedDates(res.data.blockedDates);
+      }
+    });
+  };
+
   useEffect(() => {
     if (!selectedServiceId) return;
     loadTemplates(selectedServiceId);
+    loadBlockedDates(selectedServiceId);
   }, [selectedServiceId]);
 
   const handleDelete = async (serviceId: number, serviceName: string) => {
@@ -81,6 +99,17 @@ export function ServiceManagementTab() {
       toast.success('서비스가 삭제되었습니다.');
       if (selectedServiceId === serviceId) setSelectedServiceId(null);
       if (selectedStoreId) loadServices(selectedStoreId);
+    } else {
+      toast.error(res.error?.message ?? '삭제에 실패했습니다.');
+    }
+  };
+
+  const handleDeleteBlockedDate = async (id: number, date: string) => {
+    if (!window.confirm(`${date} 휴무일을 삭제하시겠습니까?`)) return;
+    const res = await deleteScheduleBlockedDate(id);
+    if (res.success) {
+      toast.success('휴무일이 삭제되었습니다.');
+      if (selectedServiceId) loadBlockedDates(selectedServiceId);
     } else {
       toast.error(res.error?.message ?? '삭제에 실패했습니다.');
     }
@@ -159,7 +188,7 @@ export function ServiceManagementTab() {
                   onClick={() => setSelectedServiceId(service.id)}
                   onEdit={() => setEditingService(service)}
                   onDelete={() => handleDelete(service.id, service.name)}
-                  onSettings={() => setSelectedServiceId(service.id)} // ← 추가: 카드 선택과 동일
+                  onSettings={() => setSelectedServiceId(service.id)}
                 />
               ))}
             </div>
@@ -179,6 +208,14 @@ export function ServiceManagementTab() {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setBlockedDateOpen(true)}
+              >
+                <BanIcon className="mr-2 size-4" />
+                휴무일 추가
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setTemplateOpen(true)}
               >
                 <Clock className="mr-2 size-4" />
@@ -195,6 +232,7 @@ export function ServiceManagementTab() {
             </div>
           </div>
 
+          {/* 운영 템플릿 */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-base">
@@ -265,6 +303,81 @@ export function ServiceManagementTab() {
               )}
             </CardContent>
           </Card>
+
+          {/* 휴무일 목록 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2">
+                  <BanIcon className="size-4 opacity-60" />
+                  휴무일
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => loadBlockedDates(selectedServiceId!)}
+                >
+                  <RefreshCw className="size-3.5" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {blockedDates.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  등록된 휴무일이 없습니다.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {blockedDates.map((bd) => {
+                    const dateLabel = (() => {
+                      try {
+                        return format(parseISO(bd.date), 'yyyy.MM.dd (EEE)', {
+                          locale: ko,
+                        });
+                      } catch {
+                        return bd.date;
+                      }
+                    })();
+                    return (
+                      <div
+                        key={bd.id}
+                        className="flex items-center justify-between rounded-md border px-4 py-3"
+                      >
+                        <div className="space-y-0.5">
+                          <p className="font-medium">{dateLabel}</p>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={bd.isFullDay ? 'destructive' : 'warning'}
+                            >
+                              {bd.isFullDay
+                                ? '종일 휴무'
+                                : `${bd.blockedStartTime} ~ ${bd.blockedEndTime}`}
+                            </Badge>
+                            {bd.reason && (
+                              <span className="text-muted-foreground text-xs">
+                                {bd.reason}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 text-destructive hover:text-destructive"
+                          onClick={() =>
+                            handleDeleteBlockedDate(bd.id, dateLabel)
+                          }
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -292,6 +405,14 @@ export function ServiceManagementTab() {
         onOpenChange={setSlotsOpen}
         serviceId={selectedServiceId}
       />
+      {selectedServiceId && (
+        <BlockedDateCreateDialog
+          open={blockedDateOpen}
+          onOpenChange={setBlockedDateOpen}
+          serviceId={selectedServiceId}
+          onSuccess={() => loadBlockedDates(selectedServiceId)}
+        />
+      )}
     </div>
   );
 }

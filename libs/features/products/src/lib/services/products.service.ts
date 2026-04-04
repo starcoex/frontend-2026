@@ -5,13 +5,17 @@ import {
   GET_PRODUCT,
   CREATE_PRODUCT,
   UPDATE_PRODUCT,
+  DELETE_PRODUCT,
+  DELETE_PRODUCTS,
+  GET_PRODUCT_BY_BARCODE,
+  LIST_PRODUCT_TYPES,
+  GET_PRODUCT_TYPE_BY_ID,
+  GET_PRODUCT_TYPE_BY_CODE,
+  CREATE_PRODUCT_TYPE,
+  UPDATE_PRODUCT_TYPE,
   CREATE_PRODUCT_INVENTORY,
   UPDATE_PRODUCT_INVENTORY,
   DELETE_PRODUCT_INVENTORY,
-  DeleteProductOutput,
-  DELETE_PRODUCT,
-  GET_PRODUCT_BY_BARCODE,
-  DELETE_PRODUCTS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -19,15 +23,19 @@ import {
   apiErrorFromUnknown,
   createErrorResponse,
 } from '../errors';
-import type { ApiResponse } from '../types';
 import type {
+  ApiResponse,
   IProductsService,
   Product,
+  ProductType,
   ProductInventory,
   CreateProductInput,
   CreateProductOutput,
   UpdateProductInput,
   UpdateProductOutput,
+  DeleteProductOutput,
+  CreateProductTypeInput,
+  UpdateProductTypeInput,
   CreateProductInventoryInput,
   UpdateProductInventoryInput,
 } from '../types';
@@ -113,7 +121,7 @@ export class ProductsService implements IProductsService {
   }
 
   // ============================================================================
-  // Queries
+  // Product Queries
   // ============================================================================
 
   async listProducts(): Promise<ApiResponse<Product[]>> {
@@ -146,7 +154,7 @@ export class ProductsService implements IProductsService {
   }
 
   // ============================================================================
-  // Mutations
+  // Product Mutations
   // ============================================================================
 
   async createProduct(
@@ -197,12 +205,83 @@ export class ProductsService implements IProductsService {
     return res as unknown as ApiResponse<boolean>;
   }
 
+  // ============================================================================
+  // ProductType Queries
+  // ============================================================================
+
+  async listProductTypes(): Promise<ApiResponse<ProductType[]>> {
+    const res = await this.query<{ listProductTypes: ProductType[] }>(
+      LIST_PRODUCT_TYPES
+    );
+    if (res.success && res.data?.listProductTypes) {
+      return { success: true, data: res.data.listProductTypes };
+    }
+    return res as unknown as ApiResponse<ProductType[]>;
+  }
+
+  async getProductTypeById(id: number): Promise<ApiResponse<ProductType>> {
+    const res = await this.query<{ productTypeById: ProductType }>(
+      GET_PRODUCT_TYPE_BY_ID,
+      { id }
+    );
+    if (res.success && res.data?.productTypeById) {
+      return { success: true, data: res.data.productTypeById };
+    }
+    return res as unknown as ApiResponse<ProductType>;
+  }
+
+  async getProductTypeByCode(code: string): Promise<ApiResponse<ProductType>> {
+    const res = await this.query<{ productTypeByCode: ProductType }>(
+      GET_PRODUCT_TYPE_BY_CODE,
+      { code }
+    );
+    if (res.success && res.data?.productTypeByCode) {
+      return { success: true, data: res.data.productTypeByCode };
+    }
+    return res as unknown as ApiResponse<ProductType>;
+  }
+
+  // ============================================================================
+  // ProductType Mutations
+  // ============================================================================
+
+  async createProductType(
+    input: CreateProductTypeInput
+  ): Promise<ApiResponse<ProductType>> {
+    const res = await this.mutate<{ createProductType: ProductType }>(
+      CREATE_PRODUCT_TYPE,
+      { input }
+    );
+    if (res.success && res.data?.createProductType) {
+      return { success: true, data: res.data.createProductType };
+    }
+    return res as unknown as ApiResponse<ProductType>;
+  }
+
+  async updateProductType(
+    input: UpdateProductTypeInput
+  ): Promise<ApiResponse<ProductType>> {
+    const res = await this.mutate<{ updateProductType: ProductType }>(
+      UPDATE_PRODUCT_TYPE,
+      { input }
+    );
+    if (res.success && res.data?.updateProductType) {
+      return { success: true, data: res.data.updateProductType };
+    }
+    return res as unknown as ApiResponse<ProductType>;
+  }
+
+  // ============================================================================
+  // Inventory Mutations
+  // ============================================================================
+
   async createProductInventory(
     input: CreateProductInventoryInput
   ): Promise<ApiResponse<ProductInventory>> {
-    const res = await this.mutate<{
-      createProductInventory: ProductInventory;
-    }>(CREATE_PRODUCT_INVENTORY, { input });
+    const res = await this.mutate<{ createProductInventory: ProductInventory }>(
+      CREATE_PRODUCT_INVENTORY,
+      { input }
+    );
     if (res.success && res.data?.createProductInventory) {
       return { success: true, data: res.data.createProductInventory };
     }
@@ -212,9 +291,10 @@ export class ProductsService implements IProductsService {
   async updateProductInventory(
     input: UpdateProductInventoryInput
   ): Promise<ApiResponse<ProductInventory>> {
-    const res = await this.mutate<{
-      updateProductInventory: ProductInventory;
-    }>(UPDATE_PRODUCT_INVENTORY, { input });
+    const res = await this.mutate<{ updateProductInventory: ProductInventory }>(
+      UPDATE_PRODUCT_INVENTORY,
+      { input }
+    );
     if (res.success && res.data?.updateProductInventory) {
       return { success: true, data: res.data.updateProductInventory };
     }

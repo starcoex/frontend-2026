@@ -54,9 +54,14 @@ import React, {
 } from 'react';
 import { useProducts } from '@starcoex-frontend/products';
 import { useStores } from '@starcoex-frontend/stores';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Barcode from 'react-barcode';
 import { InitialInventoryManager } from '@/app/pages/dashboard/ecommerce/products/inventory/components/initial-inventory-manager';
+import {
+  FUEL_TYPE_OPTIONS,
+  FUEL_TYPE_SKU_PREFIX,
+  PRODUCT_TYPE_SKU_PREFIX,
+  type ProductTypeCode,
+} from '@/app/constants/product-type-codes';
 
 // ─── 유틸: 슬러그 자동 생성 ────────────────────────────────────────────────────
 const generateSlug = (name: string): string =>
@@ -66,52 +71,36 @@ const generateSlug = (name: string): string =>
     .replace(/[^a-z0-9가-힣\s-]/g, '')
     .replace(/\s+/g, '-');
 
-// ─── 유틸: SKU 생성 방식 ──────────────────────────────────────────────────────
-const SKU_MODES = [
-  { value: 'category', label: '카테고리 기반' },
-  { value: 'date', label: '날짜 기반' },
-  { value: 'brand', label: '브랜드 기반' },
-  { value: 'manual', label: '직접 입력' },
-] as const;
-
-type SKUMode = (typeof SKU_MODES)[number]['value'];
-
-const generateSKU = (
-  mode: SKUMode,
-  categoryId?: number,
-  brandId?: number
-): string => {
-  const random = Math.random().toString(36).substring(2, 7).toUpperCase();
-  switch (mode) {
-    case 'category':
-      return `CAT${categoryId ?? 0}-${random}`;
-    case 'date': {
-      const d = new Date();
-      const date = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(
-        2,
-        '0'
-      )}${String(d.getDate()).padStart(2, '0')}`;
-      return `${date}-${random}`;
-    }
-    case 'brand':
-      return `BRD${brandId ?? 0}-${random}`;
-    default:
-      return '';
-  }
-};
-
 // EAN-13 체크섬 포함 자동 생성
 const generateBarcode = (): string => {
   const digits = Array.from({ length: 12 }, () =>
     Math.floor(Math.random() * 10)
   );
-  // 체크섬 계산
   const checksum =
     (10 -
       (digits.reduce((sum, d, i) => sum + d * (i % 2 === 0 ? 1 : 3), 0) % 10)) %
     10;
   return [...digits, checksum].join('');
-  // 예: 4901234567890
+};
+
+/**
+ * ProductType 기반 SKU 생성
+ * FUEL + 유종: FUEL-DSL-AB12C
+ * 기타 타입:   CW-AB12C
+ * 타입 없음:   GEN-AB12C
+ */
+const generateSKUByType = (typeCode?: string, fuelType?: string): string => {
+  const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+  if (!typeCode) return `GEN-${random}`;
+
+  const prefix = PRODUCT_TYPE_SKU_PREFIX[typeCode as ProductTypeCode] ?? 'GEN';
+
+  if (typeCode === 'FUEL' && fuelType) {
+    const fuelPrefix = FUEL_TYPE_SKU_PREFIX[fuelType] ?? 'FUEL';
+    return `${prefix}-${fuelPrefix}-${random}`;
+  }
+
+  return `${prefix}-${random}`;
 };
 
 // ─── Zod 스키마 ───────────────────────────────────────────────────────────────
@@ -125,6 +114,8 @@ const FormSchema = z.object({
   salePrice: z.number().min(0).optional(),
   brandId: z.number().optional(),
   categoryId: z.number().min(1, { message: '카테고리를 선택하세요.' }),
+  productTypeId: z.number().optional(),
+  fuelType: z.string().optional(),
   isActive: z.boolean(),
   isAvailable: z.boolean(),
   isFeatured: z.boolean(),
@@ -132,7 +123,6 @@ const FormSchema = z.object({
 
 type FormValues = z.infer<typeof FormSchema>;
 
-// ─── 파일 프리뷰 타입 ─────────────────────────────────────────────────────────
 interface FilePreview {
   id: string;
   file: File;
@@ -143,22 +133,26 @@ export default function AddProductForm() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const { uploadMedia, isLoading: isUploading } = useMedia();
-  const { createProduct } = useProducts();
+  const { createProduct, productTypes } = useProducts();
   const { brands, fetchBrands, stores, fetchStores } = useStores();
   const { categoryTree, fetchCategoryTree } = useCategories();
 
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [skuMode, setSkuMode] = useState<SKUMode>('category');
-  // ─── 초기 재고 상태 ───────────────────────────────────────────────────────────
+  // ✅ SKU 자동/수동 모드만 유지
+  const [skuManual, setSkuManual] = useState(false);
+
   const [initialInventories, setInitialInventories] = useState<
     Array<{
       storeId: number;
       stock: number;
       minStock: number;
       maxStock: number;
+      reorderPoint?: number;
+      reorderQuantity?: number;
       storePrice?: number;
+      costPrice?: number;
       isAvailable: boolean;
     }>
   >([]);
@@ -174,7 +168,6 @@ export default function AddProductForm() {
     fetchStores();
   }, [fetchCategoryTree, fetchBrands, fetchStores]);
 
-  // 카테고리 평면화 — 중복 id 제거
   const flatCategories = useMemo(() => {
     const seen = new Set<number>();
     return categoryTree
@@ -191,17 +184,37 @@ export default function AddProductForm() {
     defaultValues: {
       name: '',
       slug: '',
-      sku: generateSKU('category'),
+      sku: generateSKUByType(),
       barcode: generateBarcode(),
       description: '',
       basePrice: 0,
       salePrice: undefined,
       categoryId: 0,
+      productTypeId: undefined,
+      fuelType: undefined,
       isActive: true,
       isAvailable: true,
       isFeatured: false,
     },
   });
+
+  const productTypeIdValue = form.watch('productTypeId');
+  const fuelTypeValue = form.watch('fuelType');
+  const selectedProductType = productTypes.find(
+    (pt) => pt.id === productTypeIdValue
+  );
+  const isFuelType = selectedProductType?.code === 'FUEL';
+
+  // ✅ 타입 또는 유종 변경 시 SKU 자동 재생성
+  useEffect(() => {
+    if (!skuManual) {
+      form.setValue(
+        'sku',
+        generateSKUByType(selectedProductType?.code, fuelTypeValue),
+        { shouldValidate: false }
+      );
+    }
+  }, [productTypeIdValue, fuelTypeValue, skuManual, selectedProductType?.code]);
 
   // 이름 변경 시 슬러그 자동 생성
   const nameValue = form.watch('name');
@@ -210,31 +223,6 @@ export default function AddProductForm() {
       form.setValue('slug', generateSlug(nameValue), { shouldValidate: false });
     }
   }, [nameValue, form]);
-
-  const categoryIdValue = form.watch('categoryId');
-
-  useEffect(() => {
-    if (nameValue) {
-      form.setValue('slug', generateSlug(nameValue), {
-        shouldValidate: false,
-      });
-    }
-  }, [nameValue, form]);
-
-  // SKU 모드 또는 카테고리/브랜드 변경 시 자동 재생성 (직접 입력 모드 제외)
-  useEffect(() => {
-    if (skuMode !== 'manual') {
-      form.setValue(
-        'sku',
-        generateSKU(
-          skuMode,
-          form.getValues('categoryId'),
-          form.getValues('brandId')
-        ),
-        { shouldValidate: false }
-      );
-    }
-  }, [skuMode, categoryIdValue]);
 
   // ─── 파일 유효성 검사 ──────────────────────────────────────────────────────
 
@@ -281,25 +269,20 @@ export default function AddProductForm() {
     });
   }, []);
 
-  // ─── 드래그 앤 드롭 ────────────────────────────────────────────────────────
-
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   }, []);
-
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   }, []);
-
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
-
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -338,17 +321,11 @@ export default function AddProductForm() {
           files.map((f) => f.file),
           currentUser.id
         );
-
         if (!uploadResult.success || !uploadResult.data) {
           toast.error('이미지 업로드에 실패했습니다.');
           return;
         }
-
         const response = uploadResult.data;
-
-        // UploadResponse 타입 기준 파싱
-        // 다중 파일 → files[].fileUrl
-        // 단일 파일 → fileUrl
         imageUrls = response.files
           ? response.files.map((f) => f.fileUrl)
           : response.fileUrl
@@ -365,6 +342,9 @@ export default function AddProductForm() {
         basePrice: data.basePrice,
         salePrice: data.salePrice || undefined,
         categoryId: data.categoryId,
+        productTypeId: data.productTypeId,
+        metadata:
+          isFuelType && data.fuelType ? { fuelType: data.fuelType } : undefined,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         isActive: data.isActive,
         isAvailable: data.isAvailable,
@@ -376,7 +356,10 @@ export default function AddProductForm() {
                 stock: inv.stock,
                 minStock: inv.minStock,
                 maxStock: inv.maxStock,
+                reorderPoint: inv.reorderPoint,
+                reorderQuantity: inv.reorderQuantity,
                 storePrice: inv.storePrice,
+                costPrice: inv.costPrice,
                 isAvailable: inv.isAvailable,
               }))
             : undefined,
@@ -398,7 +381,7 @@ export default function AddProductForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* ─── 헤더 ─────────────────────────────────────────────────────────── */}
+        {/* ─── 헤더 ──────────────────────────────────────────────────────── */}
         <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
           <div className="flex items-center gap-4">
             <Button variant="outline" size="icon" asChild>
@@ -430,7 +413,7 @@ export default function AddProductForm() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-6">
-          {/* ─── 좌측: 메인 정보 ──────────────────────────────────────────── */}
+          {/* ─── 좌측: 메인 정보 ─────────────────────────────────────────── */}
           <div className="space-y-4 lg:col-span-4">
             {/* 제품 정보 */}
             <Card>
@@ -467,6 +450,8 @@ export default function AddProductForm() {
                     </FormItem>
                   )}
                 />
+
+                {/* SKU + 바코드 */}
                 <div className="grid gap-4 lg:grid-cols-2">
                   <FormField
                     control={form.control}
@@ -474,44 +459,46 @@ export default function AddProductForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>SKU</FormLabel>
-                        {/* 생성 방식 선택 */}
-                        <RadioGroup
-                          value={skuMode}
-                          onValueChange={(v) => setSkuMode(v as SKUMode)}
-                          className="mb-2 flex flex-wrap gap-3"
-                        >
-                          {SKU_MODES.map((mode) => (
-                            <div
-                              key={mode.value}
-                              className="flex items-center gap-1.5"
-                            >
-                              <RadioGroupItem
-                                value={mode.value}
-                                id={`sku-${mode.value}`}
-                              />
-                              <Label
-                                htmlFor={`sku-${mode.value}`}
-                                className="cursor-pointer text-sm"
-                              >
-                                {mode.label}
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Switch
+                            id="sku-manual"
+                            checked={skuManual}
+                            onCheckedChange={(v) => {
+                              setSkuManual(v);
+                              if (!v) {
+                                form.setValue(
+                                  'sku',
+                                  generateSKUByType(
+                                    selectedProductType?.code,
+                                    fuelTypeValue
+                                  )
+                                );
+                              }
+                            }}
+                          />
+                          <Label
+                            htmlFor="sku-manual"
+                            className="text-xs cursor-pointer"
+                          >
+                            직접 입력
+                          </Label>
+                        </div>
                         <div className="flex gap-2">
                           <FormControl>
                             <Input
                               {...field}
-                              readOnly={skuMode !== 'manual'}
+                              readOnly={!skuManual}
                               placeholder={
-                                skuMode === 'manual'
-                                  ? 'SKU를 직접 입력하세요'
-                                  : '자동 생성됩니다'
+                                skuManual ? 'SKU 직접 입력' : '자동 생성됩니다'
                               }
-                              className={skuMode !== 'manual' ? 'bg-muted' : ''}
+                              className={
+                                !skuManual
+                                  ? 'bg-muted font-mono text-xs'
+                                  : 'font-mono text-xs'
+                              }
                             />
                           </FormControl>
-                          {skuMode !== 'manual' && (
+                          {!skuManual && (
                             <Button
                               type="button"
                               variant="outline"
@@ -519,10 +506,9 @@ export default function AddProductForm() {
                               onClick={() =>
                                 form.setValue(
                                   'sku',
-                                  generateSKU(
-                                    skuMode,
-                                    form.getValues('categoryId'),
-                                    form.getValues('brandId')
+                                  generateSKUByType(
+                                    selectedProductType?.code,
+                                    fuelTypeValue
                                   ),
                                   { shouldValidate: true }
                                 )
@@ -534,9 +520,12 @@ export default function AddProductForm() {
                           )}
                         </div>
                         <FormDescription>
-                          {skuMode === 'manual'
-                            ? '원하는 SKU를 직접 입력하세요.'
-                            : '방식 선택 시 자동 생성됩니다. 🔄로 재생성 가능합니다.'}
+                          {skuManual
+                            ? '직접 입력 — 중복 없는 고유 코드를 입력하세요.'
+                            : `상품 타입 기반 자동 생성 (예: ${generateSKUByType(
+                                selectedProductType?.code,
+                                fuelTypeValue
+                              )})`}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -552,7 +541,7 @@ export default function AddProductForm() {
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="바코드를 입력하거나 자동 생성하세요"
+                              placeholder="바코드 입력 또는 자동 생성"
                               className="font-mono text-xs"
                             />
                           </FormControl>
@@ -570,7 +559,6 @@ export default function AddProductForm() {
                             <RefreshCwIcon className="size-4" />
                           </Button>
                         </div>
-                        {/* 바코드 이미지 미리보기 */}
                         {field.value && field.value.length === 13 && (
                           <div className="mt-2 flex justify-center rounded-md border bg-white p-3">
                             <Barcode
@@ -591,6 +579,7 @@ export default function AddProductForm() {
                     )}
                   />
                 </div>
+
                 <FormField
                   control={form.control}
                   name="description"
@@ -721,8 +710,168 @@ export default function AddProductForm() {
             </Card>
           </div>
 
-          {/* ─── 우측: 설정 ──────────────────────────────────────────────────── */}
+          {/* ─── 우측: 설정 (3개 카드로 압축) ─────────────────────────────── */}
           <div className="space-y-4 lg:col-span-2">
+            {/* ✅ 상품 분류 — 타입 + 카테고리 + 브랜드 통합 */}
+            <Card>
+              <CardHeader>
+                <CardTitle>상품 분류</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 상품 타입 */}
+                <FormField
+                  control={form.control}
+                  name="productTypeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>상품 타입</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value ? String(field.value) : ''}
+                          onValueChange={(v) =>
+                            field.onChange(
+                              v === '__none__' ? undefined : Number(v)
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="타입 선택 (선택사항)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="__none__">
+                                선택 안 함
+                              </SelectItem>
+                              {productTypes.map((pt) => (
+                                <SelectItem key={pt.id} value={String(pt.id)}>
+                                  <span className="font-mono text-xs mr-1">
+                                    {pt.code}
+                                  </span>
+                                  {pt.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* FUEL 타입 시 유종 선택 */}
+                {isFuelType && (
+                  <FormField
+                    control={form.control}
+                    name="fuelType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>유종 *</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value ?? ''}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="유종 선택" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {FUEL_TYPE_OPTIONS.map((option) => (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                {/* 카테고리 */}
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>카테고리 *</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value ? String(field.value) : ''}
+                          onValueChange={(v) => field.onChange(Number(v))}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="카테고리 선택" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              {flatCategories.map((cat) => (
+                                <SelectItem
+                                  key={`cat-${cat.id}`}
+                                  value={String(cat.id)}
+                                >
+                                  {cat.parentId ? `└ ${cat.name}` : cat.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* 브랜드 */}
+                <FormField
+                  control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>브랜드</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value ? String(field.value) : ''}
+                          onValueChange={(v) =>
+                            field.onChange(
+                              v === '__none__' ? undefined : Number(v)
+                            )
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="브랜드 선택 (선택사항)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="__none__">
+                                선택 안 함
+                              </SelectItem>
+                              {brands.map((brand) => (
+                                <SelectItem
+                                  key={brand.id}
+                                  value={String(brand.id)}
+                                >
+                                  {brand.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
             {/* 가격 설정 */}
             <Card>
               <CardHeader>
@@ -772,61 +921,6 @@ export default function AddProductForm() {
                           min={0}
                           step={0.01}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            {/* 초기 재고 설정 */}
-            <InitialInventoryManager
-              stores={stores}
-              value={initialInventories}
-              onChange={setInitialInventories}
-            />
-
-            {/* 브랜드 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>브랜드</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="brandId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>브랜드</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value ? String(field.value) : ''}
-                          onValueChange={(v) =>
-                            field.onChange(
-                              v === '__none__' ? undefined : Number(v)
-                            )
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="브랜드 선택 (선택사항)" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectItem value="__none__">
-                                선택 안 함
-                              </SelectItem>
-                              {brands.map((brand) => (
-                                <SelectItem
-                                  key={brand.id}
-                                  value={String(brand.id)}
-                                >
-                                  {brand.name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -892,46 +986,12 @@ export default function AddProductForm() {
               </CardContent>
             </Card>
 
-            {/* 카테고리 */}
-            <Card>
-              <CardHeader>
-                <CardTitle>카테고리</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="categoryId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>카테고리 *</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value ? String(field.value) : ''}
-                          onValueChange={(v) => field.onChange(Number(v))}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="카테고리 선택" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {flatCategories.map((cat) => (
-                                <SelectItem
-                                  key={`cat-${cat.id}`}
-                                  value={String(cat.id)}
-                                >
-                                  {cat.parentId ? `└ ${cat.name}` : cat.name}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+            {/* 초기 재고 설정 */}
+            <InitialInventoryManager
+              stores={stores}
+              value={initialInventories}
+              onChange={setInitialInventories}
+            />
           </div>
         </div>
       </form>

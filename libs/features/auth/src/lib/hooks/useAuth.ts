@@ -96,20 +96,16 @@ interface UseAuthReturn {
   currentUser: User | null;
   initialized: boolean;
 
-  // 인증 상태
   checkAuthStatus(): Promise<{ isAuthenticated: boolean; user?: User }>;
   getCurrentUser(): Promise<User>;
 
-  // 로그인/로그아웃
   loginStep1(input: LoginUser1Input): Promise<ApiResponse<LoginStep1Mutation>>;
   loginStep2(input: LoginUser2Input): Promise<ApiResponse<LoginStep2Mutation>>;
   logout(): Promise<ApiResponse>;
   logoutAll(): Promise<ApiResponse>;
 
-  // 토큰
   refreshToken: () => Promise<ApiResponse<RefreshTokenMutation>>;
 
-  // 회원가입/인증
   register(
     input: RegisterUserInput
   ): Promise<ApiResponse<RegisterUserMutation>>;
@@ -120,7 +116,6 @@ interface UseAuthReturn {
     input: ResendActivationCodeInput
   ): Promise<ApiResponse<ResendActivationCodeMutation>>;
 
-  // 비밀번호
   forgotPassword(
     input: ForgotPasswordInput
   ): Promise<ApiResponse<ForgotPasswordMutation>>;
@@ -131,7 +126,6 @@ interface UseAuthReturn {
     input: ChangePasswordInput
   ): Promise<ApiResponse<ChangePasswordMutation>>;
 
-  // 소셜 로그인
   getConnectedSocialProviders(): Promise<ApiResponse<SocialProvider[]>>;
   getSocialLoginUrl(
     input: SocialLoginStartInput
@@ -146,7 +140,6 @@ interface UseAuthReturn {
     input: UnlinkSocialAccountInput
   ): Promise<ApiResponse<UnlinkSocialAccountMutation>>;
 
-  // 사용자 정보 관리
   updateUserName: (
     input: UpdateNameInput
   ) => Promise<ApiResponse<UpdateUserNameMutation>>;
@@ -167,7 +160,6 @@ interface UseAuthReturn {
   ): Promise<ApiResponse<DeleteAvatarMutation>>;
   deleteAccount(): Promise<ApiResponse<DeleteAccountMutation>>;
 
-  // 2FA 관리
   generateTwoFactorQR: () => Promise<ApiResponse<Generate2FaQrMutation>>;
   enableTwoFactor: (
     input: Enable2FaInput
@@ -183,7 +175,6 @@ interface UseAuthReturn {
   ) => Promise<ApiResponse<Disable2FaMutation>>;
   getTwoFactorStatus: () => Promise<ApiResponse<Get2FaStatusQuery>>;
 
-  // 본인인증
   getIdentityVerification(
     identityVerificationId: string
   ): Promise<ApiResponse<GetIdentityVerificationQuery>>;
@@ -204,7 +195,6 @@ interface UseAuthReturn {
     businessNumber: string
   ): Promise<ApiResponse<ValidateBusinessNumberQuery>>;
 
-  // 관리자 전용
   getAllUsers(variables: {
     page?: number;
     limit?: number;
@@ -226,7 +216,6 @@ interface UseAuthReturn {
   deleteUserByAdmin(
     id: number
   ): Promise<ApiResponse<DeleteUserByAdminMutation>>;
-  // ✅ 신규
   deleteUsersByAdmin(
     ids: number[]
   ): Promise<ApiResponse<DeleteUsersByAdminMutation>>;
@@ -237,7 +226,6 @@ interface UseAuthReturn {
   resendInvitation(
     invitationId: number
   ): Promise<ApiResponse<ResendInvitationMutation>>;
-  // ✅ 신규
   deleteInvitation(
     invitationId: number
   ): Promise<ApiResponse<DeleteInvitationMutation>>;
@@ -251,14 +239,12 @@ interface UseAuthReturn {
     token: string,
     input: AcceptInvitationInput
   ): Promise<ApiResponse<AcceptInvitationMutation>>;
-  // ✅ 마스터 키 및 권한 관리 추가
   promoteToSuperAdminWithMasterKey(
     input: AdminMasterKeyInput
   ): Promise<ApiResponse<PromoteToSuperAdminWithMasterKeyMutation>>;
   changeUserRole(
     input: ChangeRoleInput
   ): Promise<ApiResponse<ChangeUserRoleMutation>>;
-  // ✅ 신규 추가
   createGuestUserByAdmin(input: {
     name: string;
     phoneNumber: string;
@@ -274,27 +260,40 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
   const { onAuthStateChange } = options;
   const context = useAuthContext();
 
-  // ✅ 중요한 작업만 중복 방지 (선택적)
+  // ── context 액션 함수들을 ref로 유지 → 의존성 배열 무한루프 방지 ────────────
+  const setLoadingRef = useRef(context.setLoading);
+  setLoadingRef.current = context.setLoading;
+
+  const setErrorRef = useRef(context.setError);
+  setErrorRef.current = context.setError;
+
+  const clearErrorRef = useRef(context.clearError);
+  clearErrorRef.current = context.clearError;
+
+  const setUserRef = useRef(context.setUser);
+  setUserRef.current = context.setUser;
+
+  const setLogoutRef = useRef(context.setLogout);
+  setLogoutRef.current = context.setLogout;
+
+  const setInitializedRef = useRef(context.setInitialized);
+  setInitializedRef.current = context.setInitialized;
+
+  const isLoadingRef = useRef(context.isLoading);
+  isLoadingRef.current = context.isLoading;
+
   const pendingCriticalOperations = useRef(new Set<string>());
 
-  /**
-   * ✅ 개선된 API 호출 래퍼
-   * - 기본적으로는 동시 요청 허용
-   * - 중요한 작업만 선택적으로 중복 방지
-   */
+  // ── withLoading: context 대신 ref 사용 → 안정적 참조 보장 ────────────────────
   const withLoading = useCallback(
     async <T>(
       operation: () => Promise<ApiResponse<T>>,
       defaultErrorMessage: string,
       shouldUpdateAuthState = false,
-      options?: {
-        operationId?: string;
-        preventDuplicate?: boolean;
-      }
+      opts?: { operationId?: string; preventDuplicate?: boolean }
     ): Promise<ApiResponse<T>> => {
-      const { operationId, preventDuplicate = false } = options || {};
+      const { operationId, preventDuplicate = false } = opts || {};
 
-      // ✅ 중복 방지가 필요한 경우에만 체크
       if (preventDuplicate && operationId) {
         if (pendingCriticalOperations.current.has(operationId)) {
           console.warn(`⚠️ Operation "${operationId}" already in progress`);
@@ -310,35 +309,27 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
       }
 
       try {
-        // ✅ 이미 로딩 중이 아닐 때만 setLoading
-        if (!context.isLoading) {
-          context.setLoading();
-        }
-        context.clearError();
+        if (!isLoadingRef.current) setLoadingRef.current();
+        clearErrorRef.current();
 
         const res = await operation();
 
-        // ✅ ApiResponse 타입 체크 및 에러 처리
         if (!res.success) {
           let errorMsg = defaultErrorMessage;
-
-          // GraphQL 에러 메시지 우선 사용
-          if (res.graphQLErrors && res.graphQLErrors.length > 0) {
-            errorMsg = res.graphQLErrors[0].message;
+          if ((res as any).graphQLErrors?.length > 0) {
+            errorMsg = (res as any).graphQLErrors[0].message;
           } else if (res.error?.message) {
             errorMsg = res.error.message;
           }
-
-          context.setError(errorMsg);
+          setErrorRef.current(errorMsg);
         } else if (shouldUpdateAuthState) {
-          // 성공 시 인증 상태 업데이트
           const service = getAuthService();
           const status = await service.checkAuthStatus();
           if (status.isAuthenticated && status.user) {
-            context.setUser(status.user);
+            setUserRef.current(status.user);
             onAuthStateChange?.(true);
           } else {
-            context.setLogout();
+            setLogoutRef.current();
             onAuthStateChange?.(false);
           }
         }
@@ -348,68 +339,52 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         console.error('[withLoading] Operation failed:', err);
         const errorMsg =
           err instanceof Error ? err.message : defaultErrorMessage;
-        context.setError(errorMsg);
-
+        setErrorRef.current(errorMsg);
         return {
           success: false,
-          error: {
-            code: 'OPERATION_FAILED',
-            message: errorMsg,
-          },
+          error: { code: 'OPERATION_FAILED', message: errorMsg },
         } as ApiResponse<T>;
       } finally {
-        // ✅ 중복 방지 플래그 제거
         if (preventDuplicate && operationId) {
           pendingCriticalOperations.current.delete(operationId);
         }
-        context.setInitialized();
+        setInitializedRef.current();
       }
     },
-    [context, onAuthStateChange]
+    [onAuthStateChange] // ← context 제거
   );
 
-  // ============================================================================
-  // 인증 상태 관리
-  // ============================================================================
-
+  // ── checkAuthStatus: context 직접 참조 제거 ──────────────────────────────────
   const checkAuthStatus = useCallback(async () => {
     const service = getAuthService();
-
     try {
-      if (!context.isLoading) {
-        context.setLoading();
-      }
-      context.clearError();
-
+      if (!isLoadingRef.current) setLoadingRef.current();
+      clearErrorRef.current();
       const status = await service.checkAuthStatus();
-
       if (status.isAuthenticated && status.user) {
-        context.setUser(status.user);
+        setUserRef.current(status.user);
       } else {
-        context.setLogout();
+        setLogoutRef.current();
       }
-
       return status;
     } catch (e) {
       console.warn('checkAuthStatus 실패:', e);
-      context.setError('인증 상태를 확인하지 못했습니다.');
-      context.setLogout();
+      setErrorRef.current('인증 상태를 확인하지 못했습니다.');
+      setLogoutRef.current();
       throw e;
     } finally {
-      context.setInitialized();
+      setInitializedRef.current();
     }
-  }, [context]);
+  }, []); // ← 의존성 없음
 
   const getCurrentUser = useCallback(async () => {
     const service = getAuthService();
     const user = await service.getCurrentUser();
-    context.setUser(user);
+    setUserRef.current(user);
     return user;
-  }, [context.setUser]);
+  }, []); // ← 의존성 없음
 
-  // ============================================================================
-  // 로그인/로그아웃 (✅ 중복 방지 필요)
-  // ============================================================================
+  // ── 로그인/로그아웃 ───────────────────────────────────────────────────────────
 
   const loginStep1 = useCallback(
     (input: LoginUser1Input) =>
@@ -417,22 +392,18 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         async () => {
           const service = getAuthService();
           const res = await service.loginStep1(input);
-
           if (res.success && res.data && !res.data.loginStep1.requires2FA) {
             await new Promise((resolve) => setTimeout(resolve, 300));
             const status = await service.checkAuthStatus();
-            if (status.user) context.setUser(status.user);
+            if (status.user) setUserRef.current(status.user);
           }
           return res;
         },
         '1단계 로그인에 실패했습니다',
         false,
-        {
-          operationId: `login-${input.email}`,
-          preventDuplicate: true, // ✅ 중복 로그인 방지
-        }
+        { operationId: `login-${input.email}`, preventDuplicate: true }
       ),
-    [withLoading, context.setUser]
+    [withLoading]
   );
 
   const loginStep2 = useCallback(
@@ -443,18 +414,15 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
           const res = await service.loginStep2(input);
           if (res.success) {
             const status = await service.checkAuthStatus();
-            if (status.user) context.setUser(status.user);
+            if (status.user) setUserRef.current(status.user);
           }
           return res;
         },
         '2단계 로그인에 실패했습니다',
         true,
-        {
-          operationId: 'login-step2',
-          preventDuplicate: true, // ✅ 중복 방지
-        }
+        { operationId: 'login-step2', preventDuplicate: true }
       ),
-    [withLoading, context.setUser]
+    [withLoading]
   );
 
   const logout = useCallback(
@@ -463,12 +431,12 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         const service = getAuthService();
         const res = await service.logout();
         if (res.success) {
-          context.setLogout();
+          setLogoutRef.current();
           onAuthStateChange?.(false);
         }
         return res;
       }, '로그아웃에 실패했습니다'),
-    [withLoading, context.setLogout, onAuthStateChange]
+    [withLoading, onAuthStateChange]
   );
 
   const logoutAll = useCallback(
@@ -477,12 +445,12 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         const service = getAuthService();
         const res = await service.logoutAll();
         if (res.success) {
-          context.setLogout();
+          setLogoutRef.current();
           onAuthStateChange?.(false);
         }
         return res;
       }, '전체 로그아웃에 실패했습니다'),
-    [withLoading, context.setLogout, onAuthStateChange]
+    [withLoading, onAuthStateChange]
   );
 
   const refreshToken = useCallback(
@@ -495,9 +463,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 회원가입/인증 (✅ 중복 방지 필요)
-  // ============================================================================
+  // ── 회원가입/인증 ─────────────────────────────────────────────────────────────
 
   const register = useCallback(
     (input: RegisterUserInput) =>
@@ -507,7 +473,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         false,
         {
           operationId: `register-${input.email}`,
-          preventDuplicate: true, // ✅ 중복 회원가입 방지
+          preventDuplicate: true,
         }
       ),
     [withLoading]
@@ -531,9 +497,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 비밀번호
-  // ============================================================================
+  // ── 비밀번호 ──────────────────────────────────────────────────────────────────
 
   const forgotPassword = useCallback(
     (input: ForgotPasswordInput) =>
@@ -562,9 +526,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 소셜 로그인
-  // ============================================================================
+  // ── 소셜 로그인 ───────────────────────────────────────────────────────────────
 
   const getConnectedSocialProviders = useCallback(
     () =>
@@ -607,9 +569,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 사용자 정보 관리
-  // ============================================================================
+  // ── 사용자 정보 관리 ──────────────────────────────────────────────────────────
 
   const updateUserName = useCallback(
     (input: UpdateNameInput) =>
@@ -673,15 +633,13 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         true,
         {
           operationId: 'delete-account',
-          preventDuplicate: true, // ✅ 계정 삭제는 중복 방지
+          preventDuplicate: true,
         }
       ),
     [withLoading]
   );
 
-  // ============================================================================
-  // 2FA 관리
-  // ============================================================================
+  // ── 2FA 관리 ──────────────────────────────────────────────────────────────────
 
   const generateTwoFactorQR = useCallback(
     () =>
@@ -737,9 +695,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 본인인증
-  // ============================================================================
+  // ── 본인인증 ──────────────────────────────────────────────────────────────────
 
   const getIdentityVerification = useCallback(
     (identityVerificationId: string) =>
@@ -795,9 +751,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 관리자 전용 (✅ 중복 방지 없음 - 동시 작업 허용)
-  // ============================================================================
+  // ── 관리자 전용 ───────────────────────────────────────────────────────────────
 
   const getAllUsers = useCallback(
     (variables: {
@@ -859,7 +813,6 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ✅ 신규: 사용자 다건 삭제
   const deleteUsersByAdmin = useCallback(
     (ids: number[]) =>
       withLoading(
@@ -874,7 +827,6 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
       withLoading(
         () => getAuthService().inviteUser(input),
         '사용자 초대에 실패했습니다'
-        // ✅ preventDuplicate 없음 → 동시 초대 가능
       ),
     [withLoading]
   );
@@ -884,7 +836,6 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
       withLoading(
         () => getAuthService().cancelInvitation(invitationId),
         '초대 취소에 실패했습니다'
-        // ✅ preventDuplicate 없음 → 동시 취소 가능
       ),
     [withLoading]
   );
@@ -894,12 +845,10 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
       withLoading(
         () => getAuthService().resendInvitation(invitationId),
         '초대 재발송에 실패했습니다'
-        // ✅ preventDuplicate 없음 → 동시 재발송 가능
       ),
     [withLoading]
   );
 
-  // ✅ 신규: 초대 단건 삭제
   const deleteInvitation = useCallback(
     (invitationId: number) =>
       withLoading(
@@ -909,7 +858,6 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ✅ 신규: 초대 다건 삭제
   const deleteInvitations = useCallback(
     (ids: number[]) =>
       withLoading(
@@ -937,9 +885,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
-  // ============================================================================
-  // 마스터 키 및 권한 관리
-  // ============================================================================
+  // ── 마스터 키 및 권한 관리 ────────────────────────────────────────────────────
 
   const promoteToSuperAdminWithMasterKey = useCallback(
     (input: AdminMasterKeyInput) =>
@@ -949,7 +895,7 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         false,
         {
           operationId: `promote-super-admin-${input.userId}`,
-          preventDuplicate: true, // ✅ 중복 방지 필요
+          preventDuplicate: true,
         }
       ),
     [withLoading]
@@ -963,13 +909,12 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         false,
         {
           operationId: `change-role-${input.targetUserId}`,
-          preventDuplicate: true, // ✅ 중복 방지 필요
+          preventDuplicate: true,
         }
       ),
     [withLoading]
   );
 
-  // ✅ 신규 추가: 관리자 게스트 유저 생성
   const createGuestUserByAdmin = useCallback(
     (input: { name: string; phoneNumber: string; email?: string }) =>
       withLoading(
@@ -978,15 +923,13 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         false,
         {
           operationId: `create-guest-${input.phoneNumber}`,
-          preventDuplicate: true, // 동일 전화번호 중복 생성 방지
+          preventDuplicate: true,
         }
       ),
     [withLoading]
   );
 
-  // ============================================================================
-  // 유틸리티
-  // ============================================================================
+  // ── 유틸리티 ──────────────────────────────────────────────────────────────────
 
   const clearAuthCache = useCallback(() => {
     const service = getAuthService() as IAuthService & {
@@ -1000,13 +943,13 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
       const service = getAuthService();
       const status = await service.checkAuthStatus();
       if (status.isAuthenticated && status.user) {
-        context.setUser(status.user);
+        setUserRef.current(status.user);
       }
       return true;
     } catch {
       return false;
     }
-  }, [context.setUser]);
+  }, []); // ← 의존성 없음
 
   return {
     isLoading: context.isLoading,
@@ -1017,41 +960,22 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
 
     checkAuthStatus,
     getCurrentUser,
-
     loginStep1,
     loginStep2,
     refreshToken,
     logout,
     logoutAll,
-
-    getAllUsers,
-    getUserById,
-    getUsersStats,
-    getInvitations,
-    updateUserByAdmin,
-    deleteUserByAdmin,
-    deleteUsersByAdmin, // ✅ 신규
-    inviteUser,
-    cancelInvitation,
-    resendInvitation,
-    deleteInvitation, // ✅ 신규
-    deleteInvitations, // ✅ 신규
-    verifyInvitationToken,
-    acceptInvitation,
-
     register,
     verifyActivationCode,
     resendActivationCode,
     forgotPassword,
     resetPassword,
     changePassword,
-
     getConnectedSocialProviders,
     getSocialLoginUrl,
     verifySocialEmail,
     resendSocialActivationCode,
     unlinkSocialAccount,
-
     updateUserName,
     requestEmailChange,
     verifyEmailChange,
@@ -1059,25 +983,35 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     updateBusiness,
     deleteAvatar,
     deleteAccount,
-
     generateTwoFactorQR,
     enableTwoFactor,
     disableTwoFactor,
     requestEmergencyEmailCode,
     disableTwoFactorDuringLogin,
     getTwoFactorStatus,
-
     getIdentityVerification,
     getIdentityVerificationConfig,
     generateVerificationRequest,
     requestIdentityVerification,
     verifyIdentityVerification,
     validateBusinessNumber,
-
+    getAllUsers,
+    getUserById,
+    getUsersStats,
+    getInvitations,
+    updateUserByAdmin,
+    deleteUserByAdmin,
+    deleteUsersByAdmin,
+    inviteUser,
+    cancelInvitation,
+    resendInvitation,
+    deleteInvitation,
+    deleteInvitations,
+    verifyInvitationToken,
+    acceptInvitation,
     promoteToSuperAdminWithMasterKey,
     changeUserRole,
     createGuestUserByAdmin,
-
     clearError: context.clearError,
     clearAuthCache,
     checkServiceStatus,

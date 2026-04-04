@@ -20,11 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DataTablePagination } from '@starcoex-frontend/common';
 import { BrandToolbar } from './brand-toolbar';
 import { brandColumns } from './brand-columns';
 import { BrandMutateDrawer } from './brand-mutate-drawer';
 import type { Brand } from '@starcoex-frontend/stores';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-pagination';
 
 export function BrandTable({ data }: { data: Brand[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -109,7 +109,6 @@ export function BrandTable({ data }: { data: Brand[] }) {
       </div>
 
       <DataTablePagination table={table} />
-
       <BrandMutateDrawer open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );

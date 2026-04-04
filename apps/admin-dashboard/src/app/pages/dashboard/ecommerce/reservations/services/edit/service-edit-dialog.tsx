@@ -32,6 +32,10 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useReservations } from '@starcoex-frontend/reservations';
 import { useAuth } from '@starcoex-frontend/auth';
+import type {
+  ConfirmationType,
+  ReservableServiceType,
+} from '@starcoex-frontend/reservations';
 
 const SERVICE_TYPES = [
   { value: 'CAR_WASH', label: '세차' },
@@ -53,9 +57,22 @@ const CONFIRMATION_TYPES = [
 
 const schema = z.object({
   name: z.string().min(1, '서비스 이름을 입력하세요.'),
-  type: z.string().min(1),
+  type: z.enum([
+    'CAR_WASH',
+    'CAR_CARE',
+    'CAR_REPAIR',
+    'OIL_CHANGE',
+    'FUEL',
+    'EV_CHARGING',
+    'TABLE',
+    'ROOM',
+    'PICKUP',
+    'DELIVERY',
+    'CONSULTATION',
+    'EVENT',
+  ]),
   description: z.string().optional(),
-  confirmationType: z.string().min(1),
+  confirmationType: z.enum(['AUTO', 'MANUAL']),
   slotDuration: z.number().min(10),
   maxAdvanceDays: z.number().min(1),
   minAdvanceHours: z.number().min(0),
@@ -142,9 +159,10 @@ export function ServiceEditDialog({
     if (service) {
       form.reset({
         name: service.name,
-        type: service.type,
+        type: (service.type as ReservableServiceType) ?? 'CAR_WASH',
         description: service.description ?? '',
-        confirmationType: service.confirmationType,
+        confirmationType:
+          (service.confirmationType as ConfirmationType) ?? 'AUTO',
         slotDuration: service.slotDuration,
         maxAdvanceDays: service.maxAdvanceDays,
         minAdvanceHours: service.minAdvanceHours,

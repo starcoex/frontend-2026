@@ -5,7 +5,7 @@ import type { Brand } from '@starcoex-frontend/stores';
 import { BrandRowActions } from './brand-row-actions';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 
 export const brandColumns: ColumnDef<Brand>[] = [
   {

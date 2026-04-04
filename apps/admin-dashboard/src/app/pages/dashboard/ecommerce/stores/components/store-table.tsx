@@ -20,10 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { DataTablePagination } from '@starcoex-frontend/common';
 import { StoreToolbar } from './store-toolbar';
 import { storeColumns } from './store-columns';
 import type { Store } from '@starcoex-frontend/stores';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-pagination';
 
 export function StoreTable({ data }: { data: Store[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);

@@ -13,6 +13,9 @@ export const CATEGORY_ERROR_INFO_FIELDS = gql`
 export const CATEGORY_FIELDS = gql`
   fragment CategoryFields on Category {
     id
+    deletedAt
+    createdAt
+    updatedAt
     name
     slug
     description
@@ -21,9 +24,6 @@ export const CATEGORY_FIELDS = gql`
     sortOrder
     productCount
     parentId
-    createdAt
-    updatedAt
-    deletedAt
   }
 `;
 
@@ -104,10 +104,10 @@ export const LIST_CATEGORIES = gql`
 `;
 
 export const GET_CATEGORY_TREE = gql`
-  ${CATEGORY_WITH_CHILDREN_FIELDS}
-  query GetCategoryTree($rootId: Int, $maxDepth: Int) {
+  ${CATEGORY_FIELDS}
+  query GetCategoryTree($rootId: Int, $maxDepth: Int! = 3) {
     findCategoryTree(rootId: $rootId, maxDepth: $maxDepth) {
-      ...CategoryWithChildrenFields
+      ...CategoryFields
     }
   }
 `;

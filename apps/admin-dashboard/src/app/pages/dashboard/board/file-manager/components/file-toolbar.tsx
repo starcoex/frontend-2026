@@ -3,8 +3,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { FileWithUrl } from '@starcoex-frontend/graphql';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/board/file-manager/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/board/file-manager/components/data-table-view-options';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+} from '@starcoex-frontend/common';
 
 const FILE_TYPE_OPTIONS = [
   { label: '이미지', value: 'image' },

@@ -15,7 +15,7 @@ import type { ReservationCreateFormValues } from './reservation-create-schema';
 import {
   CustomerSearch,
   type SelectedCustomer,
-} from '@/app/pages/dashboard/ecommerce/orders/components/customer-search';
+} from '@starcoex-frontend/common';
 
 interface Step3Props {
   form: UseFormReturn<ReservationCreateFormValues>;

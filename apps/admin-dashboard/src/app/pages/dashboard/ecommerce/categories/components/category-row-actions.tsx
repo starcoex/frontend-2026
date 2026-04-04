@@ -22,12 +22,13 @@ interface Props {
 
 export function CategoryRowActions({ row }: Props) {
   const category = row.original;
-  const { deleteCategory } = useCategories();
+  const { deleteCategory, fetchCategoryTree } = useCategories();
   const [open, setOpen] = useDialogState<'edit' | 'detail'>(null);
 
   const handleDelete = async () => {
     if (window.confirm(`카테고리 "${category.name}"을(를) 삭제하시겠습니까?`)) {
       await deleteCategory(category.id);
+      await fetchCategoryTree();
     }
   };
 

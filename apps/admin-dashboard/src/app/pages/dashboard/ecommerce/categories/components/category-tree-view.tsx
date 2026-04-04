@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -24,13 +24,46 @@ interface Props {
   categories: Category[];
 }
 
-// 검색어/상태 필터에 매칭되는 카테고리 id 집합 반환 (조상 포함)
+// flat 배열 → id 기준 트리 재조립
+function buildTree(flat: Category[]): Category[] {
+  const map = new Map<number, Category>();
+  flat.forEach((c) => map.set(c.id, { ...c, children: [] }));
+
+  const roots: Category[] = [];
+  map.forEach((node) => {
+    if (node.parentId === null || node.parentId === undefined) {
+      roots.push(node);
+    } else {
+      const parent = map.get(node.parentId);
+      if (parent) {
+        (parent.children ??= []).push(node);
+      } else {
+        // 부모가 flat에 없으면 root로 fallback
+        roots.push(node);
+      }
+    }
+  });
+
+  // sortOrder 기준 정렬 (재귀)
+  const sortNodes = (nodes: Category[]): Category[] =>
+    nodes
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      .map((n) => ({ ...n, children: sortNodes(n.children ?? []) }));
+
+  return sortNodes(roots);
+}
+
+// flat 배열 전체에서 id로 찾기
+function findFlatById(flat: Category[], id: number): Category | null {
+  return flat.find((c) => c.id === id) ?? null;
+}
+
+// 검색어/상태 필터에 매칭되는 id 집합 반환 (트리 기준, 조상 포함)
 function getVisibleIds(
-  categories: Category[],
+  tree: Category[],
   search: string,
   statusFilter: 'all' | 'active' | 'inactive'
 ): Set<number> | null {
-  // 필터 없으면 전체 표시
   if (search === '' && statusFilter === 'all') return null;
 
   const matched = new Set<number>();
@@ -44,7 +77,6 @@ function getVisibleIds(
     return matchesSearch && matchesStatus;
   };
 
-  // 재귀적으로 매칭된 노드와 조상 수집
   const collect = (nodes: Category[], ancestors: number[]): boolean => {
     let anyMatch = false;
     for (const node of nodes) {
@@ -58,25 +90,32 @@ function getVisibleIds(
         anyMatch = true;
         matched.add(node.id);
         ancestors.forEach((id) => matched.add(id));
-      }
-      if (childMatch) {
         childAncestors.forEach((id) => matched.add(id));
       }
     }
     return anyMatch;
   };
 
-  collect(categories, []);
+  collect(tree, []);
   return matched;
 }
 
+// 트리에서 전체 노드 수 카운트 (재귀)
+function countAllNodes(nodes: Category[]): number {
+  return nodes.reduce((acc, n) => acc + 1 + countAllNodes(n.children ?? []), 0);
+}
+
 export function CategoryTreeView({ categories }: Props) {
-  const { moveCategory, updateCategory } = useCategories();
+  const { updateCategory, moveCategory } = useCategories();
   const [activeId, setActiveId] = useState<number | null>(null);
   const [overId, setOverId] = useState<number | null>(null);
-  const [localCategories, setLocalCategories] = useState(categories);
+  const [localFlat, setLocalFlat] = useState<Category[]>(categories);
 
-  // 필터 상태
+  // categories prop이 변경될 때 localFlat 동기화
+  useEffect(() => {
+    setLocalFlat(categories);
+  }, [categories]);
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'inactive'
@@ -86,27 +125,27 @@ export function CategoryTreeView({ categories }: Props) {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  const activeCategory = activeId
-    ? findCategoryById(localCategories, activeId)
-    : null;
+  // flat → tree 재조립 (렌더링용)
+  const treeCategories = useMemo(() => buildTree(localFlat), [localFlat]);
+
+  const activeCategory = activeId ? findFlatById(localFlat, activeId) : null;
 
   const visibleIds = useMemo(
-    () => getVisibleIds(localCategories, search, statusFilter),
-    [localCategories, search, statusFilter]
+    () => getVisibleIds(treeCategories, search, statusFilter),
+    [treeCategories, search, statusFilter]
   );
 
-  const totalRoot = localCategories.filter(
+  // 카운트: 트리 기준
+  const rootCategories = treeCategories.filter(
     (c) => c.parentId === null || c.parentId === undefined
-  ).length;
-  const totalSub = localCategories.length - totalRoot;
+  );
+  const totalRoot = rootCategories.length;
+  const totalSub = countAllNodes(rootCategories) - totalRoot;
 
-  const filteredList = visibleIds
-    ? localCategories.filter((c) => visibleIds.has(c.id))
-    : localCategories;
-  const filteredRoot = filteredList.filter(
-    (c) => c.parentId === null || c.parentId === undefined
-  ).length;
-  const filteredSub = filteredList.length - filteredRoot;
+  const filteredRoot = visibleIds
+    ? rootCategories.filter((c) => visibleIds.has(c.id)).length
+    : totalRoot;
+  const filteredSub = visibleIds ? visibleIds.size - filteredRoot : totalSub;
 
   const isFiltering = search !== '' || statusFilter !== 'all';
 
@@ -127,58 +166,47 @@ export function CategoryTreeView({ categories }: Props) {
     const draggedId = Number(active.id);
     const targetId = Number(over.id);
 
-    const draggedCategory = findCategoryById(localCategories, draggedId);
-    const targetCategory = findCategoryById(localCategories, targetId);
+    const dragged = findFlatById(localFlat, draggedId);
+    const target = findFlatById(localFlat, targetId);
 
-    if (!draggedCategory || !targetCategory) return;
+    if (!dragged || !target) return;
 
-    const isSameLevel = draggedCategory.parentId === targetCategory.parentId;
+    const isSameLevel = dragged.parentId === target.parentId;
 
     if (isSameLevel) {
-      const siblings = localCategories.filter(
-        (c) => c.parentId === draggedCategory.parentId
-      );
+      const siblings = localFlat
+        .filter((c) => c.parentId === dragged.parentId)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
       const oldIndex = siblings.findIndex((c) => c.id === draggedId);
       const newIndex = siblings.findIndex((c) => c.id === targetId);
-
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const reordered = arrayMove(siblings, oldIndex, newIndex);
+      const reordered = arrayMove(siblings, oldIndex, newIndex).map((c, i) => ({
+        ...c,
+        sortOrder: i,
+      }));
 
-      setLocalCategories((prev) => {
-        const others = prev.filter(
-          (c) => c.parentId !== draggedCategory.parentId
-        );
-        return [
-          ...others,
-          ...reordered.map((c, i) => ({ ...c, sortOrder: i })),
-        ];
+      setLocalFlat((prev) => {
+        const others = prev.filter((c) => c.parentId !== dragged.parentId);
+        return [...others, ...reordered];
       });
 
       await Promise.all(
         reordered
-          .map((c, i) => {
-            if (c.sortOrder !== i) {
-              return updateCategory({ id: c.id, sortOrder: i });
-            }
-            return null;
-          })
-          .filter((p): p is ReturnType<typeof updateCategory> => p !== null)
+          .filter((c, i) => siblings[i]?.sortOrder !== i)
+          .map((c) => updateCategory({ id: c.id, sortOrder: c.sortOrder }))
       );
     } else {
-      await moveCategory(draggedId, targetCategory.parentId ?? undefined);
+      await moveCategory(draggedId, target.parentId ?? undefined);
     }
   };
 
   const handleDragCancel = () => {
     setActiveId(null);
     setOverId(null);
-    setLocalCategories(categories);
+    setLocalFlat(categories); // flattenTree 제거
   };
-
-  const rootCategories = localCategories.filter(
-    (c) => c.parentId === null || c.parentId === undefined
-  );
 
   return (
     <>
@@ -204,21 +232,28 @@ export function CategoryTreeView({ categories }: Props) {
       >
         <div className="rounded-md border">
           <SortableContext
-            items={localCategories.map((c) => c.id)}
+            items={localFlat.map((c) => c.id)}
             strategy={verticalListSortingStrategy}
           >
             <ul className="divide-y">
-              {rootCategories
-                .filter((c) => !visibleIds || visibleIds.has(c.id))
-                .map((category) => (
-                  <CategoryTreeItem
-                    key={category.id}
-                    category={category}
-                    depth={0}
-                    overId={isFiltering ? null : overId}
-                    visibleIds={visibleIds}
-                  />
-                ))}
+              {rootCategories.filter((c) => !visibleIds || visibleIds.has(c.id))
+                .length === 0 ? (
+                <li className="text-muted-foreground h-24 text-center text-sm flex items-center justify-center">
+                  계층구조가 없습니다.
+                </li>
+              ) : (
+                rootCategories
+                  .filter((c) => !visibleIds || visibleIds.has(c.id))
+                  .map((category) => (
+                    <CategoryTreeItem
+                      key={category.id}
+                      category={category}
+                      depth={0}
+                      overId={isFiltering ? null : overId}
+                      visibleIds={visibleIds}
+                    />
+                  ))
+              )}
             </ul>
           </SortableContext>
         </div>
@@ -236,15 +271,4 @@ export function CategoryTreeView({ categories }: Props) {
       </DndContext>
     </>
   );
-}
-
-function findCategoryById(categories: Category[], id: number): Category | null {
-  for (const category of categories) {
-    if (category.id === id) return category;
-    if (category.children?.length) {
-      const found = findCategoryById(category.children, id);
-      if (found) return found;
-    }
-  }
-  return null;
 }

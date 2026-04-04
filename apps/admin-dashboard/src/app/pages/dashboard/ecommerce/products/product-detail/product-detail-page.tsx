@@ -30,16 +30,21 @@ import { useProducts } from '@starcoex-frontend/products';
 import { InventoryTable } from '@/app/pages/dashboard/ecommerce/products/inventory/components/inventory-table';
 import type { InventoryRow } from '@/app/pages/dashboard/ecommerce/products/inventory/components/inventory-columns';
 import Barcode from 'react-barcode';
-import { INVENTORY_ROUTES } from '@/app/constants/inventory-routes';
+import { useInventory } from '@starcoex-frontend/inventory';
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentProduct, isLoading, error, fetchProductById } = useProducts();
+  const { inventories, fetchInventoriesByProduct } = useInventory(); // ← 추가
 
   useEffect(() => {
-    if (id) fetchProductById(parseInt(id));
-  }, [id, fetchProductById]);
+    if (id) {
+      const productId = parseInt(id);
+      fetchProductById(productId);
+      fetchInventoriesByProduct(productId); // ← StoreInventory 조회
+    }
+  }, [id, fetchProductById, fetchInventoriesByProduct]);
 
   if (isLoading) {
     return (
@@ -70,39 +75,28 @@ export default function ProductDetailPage() {
   const productName = currentProduct.name;
   const productDescription = currentProduct.description || '제품 상세 정보';
   const productImage =
-    currentProduct.imageUrls[0] || '/images/og-stores-detail.jpg';
+    currentProduct.imageUrls[0] || '/images/og-cart-detail.jpg';
 
-  // 카테고리/브랜드명
-  const categoryName =
-    currentProduct.category &&
-    typeof currentProduct.category === 'object' &&
-    'name' in currentProduct.category
-      ? (currentProduct.category as { name: string }).name
-      : `카테고리 #${currentProduct.categoryId}`;
+  // 카테고리/브랜드명 — Federation stub은 id only, name은 없음
+  const categoryName = `카테고리 #${currentProduct.categoryId}`;
+  const brandName = currentProduct.brandId
+    ? `브랜드 #${currentProduct.brandId}`
+    : null;
 
-  const brandName =
-    currentProduct.brand &&
-    typeof currentProduct.brand === 'object' &&
-    'name' in currentProduct.brand
-      ? (currentProduct.brand as { name: string }).name
-      : null;
+  // 재고 행 변환: StoreInventory 기준
+  const inventoryRows: InventoryRow[] = inventories.map((inv) => ({
+    ...inv,
+    product: {
+      id: currentProduct.id,
+      name: currentProduct.name,
+      sku: currentProduct.sku,
+      imageUrls: currentProduct.imageUrls,
+    },
+  }));
 
-  // 재고 행 변환
-  const inventoryRows: InventoryRow[] = currentProduct.inventories.map(
-    (inv) => ({
-      ...inv,
-      product: {
-        id: currentProduct.id,
-        name: currentProduct.name,
-        sku: currentProduct.sku,
-        imageUrls: currentProduct.imageUrls,
-      },
-    })
-  );
-
-  // 총 재고 (inventories 합산)
-  const totalInventoryStock = currentProduct.inventories.reduce(
-    (sum, inv) => sum + inv.stock,
+  // 총 재고: StoreInventory.currentStock 합산
+  const totalInventoryStock = inventories.reduce(
+    (sum, inv) => sum + inv.currentStock,
     0
   );
 
@@ -370,9 +364,7 @@ export default function ProductDetailPage() {
                     </CardTitle>
                     <CardAction>
                       <Button variant="outline" size="sm" asChild>
-                        <Link to={INVENTORY_ROUTES.LIST}>
-                          재고 관리로 이동 →
-                        </Link>
+                        <Link to="/admin/inventory">재고 관리로 이동 →</Link>
                       </Button>
                     </CardAction>
                   </CardHeader>
@@ -380,6 +372,8 @@ export default function ProductDetailPage() {
                     <InventoryTable
                       data={inventoryRows}
                       defaultProductId={currentProduct.id}
+                      defaultProductName={currentProduct.name} // ← 추가
+                      basePrice={currentProduct.basePrice} // ← 추가
                     />
                   </CardContent>
                 </Card>

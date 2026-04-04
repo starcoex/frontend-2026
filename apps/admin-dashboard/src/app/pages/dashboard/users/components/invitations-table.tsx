@@ -23,7 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { InvitationsToolbar } from '@/app/pages/dashboard/users/components/invitations-tool-bar';
-import { DataTablePagination } from '@/app/pages/dashboard/users/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface Props {
   columns: ColumnDef<UserInvitation>[];

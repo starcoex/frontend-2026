@@ -23,7 +23,7 @@ import {
 import type { Product } from '@starcoex-frontend/products';
 import { productColumns } from './product-columns';
 import { ProductsTableToolbar } from './product-table-toolbar';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/products/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface ProductsTableProps {
   data: Product[];

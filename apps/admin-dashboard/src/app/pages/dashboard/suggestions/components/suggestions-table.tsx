@@ -15,7 +15,7 @@ import {
 } from '@tanstack/react-table';
 import type { Suggestion } from '@starcoex-frontend/suggestions';
 import { SuggestionsTableToolbar } from './suggestions-table-toolbar';
-import { DataTablePagination } from './data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 import {
   Table,
   TableBody,

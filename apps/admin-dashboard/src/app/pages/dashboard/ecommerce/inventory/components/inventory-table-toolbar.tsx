@@ -3,9 +3,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { StoreInventory, useInventory } from '@starcoex-frontend/inventory';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/products/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/products/components/data-table-view-options';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  BulkDeleteToolbar,
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+} from '@starcoex-frontend/common';
 
 const STOCK_STATUS_OPTIONS = [
   { value: 'normal', label: '정상' },

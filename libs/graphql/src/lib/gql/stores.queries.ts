@@ -5,9 +5,6 @@ import { ERROR_INFO_FIELDS } from './auth.queries.js';
 // Fragments
 // ============================================================================
 
-/**
- * Brand Fragment (최소 필드, stores 제외)
- */
 export const BRAND_FIELDS = gql`
   fragment BrandFields on Brand {
     id
@@ -23,12 +20,29 @@ export const BRAND_FIELDS = gql`
     isActive
     createdById
     updatedById
+    businessTypes {
+      brandId
+      businessTypeId
+      businessType {
+        id
+        code
+        name
+        description
+        isActive
+        sortOrder
+        allowedServices {
+          id
+          code
+          name
+          description
+          isActive
+          sortOrder
+        }
+      }
+    }
   }
 `;
 
-/**
- * Store Fragment (Address Service 연동)
- */
 export const STORE_FIELDS = gql`
   ${BRAND_FIELDS}
   fragment StoreFields on Store {
@@ -39,6 +53,7 @@ export const STORE_FIELDS = gql`
     name
     slug
     brandId
+    businessTypeId
     addressId
     address
     addressSnapshot
@@ -48,7 +63,6 @@ export const STORE_FIELDS = gql`
     phone
     email
     businessHours
-    services
     deliverySettings
     pickupEnabled
     isActive
@@ -60,12 +74,52 @@ export const STORE_FIELDS = gql`
     brand {
       ...BrandFields
     }
+    businessType {
+      id
+      code
+      name
+      description
+      isActive
+      sortOrder
+      allowedServices {
+        id
+        code
+        name
+        description
+        isActive
+        sortOrder
+      }
+    }
+    storeServices {
+      id
+      deletedAt
+      createdAt
+      updatedAt
+      storeId
+      serviceTypeId
+      isActive
+      isAvailable
+      settings
+      serviceType {
+        id
+        code
+        name
+        description
+        isActive
+        sortOrder
+      }
+    }
+    storeManagers {
+      id
+      storeId
+      userId
+      role
+      isActive
+      assignedAt
+    }
   }
 `;
 
-/**
- * 현재 통계 Fragment
- */
 export const CURRENT_STATS_FIELDS = gql`
   fragment CurrentStatsFields on CurrentStats {
     totalStores
@@ -75,9 +129,6 @@ export const CURRENT_STATS_FIELDS = gql`
   }
 `;
 
-/**
- * 이전 통계 Fragment
- */
 export const PREVIOUS_STATS_FIELDS = gql`
   fragment PreviousStatsFields on PreviousStats {
     totalStores
@@ -87,9 +138,6 @@ export const PREVIOUS_STATS_FIELDS = gql`
   }
 `;
 
-/**
- * 증가율 Fragment
- */
 export const GROWTH_RATE_FIELDS = gql`
   fragment GrowthRateFields on GrowthRate {
     totalStores
@@ -99,9 +147,6 @@ export const GROWTH_RATE_FIELDS = gql`
   }
 `;
 
-/**
- * 매장 통계 Fragment
- */
 export const STORE_STATS_FIELDS = gql`
   ${CURRENT_STATS_FIELDS}
   ${PREVIOUS_STATS_FIELDS}
@@ -121,9 +166,17 @@ export const STORE_STATS_FIELDS = gql`
   }
 `;
 
-/**
- * CreateStoreOutput Fragment
- */
+export const ADD_STORE_SERVICE_OUTPUT_FIELDS = gql`
+  ${ERROR_INFO_FIELDS}
+  fragment AddStoreServiceOutputFields on AddStoreServiceOutput {
+    success
+    message
+    error {
+      ...ErrorInfoFields
+    }
+  }
+`;
+
 export const CREATE_STORE_OUTPUT_FIELDS = gql`
   ${ERROR_INFO_FIELDS}
   ${STORE_FIELDS}
@@ -140,9 +193,6 @@ export const CREATE_STORE_OUTPUT_FIELDS = gql`
   }
 `;
 
-/**
- * UpdateStoreOutput Fragment
- */
 export const UPDATE_STORE_OUTPUT_FIELDS = gql`
   ${ERROR_INFO_FIELDS}
   ${STORE_FIELDS}
@@ -159,9 +209,6 @@ export const UPDATE_STORE_OUTPUT_FIELDS = gql`
   }
 `;
 
-/**
- * DeleteStoreOutput Fragment
- */
 export const DELETE_STORE_OUTPUT_FIELDS = gql`
   ${ERROR_INFO_FIELDS}
   fragment DeleteStoreOutputFields on DeleteStoreOutput {
@@ -174,9 +221,6 @@ export const DELETE_STORE_OUTPUT_FIELDS = gql`
   }
 `;
 
-/**
- * CreateBrandOutput Fragment
- */
 export const CREATE_BRAND_OUTPUT_FIELDS = gql`
   ${ERROR_INFO_FIELDS}
   ${BRAND_FIELDS}
@@ -193,9 +237,6 @@ export const CREATE_BRAND_OUTPUT_FIELDS = gql`
   }
 `;
 
-/**
- * UpdateBrandOutput Fragment
- */
 export const UPDATE_BRAND_OUTPUT_FIELDS = gql`
   ${ERROR_INFO_FIELDS}
   ${BRAND_FIELDS}
@@ -212,9 +253,6 @@ export const UPDATE_BRAND_OUTPUT_FIELDS = gql`
   }
 `;
 
-/**
- * DeleteBrandOutput Fragment
- */
 export const DELETE_BRAND_OUTPUT_FIELDS = gql`
   ${ERROR_INFO_FIELDS}
   fragment DeleteBrandOutputFields on DeleteBrandOutput {
@@ -231,9 +269,6 @@ export const DELETE_BRAND_OUTPUT_FIELDS = gql`
 // Queries
 // ============================================================================
 
-/**
- * 매장 통계 조회 (증가율 포함)
- */
 export const GET_STORE_STATISTICS = gql`
   ${STORE_STATS_FIELDS}
   query GetStoreStatistics {
@@ -243,9 +278,6 @@ export const GET_STORE_STATISTICS = gql`
   }
 `;
 
-/**
- * 전체 매장 목록 조회
- */
 export const LIST_STORES = gql`
   ${STORE_FIELDS}
   query ListStores {
@@ -255,9 +287,6 @@ export const LIST_STORES = gql`
   }
 `;
 
-/**
- * ID로 특정 매장 조회
- */
 export const GET_STORE_BY_ID = gql`
   ${STORE_FIELDS}
   query GetStoreById($id: Int!) {
@@ -267,9 +296,6 @@ export const GET_STORE_BY_ID = gql`
   }
 `;
 
-/**
- * 전체 브랜드 목록 조회
- */
 export const LIST_BRANDS = gql`
   ${BRAND_FIELDS}
   query ListBrands {
@@ -279,9 +305,6 @@ export const LIST_BRANDS = gql`
   }
 `;
 
-/**
- * ID로 특정 브랜드 조회
- */
 export const GET_BRAND_BY_ID = gql`
   ${BRAND_FIELDS}
   query GetBrandById($id: Int!) {
@@ -291,13 +314,46 @@ export const GET_BRAND_BY_ID = gql`
   }
 `;
 
+// ✅ 신규 — 서비스 타입 마스터 목록
+export const LIST_SERVICE_TYPES = gql`
+  query ListServiceTypes {
+    listServiceTypes {
+      id
+      code
+      name
+      description
+      isActive
+      sortOrder
+    }
+  }
+`;
+
+// ✅ 신규 — 비즈니스 타입 마스터 목록
+export const LIST_BUSINESS_TYPES = gql`
+  query ListBusinessTypes {
+    listBusinessTypes {
+      id
+      code
+      name
+      description
+      isActive
+      sortOrder
+      allowedServices {
+        id
+        code
+        name
+        description
+        isActive
+        sortOrder
+      }
+    }
+  }
+`;
+
 // ============================================================================
 // Mutations
 // ============================================================================
 
-/**
- * 매장 생성 (Address Service 연동)
- */
 export const CREATE_STORE = gql`
   ${CREATE_STORE_OUTPUT_FIELDS}
   mutation CreateStore($input: CreateStoreInput!) {
@@ -307,9 +363,6 @@ export const CREATE_STORE = gql`
   }
 `;
 
-/**
- * 매장 정보 수정
- */
 export const UPDATE_STORE = gql`
   ${UPDATE_STORE_OUTPUT_FIELDS}
   mutation UpdateStore($input: UpdateStoreInput!) {
@@ -319,9 +372,6 @@ export const UPDATE_STORE = gql`
   }
 `;
 
-/**
- * 매장 삭제 (소프트 삭제)
- */
 export const DELETE_STORE = gql`
   ${DELETE_STORE_OUTPUT_FIELDS}
   mutation DeleteStore($input: DeleteStoreInput!) {
@@ -337,9 +387,44 @@ export const DELETE_STORES = gql`
   }
 `;
 
-/**
- * 브랜드 생성
- */
+// ✅ 신규 — StoreService 관리
+export const ADD_STORE_SERVICE = gql`
+  ${ADD_STORE_SERVICE_OUTPUT_FIELDS}
+  mutation AddStoreService($input: AddStoreServiceInput!) {
+    addStoreService(input: $input) {
+      ...AddStoreServiceOutputFields
+    }
+  }
+`;
+
+export const REMOVE_STORE_SERVICE = gql`
+  ${ADD_STORE_SERVICE_OUTPUT_FIELDS}
+  mutation RemoveStoreService($input: RemoveStoreServiceInput!) {
+    removeStoreService(input: $input) {
+      ...AddStoreServiceOutputFields
+    }
+  }
+`;
+
+// ✅ 신규 — StoreManager 관리
+export const ADD_STORE_MANAGER = gql`
+  ${ADD_STORE_SERVICE_OUTPUT_FIELDS}
+  mutation AddStoreManager($input: AddStoreManagerInput!) {
+    addStoreManager(input: $input) {
+      ...AddStoreServiceOutputFields
+    }
+  }
+`;
+
+export const REMOVE_STORE_MANAGER = gql`
+  ${ADD_STORE_SERVICE_OUTPUT_FIELDS}
+  mutation RemoveStoreManager($input: RemoveStoreManagerInput!) {
+    removeStoreManager(input: $input) {
+      ...AddStoreServiceOutputFields
+    }
+  }
+`;
+
 export const CREATE_BRAND = gql`
   ${CREATE_BRAND_OUTPUT_FIELDS}
   mutation CreateBrand($input: CreateBrandInput!) {
@@ -349,9 +434,6 @@ export const CREATE_BRAND = gql`
   }
 `;
 
-/**
- * 브랜드 정보 수정
- */
 export const UPDATE_BRAND = gql`
   ${UPDATE_BRAND_OUTPUT_FIELDS}
   mutation UpdateBrand($input: UpdateBrandInput!) {
@@ -361,9 +443,6 @@ export const UPDATE_BRAND = gql`
   }
 `;
 
-/**
- * 브랜드 삭제 (소프트 삭제)
- */
 export const DELETE_BRAND = gql`
   ${DELETE_BRAND_OUTPUT_FIELDS}
   mutation DeleteBrand($input: DeleteBrandInput!) {
@@ -376,5 +455,119 @@ export const DELETE_BRAND = gql`
 export const DELETE_BRANDS = gql`
   mutation DeleteBrands($ids: [Int!]!) {
     deleteBrands(ids: $ids)
+  }
+`;
+
+// ============================================================================
+// BusinessType / ServiceType Output Fragments
+// ============================================================================
+
+export const BUSINESS_TYPE_FIELDS = gql`
+  fragment BusinessTypeFields on BusinessType {
+    id
+    code
+    name
+    description
+    isActive
+    sortOrder
+    allowedServices {
+      id
+      code
+      name
+      description
+      isActive
+      sortOrder
+    }
+  }
+`;
+
+export const SERVICE_TYPE_FIELDS = gql`
+  fragment ServiceTypeFields on ServiceType {
+    id
+    code
+    name
+    description
+    isActive
+    sortOrder
+  }
+`;
+
+export const CREATE_BUSINESS_TYPE_OUTPUT_FIELDS = gql`
+  fragment CreateBusinessTypeOutputFields on CreateBusinessTypeOutput {
+    success
+    businessType {
+      ...BusinessTypeFields
+    }
+  }
+  ${BUSINESS_TYPE_FIELDS}
+`;
+
+export const UPDATE_BUSINESS_TYPE_OUTPUT_FIELDS = gql`
+  fragment UpdateBusinessTypeOutputFields on UpdateBusinessTypeOutput {
+    success
+    businessType {
+      ...BusinessTypeFields
+    }
+  }
+  ${BUSINESS_TYPE_FIELDS}
+`;
+
+export const CREATE_SERVICE_TYPE_OUTPUT_FIELDS = gql`
+  fragment CreateServiceTypeOutputFields on CreateServiceTypeOutput {
+    success
+    serviceType {
+      ...ServiceTypeFields
+    }
+  }
+  ${SERVICE_TYPE_FIELDS}
+`;
+
+export const UPDATE_SERVICE_TYPE_OUTPUT_FIELDS = gql`
+  fragment UpdateServiceTypeOutputFields on UpdateServiceTypeOutput {
+    success
+    serviceType {
+      ...ServiceTypeFields
+    }
+  }
+  ${SERVICE_TYPE_FIELDS}
+`;
+
+// ============================================================================
+// BusinessType / ServiceType Mutations (슈퍼 어드민 전용)
+// ============================================================================
+
+export const CREATE_BUSINESS_TYPE = gql`
+  ${CREATE_BUSINESS_TYPE_OUTPUT_FIELDS}
+  mutation CreateBusinessType($input: CreateBusinessTypeInput!) {
+    createBusinessType(input: $input) {
+      ...CreateBusinessTypeOutputFields
+    }
+  }
+`;
+
+export const UPDATE_BUSINESS_TYPE = gql`
+  ${UPDATE_BUSINESS_TYPE_OUTPUT_FIELDS}
+  mutation UpdateBusinessType($input: UpdateBusinessTypeInput!) {
+    updateBusinessType(input: $input) {
+      ...UpdateBusinessTypeOutputFields
+    }
+  }
+`;
+
+export const CREATE_SERVICE_TYPE = gql`
+  ${CREATE_SERVICE_TYPE_OUTPUT_FIELDS}
+  mutation CreateServiceType($input: CreateServiceTypeInput!) {
+    createServiceType(input: $input) {
+      ...CreateServiceTypeOutputFields
+    }
+  }
+`;
+
+export const UPDATE_SERVICE_TYPE = gql`
+  ${UPDATE_SERVICE_TYPE_OUTPUT_FIELDS}
+  mutation UpdateServiceType($input: UpdateServiceTypeInput!) {
+    updateServiceType(input: $input) {
+      ...UpdateServiceTypeOutputFields
+    }
   }
 `;

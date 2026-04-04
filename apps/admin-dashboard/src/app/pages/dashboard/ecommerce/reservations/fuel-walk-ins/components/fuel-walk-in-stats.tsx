@@ -10,6 +10,21 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { FuelWalkIn } from '@starcoex-frontend/reservations';
 
+type BadgeVariant =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'destructive'
+  | 'outline'
+  | 'secondary';
+
+interface StatItem {
+  label: string;
+  value: number | string;
+  icon: React.ElementType;
+  badge: { label: string; variant: BadgeVariant } | null;
+}
+
 export function FuelWalkInStats({
   fuelWalkIns,
 }: {
@@ -22,38 +37,32 @@ export function FuelWalkInStats({
     const inService = fuelWalkIns.filter(
       (f) => f.status === 'IN_SERVICE'
     ).length;
-    const totalRevenue = fuelWalkIns
-      .filter((f) => f.status === 'COMPLETED')
-      .reduce((sum, f) => sum + (f.paidAmount ?? 0), 0);
+    const paidCount = fuelWalkIns.filter((f) => f.paymentConfirmed).length;
     const cancelled = fuelWalkIns.filter((f) =>
       ['CANCELLED', 'REFUND_PENDING'].includes(f.status)
     ).length;
 
-    return { waiting, inService, totalRevenue, cancelled };
+    return { waiting, inService, paidCount, cancelled };
   }, [fuelWalkIns]);
 
-  const statItems = [
+  const statItems: StatItem[] = [
     {
       label: '대기 / 준비',
       value: stats.waiting,
       icon: Clock,
       badge:
-        stats.waiting > 0
-          ? { label: '처리 필요', variant: 'warning' as const }
-          : null,
+        stats.waiting > 0 ? { label: '처리 필요', variant: 'warning' } : null,
     },
     {
       label: '주유 중',
       value: stats.inService,
       icon: Fuel,
       badge:
-        stats.inService > 0
-          ? { label: '진행 중', variant: 'success' as const }
-          : null,
+        stats.inService > 0 ? { label: '진행 중', variant: 'success' } : null,
     },
     {
-      label: '완료 매출',
-      value: `₩${stats.totalRevenue.toLocaleString()}`,
+      label: '결제 완료',
+      value: stats.paidCount,
       icon: CircleDollarSign,
       badge: null,
     },
@@ -63,8 +72,8 @@ export function FuelWalkInStats({
       icon: XCircle,
       badge:
         stats.cancelled > 0
-          ? { label: '확인 필요', variant: 'destructive' as const }
-          : { label: '정상', variant: 'outline' as const },
+          ? { label: '확인 필요', variant: 'destructive' }
+          : { label: '정상', variant: 'outline' },
     },
   ];
 

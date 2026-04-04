@@ -3,8 +3,8 @@ import { Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Store } from '@starcoex-frontend/stores';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-column-header';
-import { StoreRowActions } from '@/app/pages/dashboard/ecommerce/stores/components/store-row-actons';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
+import { StoreRowActions } from '@/app/pages/dashboard/ecommerce/stores/components/store-row-actions';
 
 type StoreStatus = 'active' | 'inactive' | 'closed';
 

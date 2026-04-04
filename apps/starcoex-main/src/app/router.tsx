@@ -153,7 +153,7 @@ export const router = createBrowserRouter([
         element: <SettingsPage />,
       },
       // {
-      //   path: 'notifications',
+      //   path: 'components',
       //   element: <NotificationsPage />,
       // },
       // 추가 보호된 페이지들...

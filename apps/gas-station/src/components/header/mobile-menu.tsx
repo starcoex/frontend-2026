@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
+  Bell,
   Building2,
   ChevronDown,
   ChevronRight,
   LayoutDashboard,
+  ShoppingBag,
 } from 'lucide-react';
-import { StarcoexService } from '@/app/utils/brand-constants';
+import { formatDistanceToNow } from 'date-fns';
+import { ko } from 'date-fns/locale';
+import { useAuth } from '@starcoex-frontend/auth';
+import { useNotifications } from '@starcoex-frontend/notifications';
 import {
   ContactButton,
+  HeaderServicesMobileSection,
+  NotificationStatus,
   UserMenuData,
   UserMenuItem,
   UserMenuLogout,
@@ -16,12 +23,14 @@ import {
   UserMenuRoot,
   UserMenuSeparator,
 } from '@starcoex-frontend/common';
+import { StarcoexService } from '@/app/utils/brand-constants';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { HeaderServicesMobileSection } from '@/components/header/components/header-services-mobile-section';
+import { cn } from '@/lib/utils';
 
-// 타입 정의 (header.tsx와 동일한 구조)
+// ── 타입 정의 ──────────────────────────────────────────────────────────────────
+
 interface NavigationItem {
   label: string;
   href: string;
@@ -40,34 +49,78 @@ interface MobileMenuProps {
   onClose: () => void;
   navigationItems: NavigationItem[];
   companyMenuItems: CompanyMenuItem[];
-  starcoexServices: StarcoexService[]; // 타입 변경
+  starcoexServices: StarcoexService[];
   isActivePath: (path: string) => boolean;
   user?: UserMenuData | null;
   isAuthenticated?: boolean | null;
   onLogout?: () => void;
 }
 
-// Provider Context를 사용하는 알림 섹션
-const NotificationSection: React.FC<{
-  onClose: () => void;
-}> = ({ onClose }) => {
+// ── 알림 섹션 ──────────────────────────────────────────────────────────────────
+
+const NotificationSection: React.FC<{ onClose: () => void }> = ({
+  onClose,
+}) => {
+  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // NotificationProvider의 Context 사용
-  // const { unreadCount, hasUnreadNotifications } = useNotificationContext();
+  const { currentUser } = useAuth();
+  const userId = currentUser?.id ?? null;
+
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    fetchMyNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
+
+  const hasUnread = unreadCount > 0;
+  const recentNotifications = notifications.slice(0, 3);
+
+  const handleExpand = async () => {
+    const next = !isExpanded;
+    setIsExpanded(next);
+    if (next && userId) {
+      await fetchMyNotifications({ userId, limit: 3, offset: 0 });
+    }
+  };
+
+  const handleItemClick = async (notification: any) => {
+    if (notification.status === NotificationStatus.UNREAD) {
+      await markAsRead(notification.id);
+    }
+    onClose();
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+    }
+  };
+
+  // 비로그인 시 렌더링하지 않음
+  if (!userId) return null;
 
   return (
     <div className="mx-2">
+      {/* 토글 버튼 */}
       <Button
         variant="ghost"
         className="group flex items-center justify-between w-full h-auto px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-lg"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleExpand}
       >
         <div className="flex items-center space-x-3">
+          <Bell className="w-5 h-5 text-muted-foreground group-hover:text-accent-foreground transition-colors" />
           <span className="text-foreground group-hover:text-accent-foreground transition-colors">
             알림
-            {/*알림 {hasUnreadNotifications && `(${unreadCount})`}*/}
           </span>
+          {hasUnread && (
+            <Badge
+              variant="destructive"
+              className="min-w-[18px] h-[18px] flex items-center justify-center p-0 text-[10px] font-bold"
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
+          )}
         </div>
         {isExpanded ? (
           <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-accent-foreground transition-transform" />
@@ -76,83 +129,101 @@ const NotificationSection: React.FC<{
         )}
       </Button>
 
+      {/* 알림 목록 (아코디언) */}
       <div
         className={cn(
           'overflow-hidden transition-all duration-300 ease-in-out',
-          isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          isExpanded ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'
         )}
       >
-        <div className="mt-1 ml-8">
-          {/* shadcn-ui NotificationDropdown을 모바일용으로 사용 */}
-          {/*<NotificationDropdown*/}
-          {/*  className="w-full border-0 shadow-none bg-transparent"*/}
-          {/*  renderTrigger={() => (*/}
-          {/*    <div className="w-full p-2 text-center text-sm text-muted-foreground">*/}
-          {/*      알림을 보려면 클릭하세요*/}
-          {/*    </div>*/}
-          {/*  )}*/}
-          {/*  onViewAll={() => onClose()}*/}
-          {/*  maxItems={3}*/}
-          {/*/>*/}
+        <div className="mt-1 ml-4 mr-2 space-y-1 pb-2">
+          {isLoading ? (
+            <p className="text-xs text-muted-foreground px-3 py-2">
+              불러오는 중...
+            </p>
+          ) : recentNotifications.length === 0 ? (
+            <p className="text-xs text-muted-foreground px-3 py-2">
+              새로운 알림이 없습니다
+            </p>
+          ) : (
+            recentNotifications.map((notification) => {
+              const isUnread =
+                notification.status === NotificationStatus.UNREAD;
+              const timeAgo = formatDistanceToNow(
+                new Date(notification.createdAt),
+                { addSuffix: true, locale: ko }
+              );
+
+              return (
+                <Button
+                  key={notification.id}
+                  variant="ghost"
+                  className={cn(
+                    'w-full h-auto justify-start text-left px-3 py-2 rounded-lg',
+                    isUnread && 'bg-primary/5 border-l-2 border-l-primary'
+                  )}
+                  onClick={() => handleItemClick(notification)}
+                >
+                  <div className="flex items-start gap-2.5 w-full">
+                    <span
+                      className={cn(
+                        'mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full',
+                        isUnread ? 'bg-primary' : 'bg-muted-foreground/30'
+                      )}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={cn(
+                          'text-sm truncate',
+                          isUnread
+                            ? 'font-semibold'
+                            : 'font-medium text-muted-foreground'
+                        )}
+                      >
+                        {notification.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {timeAgo}
+                      </p>
+                    </div>
+                  </div>
+                </Button>
+              );
+            })
+          )}
+
+          {/* 액션 버튼 */}
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1 text-xs h-8"
+              onClick={() => {
+                onClose();
+                navigate('/notifications');
+              }}
+            >
+              모든 알림 보기
+            </Button>
+            {hasUnread && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs h-8 px-3"
+                onClick={() => markAllAsRead()}
+                disabled={isLoading}
+              >
+                모두 읽음
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Provider Context를 사용하는 장바구니 섹션
-const CartSection: React.FC<{
-  onClose: () => void;
-}> = ({ onClose }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  // CartProvider의 Context 사용
-  // const { totalItems, totalPrice, isEmpty } = useCartContext();
-
-  return (
-    <div className="mx-2">
-      <Button
-        variant="ghost"
-        className="group flex items-center justify-between w-full h-auto px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground rounded-lg"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center space-x-3">
-          <span className="text-foreground group-hover:text-accent-foreground transition-colors">
-            장바구니
-            {/*장바구니 {!isEmpty && `(${totalItems})`}*/}
-          </span>
-        </div>
-        {isExpanded ? (
-          <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-accent-foreground transition-transform" />
-        ) : (
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent-foreground transition-transform" />
-        )}
-      </Button>
-
-      <div
-        className={cn(
-          'overflow-hidden transition-all duration-300 ease-in-out',
-          isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        )}
-      >
-        <div className="mt-1 ml-8">
-          {/* shadcn-ui CartDropdown을 모바일용으로 사용 */}
-          {/*<CartDropdown*/}
-          {/*  className="w-full border-0 shadow-none bg-transparent"*/}
-          {/*  renderTrigger={() => (*/}
-          {/*    <div className="w-full p-2 text-center text-sm text-muted-foreground">*/}
-          {/*      {isEmpty*/}
-          {/*        ? '장바구니가 비어있습니다'*/}
-          {/*        : `총 ${totalPrice.toLocaleString()}원`}*/}
-          {/*    </div>*/}
-          {/*  )}*/}
-          {/*  onViewCart={() => onClose()}*/}
-          {/*/>*/}
-        </div>
-      </div>
-    </div>
-  );
-};
+// ── 네비게이션 섹션 ────────────────────────────────────────────────────────────
 
 const NavigationSection: React.FC<{
   items: NavigationItem[];
@@ -163,7 +234,6 @@ const NavigationSection: React.FC<{
     {items.map((item) => {
       const Icon = item.icon;
       const isActive = isActivePath(item.href);
-
       return (
         <Link
           key={item.href}
@@ -183,6 +253,8 @@ const NavigationSection: React.FC<{
     })}
   </div>
 );
+
+// ── 회사 정보 섹션 ─────────────────────────────────────────────────────────────
 
 const CompanySection: React.FC<{
   items: CompanyMenuItem[];
@@ -241,12 +313,14 @@ const CompanySection: React.FC<{
   );
 };
 
+// ── MobileMenu ─────────────────────────────────────────────────────────────────
+
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   isOpen,
   onClose,
   navigationItems,
   companyMenuItems,
-  starcoexServices, // props 이름 변경
+  starcoexServices,
   isActivePath,
   user,
   isAuthenticated,
@@ -254,14 +328,12 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const handleMenuClick = (path: string) => {
-    onClose();
-  };
+  const handleMenuClick = () => onClose();
 
   return (
     <div className="lg:hidden py-4 border-t bg-background">
       <div className="space-y-3">
-        {/* 사용자 메뉴 섹션 */}
+        {/* 사용자 메뉴 */}
         <div className="px-4 pb-3">
           <UserMenuProvider
             user={user}
@@ -273,8 +345,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <UserMenuRoot>
               {isAuthenticated && (
                 <div className="mt-2 space-y-1">
-                  <UserMenuItem icon={LayoutDashboard} href="/my">
+                  <UserMenuItem icon={LayoutDashboard} href="/dashboard">
                     마이페이지
+                  </UserMenuItem>
+                  <UserMenuItem icon={ShoppingBag} href="/orders">
+                    주문 내역
                   </UserMenuItem>
                   <UserMenuItem href="/profile">프로필</UserMenuItem>
                   <UserMenuItem href="/settings">설정</UserMenuItem>
@@ -286,22 +361,17 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           </UserMenuProvider>
         </div>
 
-        {/* 인증된 사용자에게만 알림과 장바구니 섹션 표시 */}
+        {/* 알림 섹션 — 인증 사용자만, 내부에서 userId 확인 */}
         {isAuthenticated && (
           <>
             <Separator className="mx-4" />
-
-            {/* Provider Context를 사용하는 알림 섹션 */}
             <NotificationSection onClose={onClose} />
-
-            {/* Provider Context를 사용하는 장바구니 섹션 */}
-            <CartSection onClose={onClose} />
           </>
         )}
 
         <Separator className="mx-4" />
 
-        {/* 주요 네비게이션 메뉴 */}
+        {/* 주요 네비게이션 */}
         <NavigationSection
           items={navigationItems}
           isActivePath={isActivePath}
@@ -310,21 +380,21 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
         <Separator className="mx-4" />
 
-        {/* 회사 정보 드롭다운 */}
+        {/* 회사 정보 */}
         <CompanySection items={companyMenuItems} onClose={onClose} />
 
-        {/* 다른 서비스 드롭다운 - 공통 컴포넌트 사용 */}
+        {/* 다른 서비스 */}
         <HeaderServicesMobileSection
-          services={starcoexServices || []} // undefined 체크 추가
+          services={starcoexServices || []}
           onClose={onClose}
           onServiceClick={(service) => {
-            console.log(`${service.title} 클릭됨`);
             window.open(service.href, '_blank');
           }}
         />
 
         <Separator className="mx-4" />
-        {/* 연락처 버튼 - 공통 컴포넌트 사용 */}
+
+        {/* 연락처 */}
         <div className="px-4 pt-6">
           <ContactButton
             className="w-full justify-center h-auto py-3 text-sm font-medium text-foreground border-border bg-background hover:bg-accent hover:text-accent-foreground"
@@ -334,18 +404,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             variant="outline"
           />
         </div>
-
-        {/*/!* 연락처 버튼 *!/*/}
-        {/*<div className="px-4 pt-6">*/}
-        {/*  <Button*/}
-        {/*    variant="outline"*/}
-        {/*    className="w-full justify-center space-x-2 h-auto py-3 text-sm font-medium text-foreground border-border bg-background hover:bg-accent hover:text-accent-foreground"*/}
-        {/*    onClick={() => (window.location.href = 'tel:064-713-2002')}*/}
-        {/*  >*/}
-        {/*    <Phone className="w-5 h-5" />*/}
-        {/*    <span>064-713-2002</span>*/}
-        {/*  </Button>*/}
-        {/*</div>*/}
       </div>
     </div>
   );

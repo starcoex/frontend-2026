@@ -8,8 +8,8 @@ export interface BreadcrumbConfig {
 
 export const INVENTORY_BREADCRUMB_CONFIGS = {
   LIST: {
-    label: '재고 관리',
-    title: '재고 관리',
+    label: '재고 현황',
+    title: '재고 현황',
     showInBreadcrumb: true,
     showActions: true,
     showStats: true,

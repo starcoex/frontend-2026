@@ -1,13 +1,13 @@
 import { createBrowserRouter } from 'react-router-dom';
-import { MainLayout } from '../layout/main-layout';
-import { AuthLayout } from '../layout/auth-layout';
+import { MainLayout } from './layout/main-layout';
+import { AuthLayout } from './layout/auth-layout';
 //
 // // 메인 페이지들
-import { HomePage } from '../pages/home-page';
-import { ServicesPage } from '../pages/services-page';
+import { HomePage } from '';
+import { ServicesPage } from './pages/services-page';
 
 // // 인증 페이지들 (간단한 소셜 로그인만)
-import { LoginPage } from '../pages/auth/login';
+import { LoginPage } from './pages/auth/login';
 import { RegisterPage } from '../pages/auth/register';
 // import { SocialCallbackPage } from './pages/auth/social-callback-page';
 

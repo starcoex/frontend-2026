@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useReservations } from '@starcoex-frontend/reservations';
 import { PageHead } from '@starcoex-frontend/common';
@@ -28,15 +28,27 @@ import {
   LogIn,
   LogOut,
   Pencil,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { RESERVATION_STATUS_CONFIG } from '@/app/pages/dashboard/ecommerce/reservations/data/reservation-data';
+import {
+  formatReservationDate,
+  formatReservationTime,
+} from '@/app/utils/reservation-utils';
+import { usePayments, type Payment } from '@starcoex-frontend/payments';
+import {
+  formatAmount,
+  PAYMENT_STATUS_CONFIG,
+} from '@/app/pages/dashboard/ecommerce/payments/data/payment-data';
 
 export default function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const {
     currentReservation,
     isLoading,
@@ -48,10 +60,28 @@ export default function ReservationDetailPage() {
     updateReservationStatus,
   } = useReservations();
 
+  // ── 결제 정보 조회 ────────────────────────────────────────────────────────
+  const { fetchPayments } = usePayments();
+  const [reservationPayments, setReservationPayments] = useState<Payment[]>([]);
+  const [isPaymentsLoading, setIsPaymentsLoading] = useState(false);
+
   useEffect(() => {
     if (id) fetchReservationById(parseInt(id));
   }, [id, fetchReservationById]);
 
+  useEffect(() => {
+    if (!id) return;
+    setIsPaymentsLoading(true);
+    fetchPayments({ reservationId: parseInt(id) })
+      .then((res) => {
+        if (res.success && res.data?.data?.payments) {
+          setReservationPayments(res.data.data.payments);
+        }
+      })
+      .finally(() => setIsPaymentsLoading(false));
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── 로딩 / 에러 ───────────────────────────────────────────────────────────
   if (isLoading) {
     return <LoadingSpinner message="예약 정보를 불러오는 중..." />;
   }
@@ -76,8 +106,7 @@ export default function ReservationDetailPage() {
   const customerPhone =
     customerInfo?.phone ?? customerInfo?.customerPhone ?? '-';
 
-  // ── 액션 핸들러 ────────────────────────────────────────────────────────────
-
+  // ── 액션 핸들러 ───────────────────────────────────────────────────────────
   const handleCheckIn = async () => {
     const res = await checkInReservation({ reservationId: r.id });
     if (res.success) toast.success('체크인 처리되었습니다.');
@@ -108,12 +137,10 @@ export default function ReservationDetailPage() {
     else toast.error(res.error?.message ?? '취소 실패');
   };
 
-  // ── 액션 버튼 표시 조건 ────────────────────────────────────────────────────
   const canConfirm = ['PAYMENT_PENDING', 'PENDING_APPROVAL'].includes(r.status);
   const canCheckIn = r.status === 'CONFIRMED';
   const canCheckOut = ['CHECKED_IN', 'IN_PROGRESS'].includes(r.status);
   const canCancel = !['CANCELLED', 'COMPLETED', 'REFUNDED'].includes(r.status);
-
   return (
     <>
       <PageHead
@@ -129,7 +156,7 @@ export default function ReservationDetailPage() {
       />
 
       <div className="space-y-4">
-        {/* ── 헤더 ────────────────────────────────────────────────────────── */}
+        {/* ── 헤더 ── */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="icon" asChild>
@@ -158,7 +185,6 @@ export default function ReservationDetailPage() {
             </div>
           </div>
 
-          {/* 액션 버튼 */}
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
@@ -195,25 +221,25 @@ export default function ReservationDetailPage() {
           </div>
         </div>
 
-        {/* ── 스탯 카드 ────────────────────────────────────────────────────── */}
+        {/* ── 스탯 카드 ── */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[
             {
               icon: CalendarDays,
               label: '예약일',
-              value: format(new Date(r.reservedDate), 'yyyy.MM.dd (EEE)', {
-                locale: ko,
-              }),
+              value: formatReservationDate(r.reservedDate),
             },
             {
               icon: Clock,
               label: '예약 시간',
-              value: `${r.reservedStartTime} ~ ${r.reservedEndTime}`,
+              value: `${formatReservationTime(
+                r.reservedStartTime
+              )} ~ ${formatReservationTime(r.reservedEndTime)}`,
             },
             {
               icon: CircleDollarSign,
-              label: '총 금액',
-              value: `₩${r.totalAmount.toLocaleString()}`,
+              label: '결제 확인',
+              value: r.paymentConfirmed ? '완료' : '미완료',
             },
             {
               icon: User,
@@ -236,7 +262,7 @@ export default function ReservationDetailPage() {
           ))}
         </div>
 
-        {/* ── 탭 ──────────────────────────────────────────────────────────── */}
+        {/* ── 탭 ── */}
         <Tabs defaultValue="overview">
           <TabsList className="w-full">
             <TabsTrigger value="overview" className="flex-1">
@@ -244,6 +270,11 @@ export default function ReservationDetailPage() {
             </TabsTrigger>
             <TabsTrigger value="payment" className="flex-1">
               결제
+              {reservationPayments.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {reservationPayments.length}
+                </Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="timeline" className="flex-1">
               타임라인
@@ -253,7 +284,6 @@ export default function ReservationDetailPage() {
           {/* 개요 탭 */}
           <TabsContent value="overview" className="mt-4">
             <div className="grid gap-4 lg:grid-cols-2">
-              {/* 고객 정보 */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -295,7 +325,6 @@ export default function ReservationDetailPage() {
                 </CardContent>
               </Card>
 
-              {/* 예약 정보 */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -327,9 +356,13 @@ export default function ReservationDetailPage() {
                         </TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell className="font-medium">결제 방식</TableCell>
+                        <TableCell className="font-medium">결제 확인</TableCell>
                         <TableCell className="text-right">
-                          <Badge variant="outline">{r.paymentType}</Badge>
+                          <Badge
+                            variant={r.paymentConfirmed ? 'default' : 'outline'}
+                          >
+                            {r.paymentConfirmed ? '완료' : '미완료'}
+                          </Badge>
                         </TableCell>
                       </TableRow>
                       {r.specialRequests && (
@@ -347,7 +380,6 @@ export default function ReservationDetailPage() {
                 </CardContent>
               </Card>
 
-              {/* 메모 */}
               {r.notes && (
                 <Card className="lg:col-span-2">
                   <CardHeader>
@@ -364,81 +396,113 @@ export default function ReservationDetailPage() {
             </div>
           </TabsContent>
 
-          {/* 결제 탭 */}
+          {/* ── 결제 탭 ── */}
           <TabsContent value="payment" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <CircleDollarSign className="size-4 opacity-60" />
-                  결제 정보
-                </CardTitle>
-                <CardAction>
-                  <Badge
-                    variant={
-                      r.paymentStatus === 'FULLY_PAID'
-                        ? 'success'
-                        : r.paymentStatus === 'PENDING'
-                        ? 'warning'
-                        : 'outline'
-                    }
-                  >
-                    {r.paymentStatus}
-                  </Badge>
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="font-medium">서비스 금액</TableCell>
-                      <TableCell className="text-right">
-                        ₩{r.serviceAmount.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                    {r.depositAmount > 0 && (
-                      <TableRow>
-                        <TableCell className="font-medium">보증금</TableCell>
-                        <TableCell className="text-right">
-                          ₩{r.depositAmount.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    {r.additionalAmount > 0 && (
-                      <TableRow>
-                        <TableCell className="font-medium">추가 금액</TableCell>
-                        <TableCell className="text-right">
-                          ₩{r.additionalAmount.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    <TableRow>
-                      <TableCell className="font-semibold">총액</TableCell>
-                      <TableCell className="text-right font-semibold">
-                        ₩{r.totalAmount.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell className="font-medium text-green-600">
-                        결제 완료
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-green-600">
-                        ₩{r.paidAmount.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                    {r.refundAmount > 0 && (
-                      <TableRow>
-                        <TableCell className="text-destructive font-medium">
-                          환불액
-                        </TableCell>
-                        <TableCell className="text-destructive text-right font-medium">
-                          ₩{r.refundAmount.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            {isPaymentsLoading ? (
+              <div className="flex items-center justify-center gap-2 py-8">
+                <Loader2 className="size-4 animate-spin" />
+                <span className="text-muted-foreground text-sm">
+                  결제 정보를 불러오는 중...
+                </span>
+              </div>
+            ) : reservationPayments.length === 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <CircleDollarSign className="size-4 opacity-60" />
+                    결제 정보
+                  </CardTitle>
+                  <CardAction>
+                    <Badge variant={r.paymentConfirmed ? 'success' : 'warning'}>
+                      {r.paymentConfirmed ? '결제 완료' : '결제 미완료'}
+                    </Badge>
+                  </CardAction>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">
+                    연결된 결제 내역이 없습니다.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {reservationPayments.map((payment) => {
+                  const paymentStatusConfig =
+                    PAYMENT_STATUS_CONFIG[payment.status];
+                  return (
+                    <Card key={payment.id}>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                          <CircleDollarSign className="size-4 opacity-60" />
+                          {payment.orderName}
+                        </CardTitle>
+                        <CardAction>
+                          <div className="flex items-center gap-2">
+                            {paymentStatusConfig && (
+                              <Badge variant={paymentStatusConfig.variant}>
+                                {paymentStatusConfig.label}
+                              </Badge>
+                            )}
+                            <Button variant="outline" size="sm" asChild>
+                              <Link to={`/admin/payments/${payment.portOneId}`}>
+                                <ExternalLink className="mr-1 h-3 w-3" />
+                                상세 보기
+                              </Link>
+                            </Button>
+                          </div>
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell className="font-medium">
+                                결제 금액
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {formatAmount(payment.amount, payment.currency)}
+                              </TableCell>
+                            </TableRow>
+                            <TableRow>
+                              <TableCell className="font-medium">
+                                포트원 ID
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-xs">
+                                {payment.portOneId}
+                              </TableCell>
+                            </TableRow>
+                            {payment.paidAt && (
+                              <TableRow>
+                                <TableCell className="font-medium">
+                                  결제 완료일
+                                </TableCell>
+                                <TableCell className="text-right text-sm">
+                                  {format(
+                                    new Date(payment.paidAt),
+                                    'yyyy.MM.dd HH:mm',
+                                    { locale: ko }
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )}
+                            {payment.cancellations.length > 0 && (
+                              <TableRow>
+                                <TableCell className="font-medium">
+                                  취소 내역
+                                </TableCell>
+                                <TableCell className="text-right text-sm">
+                                  {payment.cancellations.length}건 취소됨
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           {/* 타임라인 탭 */}
@@ -451,22 +515,19 @@ export default function ReservationDetailPage() {
                 <div className="space-y-3">
                   {[
                     { label: '예약 생성', time: r.createdAt },
-                    { label: '결제 완료', time: r.paymentCompletedAt },
                     { label: '예약 확정', time: r.confirmedAt },
                     { label: '체크인', time: r.checkedInAt },
                     { label: '서비스 시작', time: r.serviceStartedAt },
                     { label: '완료', time: r.completedAt },
                     { label: '취소', time: r.cancelledAt },
-                    { label: '환불 요청', time: r.refundRequestedAt },
-                    { label: '환불 완료', time: r.refundCompletedAt },
                   ]
                     .filter((item) => !!item.time)
                     .map((item, index, arr) => (
                       <div key={item.label} className="flex gap-4">
                         <div className="flex flex-col items-center">
-                          <div className="bg-primary size-2.5 rounded-full mt-1" />
+                          <div className="bg-primary mt-1 size-2.5 rounded-full" />
                           {index < arr.length - 1 && (
-                            <div className="bg-border w-px flex-1 my-1" />
+                            <div className="bg-border my-1 w-px flex-1" />
                           )}
                         </div>
                         <div className="pb-3">
@@ -479,10 +540,7 @@ export default function ReservationDetailPage() {
                         </div>
                       </div>
                     ))}
-
-                  {/* 이력이 생성일 하나뿐일 때 */}
                   {[
-                    r.paymentCompletedAt,
                     r.confirmedAt,
                     r.checkedInAt,
                     r.completedAt,

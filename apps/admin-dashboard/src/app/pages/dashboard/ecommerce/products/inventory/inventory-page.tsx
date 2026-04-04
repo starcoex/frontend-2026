@@ -52,7 +52,7 @@ export default function InventoryPage() {
         og={{
           title: `재고 관리 - ${COMPANY_INFO.name}`,
           description: '매장별 상품 재고 현황 관리',
-          image: '/images/og-inventory.jpg',
+          image: '/images/og-emails.jpg',
           type: 'website',
         }}
       />

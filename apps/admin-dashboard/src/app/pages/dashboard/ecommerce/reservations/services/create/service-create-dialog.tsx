@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { useReservations } from '@starcoex-frontend/reservations';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useState } from 'react';
+import type { ConfirmationType } from '@starcoex-frontend/reservations';
 
 const SERVICE_TYPES = [
   { value: 'CAR_WASH', label: '세차' },
@@ -47,25 +48,18 @@ const SERVICE_TYPES = [
   { value: 'EVENT', label: '이벤트' },
 ] as const;
 
-const BUSINESS_TYPES = [
-  { value: 'COMMON', label: '공통' },
-  { value: 'ZERAGAE_CARCARE', label: '제라게 카케어' },
-  { value: 'SINHAN_NETWORKS', label: '신한 네트웍스' },
-  { value: 'STAR_GAS_STATION', label: '별표주유소' },
-  { value: 'SHADE_CANOPY', label: '그늘막' },
-] as const;
-
 const CONFIRMATION_TYPES = [
   { value: 'AUTO', label: '자동 확정' },
   { value: 'MANUAL', label: '수동 확정' },
 ] as const;
 
+const CONFIRMATION_TYPE_VALUES = CONFIRMATION_TYPES.map((t) => t.value);
+
 const schema = z.object({
   name: z.string().min(1, '서비스 이름을 입력하세요.'),
   type: z.string().min(1, '서비스 타입을 선택하세요.'),
   description: z.string().optional(),
-  businessType: z.string().min(1),
-  confirmationType: z.string().min(1),
+  confirmationType: z.enum(CONFIRMATION_TYPE_VALUES as [string, ...string[]]),
   slotDuration: z.number().min(10, '최소 10분 이상이어야 합니다.'),
   maxAdvanceDays: z.number().min(1),
   minAdvanceHours: z.number().min(0),
@@ -115,7 +109,6 @@ export function ServiceCreateDialog({
       name: '',
       type: 'CAR_WASH',
       description: '',
-      businessType: 'COMMON',
       confirmationType: 'AUTO',
       slotDuration: 60,
       maxAdvanceDays: 30,
@@ -155,8 +148,7 @@ export function ServiceCreateDialog({
       name: data.name,
       type: data.type,
       description: data.description,
-      businessType: data.businessType,
-      confirmationType: data.confirmationType,
+      confirmationType: data.confirmationType as ConfirmationType,
       slotGenerationType: 'AUTO',
       slotDuration: data.slotDuration,
       maxAdvanceDays: data.maxAdvanceDays,
@@ -222,30 +214,6 @@ export function ServiceCreateDialog({
                       </FormControl>
                       <SelectContent>
                         {SERVICE_TYPES.map((t) => (
-                          <SelectItem key={t.value} value={t.value}>
-                            {t.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="businessType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>비즈니스 타입</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {BUSINESS_TYPES.map((t) => (
                           <SelectItem key={t.value} value={t.value}>
                             {t.label}
                           </SelectItem>

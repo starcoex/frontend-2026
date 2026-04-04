@@ -4,12 +4,14 @@ import {
   suggestionPriorities,
   suggestionStatuses,
 } from '../data/suggestion-data';
-import { DataTableFacetedFilter } from './data-table-faceted-filter';
-import { DataTableViewOptions } from './data-table-view-options';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Suggestion, useSuggestions } from '@starcoex-frontend/suggestions';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 
 interface Props {
   table: Table<Suggestion>;

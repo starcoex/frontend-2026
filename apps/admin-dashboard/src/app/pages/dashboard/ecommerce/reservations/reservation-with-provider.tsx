@@ -3,6 +3,7 @@ import { ReservationsLayout } from '@/app/pages/dashboard/ecommerce/reservations
 import { StoresProvider } from '@starcoex-frontend/stores';
 import { ProductsProvider } from '@starcoex-frontend/products';
 import { CategoriesProvider } from '@starcoex-frontend/categories';
+import { PaymentsProvider } from '@starcoex-frontend/payments';
 
 export const ReservationsWithProvider = () => {
   return (
@@ -10,7 +11,9 @@ export const ReservationsWithProvider = () => {
       <ProductsProvider>
         <StoresProvider>
           <ReservationsProvider>
-            <ReservationsLayout />
+            <PaymentsProvider>
+              <ReservationsLayout />
+            </PaymentsProvider>
           </ReservationsProvider>
         </StoresProvider>
       </ProductsProvider>

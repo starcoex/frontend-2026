@@ -2,11 +2,13 @@ import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/users/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/users/components/data-table-view-options';
 import { UserInvitation } from '@starcoex-frontend/graphql';
 import { useAuth } from '@starcoex-frontend/auth';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 import { toast } from 'sonner';
 
 interface Props {

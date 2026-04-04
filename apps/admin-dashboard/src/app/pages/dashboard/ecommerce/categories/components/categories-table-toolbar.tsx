@@ -1,12 +1,14 @@
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { Table } from '@tanstack/react-table';
 import { categoryStatuses } from '../data/category-data';
-import { DataTableFacetedFilter } from './data-table-faceted-filter';
-import { DataTableViewOptions } from './data-table-view-options';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Category, useCategories } from '@starcoex-frontend/categories';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 
 interface Props {
   table: Table<Category>;
@@ -14,7 +16,7 @@ interface Props {
 
 export function CategoriesTableToolbar({ table }: Props) {
   const isFiltered = table.getState().columnFilters.length > 0;
-  const { deleteCategories, fetchCategories } = useCategories();
+  const { deleteCategories, fetchCategoryTree } = useCategories();
 
   return (
     <div className="flex items-center justify-between">
@@ -50,7 +52,7 @@ export function CategoriesTableToolbar({ table }: Props) {
         <BulkDeleteToolbar
           table={table}
           onDelete={deleteCategories}
-          onSuccess={fetchCategories}
+          onSuccess={fetchCategoryTree}
           itemLabel="카테고리"
         />
       </div>

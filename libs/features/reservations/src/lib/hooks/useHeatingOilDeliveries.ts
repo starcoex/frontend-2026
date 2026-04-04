@@ -1,14 +1,15 @@
 import { useCallback, useRef } from 'react';
-import type { ApiResponse } from '../types';
 import { getReservationsService } from '../services';
+import { useHeatingOilDeliveriesContext } from '../context';
 import type {
+  ApiResponse,
+  HeatingOilDelivery,
+  HeatingOilDeliveryStatus,
   CreateHeatingOilDeliveryInput,
   AssignDriverInput,
   UpdateHeatingOilDeliveryStatusInput,
   CompleteHeatingOilDeliveryInput,
-  HeatingOilDeliveryStatus,
 } from '../types';
-import { useHeatingOilDeliveriesContext } from '../context';
 
 export const useHeatingOilDeliveries = () => {
   const context = useHeatingOilDeliveriesContext();
@@ -104,7 +105,10 @@ export const useHeatingOilDeliveries = () => {
         const service = getReservationsService();
         const res = await service.assignDeliveryDriver(input);
         if (res.success && res.data?.delivery) {
-          updateDeliveryInContext(input.deliveryId, res.data.delivery);
+          updateDeliveryInContext(
+            input.deliveryId,
+            res.data.delivery as HeatingOilDelivery
+          );
         }
         return res;
       }, '배달 기사 배정에 실패했습니다.'),
@@ -117,7 +121,10 @@ export const useHeatingOilDeliveries = () => {
         const service = getReservationsService();
         const res = await service.updateHeatingOilDeliveryStatus(input);
         if (res.success && res.data?.delivery) {
-          updateDeliveryInContext(input.deliveryId, res.data.delivery);
+          updateDeliveryInContext(
+            input.deliveryId,
+            res.data.delivery as HeatingOilDelivery
+          );
         }
         return res;
       }, '배달 상태 변경에 실패했습니다.'),
@@ -130,7 +137,10 @@ export const useHeatingOilDeliveries = () => {
         const service = getReservationsService();
         const res = await service.completeHeatingOilDelivery(input);
         if (res.success && res.data?.delivery) {
-          updateDeliveryInContext(input.deliveryId, res.data.delivery);
+          updateDeliveryInContext(
+            input.deliveryId,
+            res.data.delivery as HeatingOilDelivery
+          );
         }
         return res;
       }, '배달 완료 처리에 실패했습니다.'),

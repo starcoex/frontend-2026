@@ -58,6 +58,9 @@ export type CountItemStatus = 'PENDING' | 'COUNTED' | 'VARIANCE' | 'ADJUSTED';
 
 export interface InventoryTransaction {
   id: number;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
   inventoryId: number;
   type: InventoryTransactionType;
   quantity: number;
@@ -75,17 +78,16 @@ export interface InventoryTransaction {
   idempotencyKey?: string | null;
   createdById: number;
   processedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  // computed fields (신규)
-  isInbound?: boolean;
-  isOutbound?: boolean;
-  isAdjustment?: boolean;
-  hasCosting?: boolean;
-  hasBatch?: boolean;
-  hasExpiry?: boolean;
-  isExpiringSoon?: boolean;
-  isProcessed?: boolean;
+  // computed fields
+  isInbound?: boolean | null;
+  isOutbound?: boolean | null;
+  isAdjustment?: boolean | null;
+  hasCosting?: boolean | null;
+  averageCost?: number | null;
+  hasBatch?: boolean | null;
+  hasExpiry?: boolean | null;
+  isExpiringSoon?: boolean | null;
+  isProcessed?: boolean | null;
   processingTime?: number | null;
 }
 
@@ -140,6 +142,7 @@ export interface StoreInventory {
   createdById: number;
   updatedById: number;
   lastCountedAt?: string | null;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   // computed fields
@@ -263,16 +266,7 @@ export interface DispenseFuelInput {
 export interface FuelInventoryOutput {
   success: boolean;
   message: string;
-  inventory?: Pick<
-    StoreInventory,
-    | 'id'
-    | 'productId'
-    | 'storeId'
-    | 'currentVolume'
-    | 'availableVolume'
-    | 'reservedVolume'
-    | 'unit'
-  > | null;
+  inventory?: StoreInventory | null;
 }
 
 // ============================================================================

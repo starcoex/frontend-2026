@@ -112,25 +112,13 @@ export const heatingOilDeliveryColumns: ColumnDef<HeatingOilDelivery>[] = [
     },
   },
   {
-    accessorKey: 'totalAmount',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="총액" />
+    id: 'payment',
+    header: '결제',
+    cell: ({ row }) => (
+      <Badge variant={row.original.paymentConfirmed ? 'default' : 'outline'}>
+        {row.original.paymentConfirmed ? '결제완료' : '미결제'}
+      </Badge>
     ),
-    cell: ({ row }) => {
-      const d = row.original;
-      return (
-        <div className="flex flex-col">
-          <span className="text-sm font-medium">
-            ₩{d.totalAmount.toLocaleString()}
-          </span>
-          {d.paidAmount > 0 && (
-            <span className="text-muted-foreground text-xs">
-              결제 ₩{d.paidAmount.toLocaleString()}
-            </span>
-          )}
-        </div>
-      );
-    },
   },
   {
     accessorKey: 'scheduledDate',

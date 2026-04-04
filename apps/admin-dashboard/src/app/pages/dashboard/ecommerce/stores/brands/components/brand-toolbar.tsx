@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import { PlusIcon } from 'lucide-react';
 import { Brand, useStores } from '@starcoex-frontend/stores';
-import { DataTableFacetedFilter } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/app/pages/dashboard/ecommerce/stores/components/data-table-view-options';
-import { BulkDeleteToolbar } from '@starcoex-frontend/common';
+import {
+  DataTableFacetedFilter,
+  DataTableViewOptions,
+  BulkDeleteToolbar,
+} from '@starcoex-frontend/common';
 
 const BRAND_STATUS_OPTIONS = [
   { value: 'active', label: '활성' },

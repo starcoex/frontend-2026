@@ -36,6 +36,14 @@ export const RESERVATION_BREADCRUMB_CONFIGS = {
     showActions: false,
     showStats: false,
   },
+  CALENDAR: {
+    // ← 추가
+    label: '예약 캘린더',
+    title: '예약 캘린더',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
 } as const;
 
 export const DEFAULT_RESERVATION_BREADCRUMB_CONFIG: BreadcrumbConfig = {

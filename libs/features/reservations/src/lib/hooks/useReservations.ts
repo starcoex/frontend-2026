@@ -1,4 +1,6 @@
 import { useCallback, useRef } from 'react';
+import { useReservationsContext } from '../context';
+import { getReservationsService } from '../services';
 import type {
   ApiResponse,
   CreateRefundPolicyInput,
@@ -6,10 +8,6 @@ import type {
   FindReservableServicesInput,
   UpdateRefundPolicyInput,
   UpdateReservableServiceInput,
-} from '../types';
-import { useReservationsContext } from '../context';
-import { getReservationsService } from '../services';
-import type {
   CreateReservationInput,
   UpdateReservationStatusInput,
   CancelReservationInput,
@@ -25,6 +23,8 @@ import type {
   CreateServiceResourceInput,
   UpdateServiceResourceInput,
   WalkInStatus,
+  FindScheduleBlockedDatesInput,
+  UpdateScheduleBlockedDateInput,
 } from '../types';
 
 export const useReservations = () => {
@@ -150,6 +150,36 @@ export const useReservations = () => {
         const service = getReservationsService();
         return service.findScheduleTemplates(serviceId);
       }, '스케줄 템플릿을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ← 인자 구조 변경: serviceId → FindScheduleBlockedDatesInput
+  const fetchScheduleBlockedDates = useCallback(
+    async (input: FindScheduleBlockedDatesInput) =>
+      withLoading(async () => {
+        const service = getReservationsService();
+        return service.findScheduleBlockedDates(input);
+      }, '휴무일 목록을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ← 신규
+  const updateScheduleBlockedDate = useCallback(
+    async (input: UpdateScheduleBlockedDateInput) =>
+      withLoading(async () => {
+        const service = getReservationsService();
+        return service.updateScheduleBlockedDate(input);
+      }, '휴무일 수정에 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ← 신규
+  const bulkDeleteScheduleBlockedDates = useCallback(
+    async (ids: number[]) =>
+      withLoading(async () => {
+        const service = getReservationsService();
+        return service.bulkDeleteScheduleBlockedDates(ids);
+      }, '휴무일 다건 삭제에 실패했습니다.'),
     [withLoading]
   );
 
@@ -528,8 +558,10 @@ export const useReservations = () => {
     fetchAvailableSlots,
     fetchServiceResources,
     fetchScheduleTemplates,
+    fetchScheduleBlockedDates, // ← 추가
     fetchReservableServices, // ← 추가
     fetchRefundPolicies, // ← 추가
+    bulkDeleteScheduleBlockedDates, // ← 신규
     fetchWalkIns,
     filteredReservations,
 
@@ -560,6 +592,7 @@ export const useReservations = () => {
     deactivateScheduleTemplate,
     createScheduleBlockedDate,
     deleteScheduleBlockedDate,
+    updateScheduleBlockedDate, // ← 신규
     createServiceResource,
     updateServiceResource,
     deactivateServiceResource,

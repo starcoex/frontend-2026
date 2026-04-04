@@ -76,7 +76,7 @@ export const useCategories = () => {
   );
 
   const fetchCategoryTree = useCallback(
-    async (rootId?: number, maxDepth?: number) =>
+    async (rootId?: number, maxDepth: number = 3) =>
       withLoading(async () => {
         const service = getCategoriesService();
         const res = await service.getCategoryTree(rootId, maxDepth);

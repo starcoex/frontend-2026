@@ -24,23 +24,12 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import {
-  ArrowLeft,
-  Loader2,
-  User,
-  Package,
-  Search,
-  PlusIcon,
-  XIcon,
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Loader2, User, Package } from 'lucide-react';
 import { PageHead } from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
 import { useHeatingOilDeliveries } from '@starcoex-frontend/reservations';
 import { useStores } from '@starcoex-frontend/stores';
-import { useProducts } from '@starcoex-frontend/products';
-import { useAddress } from '@starcoex-frontend/address';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   HeatingOilDeliveryCreateSchema,
   type HeatingOilDeliveryCreateFormValues,
@@ -49,9 +38,9 @@ import { HEATING_OIL_FUEL_TYPE_LABELS } from '@/app/pages/dashboard/ecommerce/re
 import {
   CustomerSearch,
   type SelectedCustomer,
-} from '@/app/pages/dashboard/ecommerce/orders/components/customer-search';
-import { AddressSearchInput } from '@/components/address-search';
-import type { JusoApiAddress } from '@starcoex-frontend/graphql';
+  AddressFormFields,
+} from '@starcoex-frontend/common';
+import { useAddressForm } from '@starcoex-frontend/common';
 
 const TIME_SLOT_OPTIONS = [
   { value: '09:00-12:00', label: '오전 (09:00 ~ 12:00)' },
@@ -60,55 +49,23 @@ const TIME_SLOT_OPTIONS = [
   { value: '18:00-21:00', label: '저녁 (18:00 ~ 21:00)' },
 ];
 
-const PAYMENT_TYPE_OPTIONS = [
-  { value: 'PREPAID', label: '선불' },
-  { value: 'DEPOSIT', label: '보증금' },
-  { value: 'POSTPAID', label: '후불' },
-  { value: 'FREE', label: '무료' },
-];
-
 export default function HeatingOilDeliveryCreatePage() {
   const navigate = useNavigate();
   const { createDelivery } = useHeatingOilDeliveries();
   const { stores, fetchStores } = useStores();
-  const { products, fetchProducts } = useProducts();
-  const { saveAddress } = useAddress();
-
-  // 고객 검색
   const [selectedCustomer, setSelectedCustomer] =
     useState<SelectedCustomer | null>(null);
 
-  // 주소
-  const [selectedAddress, setSelectedAddress] = useState<JusoApiAddress | null>(
-    null
-  );
-
-  // 상품 검색 (유종별 상품)
-  const [productQuery, setProductQuery] = useState('');
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    null
-  );
-  const [selectedQty, setSelectedQty] = useState(1);
-
-  interface DeliveryItemDraft {
-    productId: number;
-    productName: string;
-    productSku?: string;
-    unitPrice: number;
-    quantity: number;
-  }
-  const [items, setItems] = useState<DeliveryItemDraft[]>([]);
-
   useEffect(() => {
     fetchStores();
-    fetchProducts();
-  }, [fetchStores, fetchProducts]);
+  }, [fetchStores]);
 
   const form = useForm<HeatingOilDeliveryCreateFormValues>({
     resolver: zodResolver(HeatingOilDeliveryCreateSchema),
     defaultValues: {
       storeId: 0,
       userId: 0,
+      productId: undefined,
       customerName: '',
       customerPhone: '',
       guestEmail: '',
@@ -117,11 +74,6 @@ export default function HeatingOilDeliveryCreatePage() {
       fuelType: 'KEROSENE',
       orderType: 'STANDARD',
       requestedLiters: 0,
-      serviceAmount: 0,
-      deliveryFee: 0,
-      urgentFee: 0,
-      totalAmount: 0,
-      paymentType: 'POSTPAID',
       scheduledDate: '',
       scheduledTimeSlot: '',
       isUrgent: false,
@@ -130,16 +82,10 @@ export default function HeatingOilDeliveryCreatePage() {
     },
   });
 
-  const recalcTotal = () => {
-    const service = form.getValues('serviceAmount') ?? 0;
-    const delivery = form.getValues('deliveryFee') ?? 0;
-    const urgent = form.getValues('urgentFee') ?? 0;
-    form.setValue('totalAmount', service + delivery + urgent);
-  };
+  const { selectedAddress, handleAddressSelect } = useAddressForm(form);
 
   const isUrgent = form.watch('isUrgent');
 
-  // 고객 선택
   const handleSelectCustomer = (customer: SelectedCustomer) => {
     setSelectedCustomer(customer);
     form.setValue('userId', customer.userId, { shouldValidate: true });
@@ -156,87 +102,11 @@ export default function HeatingOilDeliveryCreatePage() {
     form.setValue('guestEmail', '');
   };
 
-  // 주소 선택
-  const handleAddressSelect = (address: JusoApiAddress) => {
-    setSelectedAddress(address);
-    form.setValue('deliveryAddress', address.roadAddr, {
-      shouldValidate: true,
-    });
-    form.setValue('deliveryAddressDetail', '');
-    toast.success('주소가 선택되었습니다.');
-  };
-
-  // 상품 필터
-  const filteredProducts = useMemo(() => {
-    const q = productQuery.trim().toLowerCase();
-    return products
-      .filter((p) => p.isAvailable)
-      .filter((p) => {
-        if (!q) return true;
-        if (p.name.toLowerCase().includes(q)) return true;
-        const cat = p.category;
-        if (!cat) return false;
-        if (Array.isArray(cat))
-          return cat.some((c) => c.name.toLowerCase().includes(q));
-        return (cat as { name: string }).name.toLowerCase().includes(q);
-      });
-  }, [products, productQuery]);
-
-  const handleAddItem = () => {
-    const product = products.find((p) => p.id === selectedProductId);
-    if (!product) return;
-    if (items.some((i) => i.productId === product.id)) {
-      toast.error('이미 추가된 상품입니다.');
-      return;
-    }
-    setItems((prev) => [
-      ...prev,
-      {
-        productId: product.id,
-        productName: product.name,
-        productSku: (product as any).sku ?? undefined,
-        unitPrice: product.salePrice ?? product.basePrice,
-        quantity: selectedQty,
-      },
-    ]);
-    setSelectedProductId(null);
-    setProductQuery('');
-    setSelectedQty(1);
-  };
-
   const onSubmit = async (data: HeatingOilDeliveryCreateFormValues) => {
     try {
-      // 주소 저장
-      if (selectedAddress) {
-        await saveAddress({
-          roadFullAddr: selectedAddress.roadAddr,
-          roadAddrPart1: selectedAddress.roadAddr,
-          roadAddrPart2: '',
-          jibunAddr: selectedAddress.jibunAddr || '',
-          engAddr: selectedAddress.engAddr || '',
-          zipNo: selectedAddress.zipNo,
-          admCd: selectedAddress.admCd || '',
-          siNm: selectedAddress.siNm || '',
-          sggNm: selectedAddress.sggNm || '',
-          emdNm: selectedAddress.emdNm || '',
-          rn: selectedAddress.rn || '',
-          rnMgtSn: selectedAddress.rnMgtSn || '',
-          bdMgtSn: selectedAddress.bdMgtSn || '',
-          bdNm: selectedAddress.bdNm || '',
-          buildingType: 'SINGLE_HOUSE',
-          buldMnnm: parseInt(selectedAddress.buldMnnm || '0'),
-          buldSlno: parseInt(selectedAddress.buldSlno || '0'),
-          lnbrMnnm: 0,
-          lnbrSlno: 0,
-          emdNo: '01',
-          addrDetail: data.deliveryAddressDetail || '',
-          status: 'ACTIVE',
-          dataSource: 'JUSO_API',
-        });
-      }
-
       const res = await createDelivery({
         storeId: data.storeId,
+        productId: data.productId,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
         guestEmail: data.guestEmail || undefined,
@@ -247,11 +117,6 @@ export default function HeatingOilDeliveryCreatePage() {
         requestedLiters: data.requestedLiters,
         tankCapacity: data.tankCapacity,
         tankCurrentLevel: data.tankCurrentLevel,
-        serviceAmount: data.serviceAmount,
-        deliveryFee: data.deliveryFee,
-        urgentFee: data.urgentFee,
-        totalAmount: data.totalAmount,
-        paymentType: data.paymentType,
         scheduledDate: data.scheduledDate,
         scheduledTimeSlot: data.scheduledTimeSlot,
         isUrgent: data.isUrgent,
@@ -286,7 +151,6 @@ export default function HeatingOilDeliveryCreatePage() {
         }}
       />
 
-      {/* 헤더 */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="outline" size="icon" asChild>
@@ -325,7 +189,7 @@ export default function HeatingOilDeliveryCreatePage() {
         >
           {/* ── 좌측 메인 (3/5) ── */}
           <div className="space-y-4 lg:col-span-3">
-            {/* 고객 정보 - CustomerSearch */}
+            {/* 고객 정보 */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -352,29 +216,17 @@ export default function HeatingOilDeliveryCreatePage() {
               </CardContent>
             </Card>
 
-            {/* 배달 주소 - AddressSearchInput */}
+            {/* 배달 주소 */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">배달 주소 *</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <FormLabel>주소 검색 *</FormLabel>
-                  <AddressSearchInput
-                    onSelectAddress={handleAddressSelect}
-                    className="mt-2"
-                  />
-                </div>
-                {selectedAddress && (
-                  <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm">
-                    <p className="font-medium text-blue-900">
-                      {selectedAddress.roadAddr}
-                    </p>
-                    <p className="mt-0.5 text-xs text-blue-700">
-                      우편번호: {selectedAddress.zipNo}
-                    </p>
-                  </div>
-                )}
+              <CardContent>
+                <AddressFormFields
+                  form={form}
+                  selectedAddress={selectedAddress}
+                  onAddressSelect={handleAddressSelect}
+                />
                 <FormField
                   control={form.control}
                   name="deliveryAddress"
@@ -384,27 +236,10 @@ export default function HeatingOilDeliveryCreatePage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="deliveryAddressDetail"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>상세 주소</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="101동 201호"
-                          disabled={!selectedAddress}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </CardContent>
             </Card>
 
-            {/* 주문 정보 - 상품 검색 */}
+            {/* 주문 정보 */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -517,132 +352,6 @@ export default function HeatingOilDeliveryCreatePage() {
                     )}
                   />
                 </div>
-
-                {/* 상품 검색 */}
-                <Separator />
-                <div className="space-y-2">
-                  <FormLabel>관련 상품 검색</FormLabel>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={productQuery}
-                      onChange={(e) => {
-                        setProductQuery(e.target.value);
-                        setSelectedProductId(null);
-                      }}
-                      placeholder="상품명 또는 카테고리 검색..."
-                      className="pl-9"
-                    />
-                  </div>
-
-                  {productQuery.trim() && (
-                    <div className="max-h-52 divide-y overflow-y-auto rounded-md border">
-                      {filteredProducts.length === 0 ? (
-                        <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-                          검색 결과가 없습니다.
-                        </p>
-                      ) : (
-                        filteredProducts.slice(0, 50).map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            className={`w-full px-3 py-2 text-left transition-colors hover:bg-muted ${
-                              selectedProductId === p.id ? 'bg-primary/10' : ''
-                            }`}
-                            onClick={() => setSelectedProductId(p.id)}
-                          >
-                            <div className="flex items-center justify-between">
-                              <p className="truncate text-sm font-medium">
-                                {p.name}
-                              </p>
-                              <span className="ml-2 shrink-0 text-sm font-semibold">
-                                ₩{(p.salePrice ?? p.basePrice).toLocaleString()}
-                              </span>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      min={1}
-                      value={selectedQty}
-                      onChange={(e) =>
-                        setSelectedQty(parseInt(e.target.value) || 1)
-                      }
-                      className="w-24"
-                      placeholder="수량"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={handleAddItem}
-                      disabled={!selectedProductId}
-                    >
-                      <PlusIcon className="mr-1 size-4" />
-                      {selectedProductId
-                        ? `"${
-                            products.find((p) => p.id === selectedProductId)
-                              ?.name
-                          }" 추가`
-                        : '상품을 선택하세요'}
-                    </Button>
-                  </div>
-                </div>
-
-                {items.length > 0 && (
-                  <div className="space-y-2">
-                    {items.map((item) => (
-                      <div
-                        key={item.productId}
-                        className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate font-medium">
-                              {item.productName}
-                            </p>
-                            {item.productSku && (
-                              <Badge
-                                variant="secondary"
-                                className="shrink-0 text-xs"
-                              >
-                                {item.productSku}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            ₩{item.unitPrice.toLocaleString()} × {item.quantity}
-                          </p>
-                        </div>
-                        <div className="ml-2 flex items-center gap-2">
-                          <span className="font-medium">
-                            ₩{(item.unitPrice * item.quantity).toLocaleString()}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-6"
-                            onClick={() =>
-                              setItems((prev) =>
-                                prev.filter(
-                                  (i) => i.productId !== item.productId
-                                )
-                              )
-                            }
-                          >
-                            <XIcon className="size-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -793,114 +502,6 @@ export default function HeatingOilDeliveryCreatePage() {
                     )}
                   />
                 )}
-              </CardContent>
-            </Card>
-
-            {/* 결제 */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">결제 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="paymentType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>결제 방식</FormLabel>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PAYMENT_TYPE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="serviceAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>서비스 금액</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          min={0}
-                          onChange={(e) => {
-                            field.onChange(parseFloat(e.target.value) || 0);
-                            recalcTotal();
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="deliveryFee"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>배달비</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          min={0}
-                          onChange={(e) => {
-                            field.onChange(parseFloat(e.target.value) || 0);
-                            recalcTotal();
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {isUrgent && (
-                  <FormField
-                    control={form.control}
-                    name="urgentFee"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>긴급 수수료</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="number"
-                            min={0}
-                            onChange={(e) => {
-                              field.onChange(parseFloat(e.target.value) || 0);
-                              recalcTotal();
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-                <Separator />
-                <div className="flex items-center justify-between rounded-md bg-muted px-3 py-2">
-                  <span className="text-sm font-medium">총액</span>
-                  <span className="font-bold">
-                    ₩{(form.watch('totalAmount') ?? 0).toLocaleString()}
-                  </span>
-                </div>
               </CardContent>
             </Card>
           </div>

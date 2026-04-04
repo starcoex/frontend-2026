@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { PackagePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { StoreInventory } from '@starcoex-frontend/inventory';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 import { INVENTORY_ROUTES } from '@/app/constants/inventory-routes';
 import { InventoryAddStockDrawer } from '@/app/pages/dashboard/ecommerce/inventory/inventory-detail/components/inventory-add-stock-drawer';
 

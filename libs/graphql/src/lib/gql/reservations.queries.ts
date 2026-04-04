@@ -32,27 +32,14 @@ export const RESERVATION_FIELDS = gql`
     isWalkIn
     partySize
     specialRequests
-    paymentType
-    serviceAmount
-    depositAmount
-    additionalAmount
-    totalAmount
-    paidAmount
-    refundAmount
-    paymentStatus
-    prepaidPaymentId
-    finalPaymentId
-    refundPaymentId
+    paymentId
+    paymentConfirmed
     appliedRefundPolicy
-    refundCalculation
-    paymentCompletedAt
     confirmedAt
     checkedInAt
     serviceStartedAt
     completedAt
     cancelledAt
-    refundRequestedAt
-    refundCompletedAt
     notes
     metadata
     createdById
@@ -66,15 +53,6 @@ export const RESERVATION_FIELDS = gql`
       id
     }
     vehicle {
-      id
-    }
-    prepaidPayment {
-      id
-    }
-    finalPayment {
-      id
-    }
-    refundPayment {
       id
     }
   }
@@ -149,6 +127,7 @@ export const WALK_IN_FIELDS = gql`
     customerPhone
     vehicleId
     packageId
+    paymentConfirmed
     status
     waitingOrder
     estimatedWaitMinutes
@@ -174,17 +153,15 @@ export const FUEL_WALK_IN_FIELDS = gql`
     customerName
     customerPhone
     vehicleId
+    productId
     fuelType
     requestedAmount
     actualAmount
     literAmount
     unitPrice
-    paymentType
-    paymentStatus
-    paymentId
-    paidAmount
-    refundAmount
     isPrepaid
+    paymentId
+    paymentConfirmed
     packageId
     status
     arrivedAt
@@ -211,15 +188,9 @@ export const FUEL_WALK_IN_PACKAGE_FIELDS = gql`
     includesFuel
     includesWash
     washServiceId
-    fuelAmount
-    washAmount
-    discountAmount
-    totalAmount
-    paidAmount
-    paymentType
-    paymentStatus
-    paymentId
     isPrepaid
+    paymentId
+    paymentConfirmed
     status
     arrivedAt
     completedAt
@@ -237,6 +208,7 @@ export const HEATING_OIL_DELIVERY_FIELDS = gql`
     id
     storeId
     deliveryNumber
+    productId
     userId
     customerName
     customerPhone
@@ -252,14 +224,8 @@ export const HEATING_OIL_DELIVERY_FIELDS = gql`
     unitPrice
     tankCapacity
     tankCurrentLevel
-    serviceAmount
-    deliveryFee
-    urgentFee
-    totalAmount
-    paidAmount
-    paymentType
-    paymentStatus
     paymentId
+    paymentConfirmed
     status
     scheduledDate
     scheduledTimeSlot
@@ -273,9 +239,6 @@ export const HEATING_OIL_DELIVERY_FIELDS = gql`
     arrivedAt
     completedAt
     cancelledAt
-    refundAmount
-    refundRequestedAt
-    refundCompletedAt
     notes
     metadata
     createdAt
@@ -292,8 +255,8 @@ export const RESERVABLE_SERVICE_FIELDS = gql`
     storeId
     name
     type
+    serviceTypeCode
     description
-    businessType
     confirmationType
     slotGenerationType
     requiresPayment
@@ -485,6 +448,73 @@ export const FIND_SCHEDULE_TEMPLATES = gql`
   query FindScheduleTemplates($serviceId: Int!) {
     findScheduleTemplates(serviceId: $serviceId) {
       ...ScheduleTemplateFields
+    }
+  }
+`;
+
+// ← 신규 추가
+export const SCHEDULE_BLOCKED_DATE_FIELDS = gql`
+  fragment ScheduleBlockedDateFields on ScheduleBlockedDate {
+    id
+    serviceId
+    date
+    reason
+    isFullDay
+    blockedStartTime
+    blockedEndTime
+    createdById
+    createdAt
+    updatedAt
+  }
+`;
+
+// ← findScheduleBlockedDates: 인자 구조 변경 (input 객체로)
+export const FIND_SCHEDULE_BLOCKED_DATES = gql`
+  ${SCHEDULE_BLOCKED_DATE_FIELDS}
+  query FindScheduleBlockedDates($input: FindScheduleBlockedDatesInput!) {
+    findScheduleBlockedDates(input: $input) {
+      success
+      blockedDates {
+        ...ScheduleBlockedDateFields
+      }
+      total
+    }
+  }
+`;
+
+// ← CREATE: createdById 제거, date가 String으로 변경됨 (쿼리 자체는 동일)
+// 기존 CREATE_SCHEDULE_BLOCKED_DATE 유지
+
+// ← 신규: UPDATE
+export const UPDATE_SCHEDULE_BLOCKED_DATE = gql`
+  ${SCHEDULE_BLOCKED_DATE_FIELDS}
+  mutation UpdateScheduleBlockedDate($input: UpdateScheduleBlockedDateInput!) {
+    updateScheduleBlockedDate(input: $input) {
+      success
+      error {
+        code
+        message
+        details
+      }
+      blockedDate {
+        ...ScheduleBlockedDateFields
+      }
+      message
+    }
+  }
+`;
+
+// ← 신규: BULK DELETE
+export const BULK_DELETE_SCHEDULE_BLOCKED_DATES = gql`
+  mutation BulkDeleteScheduleBlockedDates($ids: [Int!]!) {
+    bulkDeleteScheduleBlockedDates(ids: $ids) {
+      success
+      error {
+        code
+        message
+        details
+      }
+      message
     }
   }
 `;

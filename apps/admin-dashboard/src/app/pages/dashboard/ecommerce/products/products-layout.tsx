@@ -27,14 +27,16 @@ const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [PRODUCT_ROUTES.LIST]: PRODUCT_BREADCRUMB_CONFIGS.LIST,
   [PRODUCT_ROUTES.CREATE]: PRODUCT_BREADCRUMB_CONFIGS.CREATE,
   [PRODUCT_ROUTES.SCAN]: PRODUCT_BREADCRUMB_CONFIGS.SCAN, // ✅ 추가
+  [PRODUCT_ROUTES.INVENTORY]: PRODUCT_BREADCRUMB_CONFIGS.INVENTORY,
+  [PRODUCT_ROUTES.SETTINGS]: PRODUCT_BREADCRUMB_CONFIGS.SETTINGS,
 };
 
 const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
   const editMatch = pathname.match(PRODUCT_ROUTE_PATTERNS.EDIT);
   if (editMatch) {
     return {
-      label: `Edit Product #${editMatch[1]}`,
-      title: `Edit Product #${editMatch[1]}`,
+      label: `제품 수정 #${editMatch[1]}`,
+      title: `제품 수정 #${editMatch[1]}`,
       showInBreadcrumb: true,
       showActions: false,
       showStats: false,
@@ -44,8 +46,8 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
   const detailMatch = pathname.match(PRODUCT_ROUTE_PATTERNS.DETAIL);
   if (detailMatch) {
     return {
-      label: `Product #${detailMatch[1]}`,
-      title: `Product Details #${detailMatch[1]}`,
+      label: `제품 상세 #${detailMatch[1]}`,
+      title: `제품 상세 #${detailMatch[1]}`,
       showInBreadcrumb: true,
       showActions: false,
       showStats: false,
@@ -57,11 +59,12 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
 
 export const ProductsLayout = () => {
   const location = useLocation();
-  const { products, fetchProducts } = useProducts();
+  const { products, fetchProducts, fetchProductTypes } = useProducts();
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    fetchProductTypes();
+  }, [fetchProducts, fetchProductTypes]);
 
   const config = useMemo((): BreadcrumbConfig => {
     const pathname = location.pathname;
@@ -81,7 +84,7 @@ export const ProductsLayout = () => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/admin">Home</Link>
+                <Link to="/admin">홈</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />

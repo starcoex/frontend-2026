@@ -7,6 +7,7 @@ import { ReservationRowActions } from './reservation-row-actions';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { RESERVATION_STATUS_CONFIG } from '@/app/pages/dashboard/ecommerce/reservations/data/reservation-data';
+import { formatReservationPeriod } from '@/app/utils/reservation-utils';
 
 export const reservationColumns: ColumnDef<Reservation>[] = [
   {
@@ -48,16 +49,12 @@ export const reservationColumns: ColumnDef<Reservation>[] = [
       <DataTableColumnHeader column={column} title="예약일" />
     ),
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">
-          {format(new Date(row.original.reservedDate), 'yyyy.MM.dd', {
-            locale: ko,
-          })}
-        </span>
-        <span className="text-muted-foreground text-xs">
-          {row.original.reservedStartTime} ~ {row.original.reservedEndTime}
-        </span>
-      </div>
+      <span className="text-sm">
+        {formatReservationPeriod(
+          row.original.reservedStartTime,
+          row.original.reservedEndTime
+        )}
+      </span>
     ),
   },
   {
@@ -78,21 +75,12 @@ export const reservationColumns: ColumnDef<Reservation>[] = [
     },
   },
   {
-    accessorKey: 'totalAmount',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="총액" />
-    ),
+    id: 'payment',
+    header: '결제',
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="text-sm font-medium">
-          ₩{row.original.totalAmount.toLocaleString()}
-        </span>
-        {row.original.paidAmount > 0 && (
-          <span className="text-muted-foreground text-xs">
-            결제 ₩{row.original.paidAmount.toLocaleString()}
-          </span>
-        )}
-      </div>
+      <Badge variant={row.original.paymentConfirmed ? 'default' : 'outline'}>
+        {row.original.paymentConfirmed ? '결제완료' : '미결제'}
+      </Badge>
     ),
   },
   {

@@ -25,10 +25,10 @@ import { ReservationCreateStep4 } from './reservation-create-step4';
 
 // Step별 유효성 검사 필드
 const STEP_FIELDS: Record<number, (keyof ReservationCreateFormValues)[]> = {
-  1: ['storeId', 'serviceIds'], // ← serviceId → serviceIds
+  1: ['storeId', 'serviceIds'],
   2: ['reservedDate', 'reservedStartTime', 'reservedEndTime'],
-  3: ['customerName', 'customerPhone', 'partySize'],
-  4: ['paymentType', 'serviceAmount', 'totalAmount', 'confirmationType'],
+  3: ['customerName', 'customerPhone', 'partySize'], // userId 제거
+  4: ['confirmationType'],
 };
 
 export default function ReservationCreatePage() {
@@ -41,20 +41,16 @@ export default function ReservationCreatePage() {
     resolver: zodResolver(ReservationCreateSchema),
     defaultValues: {
       storeId: 0,
-      serviceIds: [], // ← serviceId: 0 → serviceIds: []
+      serviceIds: [],
       reservedDate: '',
       reservedStartTime: '',
       reservedEndTime: '',
-      userId: 0, // ← 추가
+      userId: 0,
       customerName: '',
       customerPhone: '',
       guestEmail: '',
       partySize: 1,
       specialRequests: '',
-      paymentType: 'POSTPAID',
-      serviceAmount: 0,
-      depositAmount: 0,
-      totalAmount: 0,
       confirmationType: 'AUTO',
       notes: '',
     },
@@ -73,14 +69,14 @@ export default function ReservationCreatePage() {
     try {
       const res = await createReservation({
         storeId: data.storeId,
-        serviceIds: data.serviceIds, // ← 배열 전달
-        serviceId: data.serviceIds[0], // ← DB 저장용 (백엔드 트랜잭션에서 첫 번째 값 사용)
+        serviceIds: data.serviceIds,
+        serviceId: data.serviceIds[0],
         timeSlotId: data.timeSlotId,
         resourceId: data.resourceId,
         reservedDate: data.reservedDate,
         reservedStartTime: data.reservedStartTime,
         reservedEndTime: data.reservedEndTime,
-        userId: data.userId, // ← 추가
+        userId: data.userId,
         customerInfo: {
           name: data.customerName,
           phone: data.customerPhone,
@@ -90,10 +86,6 @@ export default function ReservationCreatePage() {
         partySize: data.partySize,
         specialRequests: data.specialRequests || undefined,
         vehicleId: data.vehicleId,
-        paymentType: data.paymentType,
-        serviceAmount: data.serviceAmount,
-        depositAmount: data.depositAmount || 0,
-        totalAmount: data.totalAmount,
         notes: data.notes || undefined,
         createdById: currentUser?.id,
       });
@@ -142,7 +134,7 @@ export default function ReservationCreatePage() {
 
         {/* 폼 */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div>
             {currentStep === 1 && <ReservationCreateStep1 form={form} />}
             {currentStep === 2 && <ReservationCreateStep2 form={form} />}
             {currentStep === 3 && <ReservationCreateStep3 form={form} />}
@@ -160,7 +152,11 @@ export default function ReservationCreatePage() {
               </Button>
 
               {isLastStep ? (
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={form.handleSubmit(onSubmit)}
+                >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -177,7 +173,7 @@ export default function ReservationCreatePage() {
                 </Button>
               )}
             </div>
-          </form>
+          </div>
         </Form>
       </div>
     </>

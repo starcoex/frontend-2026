@@ -2,12 +2,13 @@ import { ColumnDef } from '@tanstack/react-table';
 import { ImageIcon, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { Product, ProductCategoryRef } from '@starcoex-frontend/products';
+import type { Product } from '@starcoex-frontend/products';
 import { ProductRowActions } from './product-row-actions';
-import { DataTableColumnHeader } from '@/app/pages/dashboard/ecommerce/products/components/data-table-column-header';
+import { DataTableColumnHeader } from '@starcoex-frontend/common';
 
+// Federation stub(id only) — name은 없을 수 있으므로 옵셔널 처리
 const getCategoryName = (
-  category: ProductCategoryRef | null | undefined
+  category: { id: number; name?: string } | null | undefined
 ): string => category?.name ?? 'N/A';
 
 type ProductStatus = 'active' | 'out-of-stock' | 'closed-for-sale';
@@ -37,14 +38,14 @@ export const productColumns: ColumnDef<Product>[] = [
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label="전체 선택"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label="행 선택"
       />
     ),
     enableSorting: false,
@@ -108,6 +109,24 @@ export const productColumns: ColumnDef<Product>[] = [
     cell: ({ row }) => (
       <span className="text-sm">{getCategoryName(row.original.category)}</span>
     ),
+  },
+  {
+    accessorKey: 'productTypeId',
+    header: '상품 타입',
+    cell: ({ row }) => {
+      const pt = row.original.productType;
+      return (
+        <span className="text-sm">
+          {pt ? (
+            <Badge variant="outline" className="font-mono text-xs">
+              {pt.code}
+            </Badge>
+          ) : (
+            '-'
+          )}
+        </span>
+      );
+    },
   },
   {
     id: 'stock',

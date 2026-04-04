@@ -23,9 +23,15 @@ import {
 import { OrderToolbar } from './order-toolbar';
 import { orderColumns } from './order-columns';
 import type { Order } from '@starcoex-frontend/orders';
-import { DataTablePagination } from '@/app/pages/dashboard/ecommerce/orders/components/data-table-pagination';
+import { DataTablePagination } from '@starcoex-frontend/common';
 
-export function OrderTable({ data }: { data: Order[] }) {
+export function OrderTable({
+  data,
+  onRefresh,
+}: {
+  data: Order[];
+  onRefresh?: () => void;
+}) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: 'createdAt', desc: true },
   ]);
@@ -55,7 +61,7 @@ export function OrderTable({ data }: { data: Order[] }) {
 
   return (
     <div className="space-y-4">
-      <OrderToolbar table={table} />
+      <OrderToolbar table={table} onRefresh={onRefresh} />
 
       <div className="rounded-lg border">
         <Table>

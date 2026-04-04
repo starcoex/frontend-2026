@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, Settings } from 'lucide-react';
 import {
   BreadcrumbConfig,
   DEFAULT_STORE_BREADCRUMB_CONFIG,
@@ -29,6 +29,7 @@ const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [STORE_ROUTES.LIST]: STORE_BREADCRUMB_CONFIGS.LIST,
   [STORE_ROUTES.CREATE]: STORE_BREADCRUMB_CONFIGS.CREATE,
   [STORE_ROUTES.BRANDS]: STORE_BREADCRUMB_CONFIGS.BRANDS,
+  [STORE_ROUTES.SETTINGS]: STORE_BREADCRUMB_CONFIGS.SETTINGS, // ✅ 추가
 };
 
 const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
@@ -66,11 +67,25 @@ export const StoresLayout = () => {
     fetchStores,
     fetchBrands,
     fetchStatistics,
+    fetchBusinessTypes,
+    fetchServiceTypes,
   } = useStores();
 
   useEffect(() => {
-    Promise.all([fetchStores(), fetchBrands(), fetchStatistics()]);
-  }, [fetchStores, fetchBrands, fetchStatistics]);
+    Promise.all([
+      fetchStores(),
+      fetchBrands(),
+      fetchStatistics(),
+      fetchBusinessTypes(),
+      fetchServiceTypes(),
+    ]);
+  }, [
+    fetchStores,
+    fetchBrands,
+    fetchStatistics,
+    fetchBusinessTypes,
+    fetchServiceTypes,
+  ]);
 
   const config = useMemo((): BreadcrumbConfig => {
     const pathname = location.pathname;
@@ -84,6 +99,7 @@ export const StoresLayout = () => {
   }, [location.pathname]);
 
   const isBrandPage = location.pathname.includes('/brands');
+  const isSettingsPage = location.pathname === STORE_ROUTES.SETTINGS;
 
   return (
     <main className="flex h-full flex-1 flex-col p-4">
@@ -96,10 +112,26 @@ export const StoresLayout = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            {config.showInBreadcrumb && (
-              <BreadcrumbItem>
-                <BreadcrumbPage>{config.label}</BreadcrumbPage>
-              </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={STORE_ROUTES.LIST}>매장</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {config.showInBreadcrumb && !isSettingsPage && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{config.label}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
+            )}
+            {isSettingsPage && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>설정</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
             )}
           </BreadcrumbList>
         </Breadcrumb>
@@ -108,14 +140,27 @@ export const StoresLayout = () => {
           <CardTitle className="flex-none text-2xl font-bold tracking-tight">
             {config.title}
           </CardTitle>
-          {config.showActions && !isBrandPage && (
-            <Button asChild>
-              <Link to={STORE_ROUTES.CREATE}>
-                <PlusIcon className="mr-2 h-4 w-4" />
-                매장 추가
-              </Link>
-            </Button>
-          )}
+
+          {/* 액션 버튼 영역 */}
+          <div className="flex items-center gap-2">
+            {config.showActions && !isBrandPage && (
+              <Button asChild>
+                <Link to={STORE_ROUTES.CREATE}>
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  매장 추가
+                </Link>
+              </Button>
+            )}
+            {/* ✅ 설정 버튼 — 설정 페이지가 아닐 때만 표시 */}
+            {!isSettingsPage && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to={STORE_ROUTES.SETTINGS}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  설정
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         {config.showStats &&
