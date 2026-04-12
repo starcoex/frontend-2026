@@ -6,24 +6,8 @@ import {
   useMemo,
   useCallback,
 } from 'react';
-import type { User } from '@starcoex-frontend/graphql';
-
-interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean | null;
-  initialized: boolean;
-}
-
-interface AuthContextValue extends AuthState {
-  setUser: (user: User | null) => void;
-  setLoading: () => void;
-  setError: (message: string | null) => void;
-  setLogout: () => void;
-  setInitialized: () => void;
-  clearError: () => void;
-}
+import type { AuthState, AuthContextValue } from '../types';
+import { User } from '@starcoex-frontend/graphql';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 

@@ -240,6 +240,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '배송 목록', url: '/admin/delivery' },
               { title: '배송 추가', url: '/admin/delivery/create' },
               { title: '기사 관리', url: '/admin/delivery/drivers' },
+              { title: '기사 추가', url: '/admin/delivery/drivers/create' },
               { title: '배송 추적', url: '/admin/delivery/tracking' },
             ],
           },
@@ -652,6 +653,32 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
+      // ✅ 배달기사 전용 메뉴 — URL을 /admin/driver/*로 수정
+      {
+        title: '내 배송',
+        items: [
+          {
+            title: '대시보드',
+            url: '/admin/driver/dashboard',
+            icon: IconLayoutDashboard,
+          },
+          {
+            title: '내 배송 목록',
+            url: '/admin/driver/deliveries',
+            icon: IconTruck,
+          },
+          {
+            title: '진행 중인 배송',
+            url: '/admin/driver/active',
+            icon: IconBoxSeam,
+          },
+          {
+            title: '내 프로필',
+            url: '/admin/driver/profile',
+            icon: IconUser,
+          },
+        ],
+      },
       {
         title: '배달 관리',
         items: [
@@ -665,12 +692,12 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '배송 추적', url: '/admin/delivery/tracking' },
             ],
           },
-          {
-            title: '기사 관리',
-            url: '/admin/delivery/drivers',
-            icon: IconUser,
-            items: [{ title: '기사 목록', url: '/admin/delivery/drivers' }],
-          },
+          // {
+          //   title: '기사 관리',
+          //   url: '/admin/delivery/drivers',
+          //   icon: IconUser,
+          //   items: [{ title: '기사 목록', url: '/admin/delivery/drivers' }],
+          // },
           {
             title: '주문 관리',
             url: '/admin/orders',
@@ -682,17 +709,17 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '주문 통계', url: '/admin/orders/stats' },
             ],
           },
-          {
-            title: '거점 관리',
-            url: '/admin/stores',
-            icon: IconBuildingStore,
-            items: [
-              { title: '거점 목록', url: '/admin/stores' },
-              { title: '거점 추가', url: '/admin/stores/create' },
-              { title: '브랜드 목록', url: '/admin/stores/brands' },
-              { title: '매장 설정', url: '/admin/stores/settings' },
-            ],
-          },
+          // {
+          //   title: '거점 관리',
+          //   url: '/admin/stores',
+          //   icon: IconBuildingStore,
+          //   items: [
+          //     { title: '거점 목록', url: '/admin/stores' },
+          //     { title: '거점 추가', url: '/admin/stores/create' },
+          //     { title: '브랜드 목록', url: '/admin/stores/brands' },
+          //     { title: '매장 설정', url: '/admin/stores/settings' },
+          //   ],
+          // },
           {
             title: '배달 상품',
             url: '/delivery-products',
@@ -762,15 +789,22 @@ export const filterMenuByRole = (
   userRole: UserRole
 ): NavGroup[] => {
   try {
-    // ADMIN은 모든 메뉴 표시
+    // ADMIN, SUPER_ADMIN → 모든 메뉴 표시
     if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
+      return navGroups;
+    }
+
+    // DELIVERY → Delivery 팀 메뉴 전체 표시
+    // (team-provider에서 teamName='Delivery'로 강제되므로
+    //  이미 Delivery 팀 메뉴만 들어온 상태 — 추가 필터 불필요)
+    if (userRole === 'DELIVERY') {
       return navGroups;
     }
 
     // 여기에 다른 권한 처리가 있다면 그것도 확인
     const rolePermissions: { [key: string]: string[] } = {
       USER: ['dashboard', 'settings'], // 대시보드와 설정만
-      DELIVERY: ['dashboard', 'orders', 'delivery', 'settings'], // 배달 관련
+      // DELIVERY: ['dashboard', 'orders', 'delivery', 'settings'], // 배달 관련
     };
 
     const allowedMenus: string[] = rolePermissions[userRole] || [];
@@ -802,7 +836,12 @@ export const getSidebarData = (
   userRole: UserRole,
   userData?: User // 사용자 정보 추가 (선택적)
 ): SidebarData => {
-  const navGroups = getNavGroupsByTeam(teamName);
+  // ✅ DELIVERY 역할은 항상 Delivery 팀 메뉴 사용
+  const resolvedTeamName: TeamName =
+    userRole === 'DELIVERY' ? 'Delivery' : teamName;
+
+  // const navGroups = getNavGroupsByTeam(teamName);
+  const navGroups = getNavGroupsByTeam(resolvedTeamName);
   const filteredNavGroups = filterMenuByRole(navGroups, userRole);
 
   // ✅ 실제 사용자 정보 또는 기본값 사용

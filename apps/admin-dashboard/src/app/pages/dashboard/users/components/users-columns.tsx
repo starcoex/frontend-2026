@@ -94,11 +94,16 @@ export const columns: ColumnDef<User>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="최근 로그인" />
     ),
-    cell: ({ row }) => (
-      <div className="w-fit text-nowrap">
-        {format(row.getValue('lastLoginAt'), 'dd MMM, yyyy')}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const date = row.getValue('lastLoginAt'); //
+
+      return (
+        <div className="w-fit text-nowrap">
+          {/* 값이 있을 때만 포맷팅, 없으면 '-' 표시 */}
+          {date ? format(new Date(date as string), 'dd MMM, yyyy') : '-'}
+        </div>
+      );
+    },
     enableSorting: false,
   },
   {

@@ -27,9 +27,17 @@ import { DataTablePagination } from '@starcoex-frontend/common';
 
 interface DeliveryTableProps {
   data: Delivery[];
+  onDeleted?: (deliveryId: number) => void; // ✅ 단건 삭제
+  onDeleteSuccess?: () => void; // ✅ 다건 삭제 후 새로고침
+  onRefresh?: () => void;
 }
 
-export function DeliveryTable({ data }: DeliveryTableProps) {
+export function DeliveryTable({
+  data,
+  onDeleted,
+  onDeleteSuccess,
+  onRefresh,
+}: DeliveryTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -38,9 +46,15 @@ export function DeliveryTable({ data }: DeliveryTableProps) {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  // ✅ onDeleted를 columns에 전달하기 위해 columns를 동적으로 생성
+  const columns = React.useMemo(
+    () => deliveryColumns({ onDeleted }),
+    [onDeleted]
+  );
+
   const table = useReactTable({
     data,
-    columns: deliveryColumns,
+    columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -57,14 +71,13 @@ export function DeliveryTable({ data }: DeliveryTableProps) {
 
   return (
     <div className="space-y-4">
-      <DeliveryTableToolbar table={table} />
-
+      <DeliveryTableToolbar table={table} onDeleteSuccess={onDeleteSuccess} />
       <div className="rounded-lg border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((header) => (
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
@@ -97,7 +110,7 @@ export function DeliveryTable({ data }: DeliveryTableProps) {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={deliveryColumns.length}
+                  colSpan={columns.length}
                   className="text-muted-foreground h-24 text-center"
                 >
                   {table.getState().columnFilters.length > 0
@@ -109,7 +122,6 @@ export function DeliveryTable({ data }: DeliveryTableProps) {
           </TableBody>
         </Table>
       </div>
-
       <DataTablePagination table={table} />
     </div>
   );

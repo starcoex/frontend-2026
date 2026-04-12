@@ -52,7 +52,15 @@ export const AdminLayout: React.FC = () => {
     );
   }
 
-  // 4) 인증 + 사용자 정보까지 준비된 상태 → 실제 Admin 레이아웃 렌더
+  // 4) DELIVERY 역할은 /admin 직접 접근 시 → 배달기사 전용 페이지로
+  if (currentUser.role === 'DELIVERY') {
+    // /admin/driver/** 접근은 허용, /admin 루트만 리다이렉트
+    const isDriverPath = location.pathname.startsWith('/admin/driver');
+    if (!isDriverPath) {
+      return <Navigate to="/admin/driver/dashboard" replace />;
+    }
+  }
+  // 5) 인증 + 사용자 정보까지 준비된 상태 → 실제 Admin 레이아웃 렌더
   return (
     <div className="border-grid flex flex-1 flex-col">
       <SidebarProvider defaultOpen={defaultOpen}>

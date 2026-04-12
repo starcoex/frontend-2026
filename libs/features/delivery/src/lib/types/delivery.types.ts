@@ -174,7 +174,7 @@ export interface DeliveryRating {
   accuracyRating?: number | null;
   // ── 관계 필드 (스키마 반영, Stub으로 순환참조 방지) ──
   delivery: DeliveryStub;
-  driver: DeliveryDriverStub;
+  driver?: DeliveryDriverStub | null; // ✅ optional로 변경 — DELIVERY_RATING_FIELDS에서 driver 블록 제거했으므로
 }
 
 export interface DriverSettlement {
@@ -280,6 +280,123 @@ export interface DeliveryTrackingInfo {
 }
 
 // ============================================================================
+// 운전면허 관련 타입 (schema-new-delivery.graphql 반영)
+// ============================================================================
+
+export interface OcrLicenseResult {
+  name?: string | null;
+  birthY?: string | null;
+  birthM?: string | null;
+  birthD?: string | null;
+  rrn1?: string | null;
+  rrn2?: string | null;
+  licenNo0?: string | null;
+  licenNo1?: string | null;
+  licenNo2?: string | null;
+  licenNo3?: string | null;
+  ghostNum?: string | null;
+}
+
+export interface VerifyDriverLicenseOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  verified: boolean;
+  message?: string | null;
+  resultCode?: number | null;
+}
+
+export interface OcrDriverLicenseOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  result?: OcrLicenseResult | null;
+}
+
+export interface VerifyDriverLicenseInput {
+  name: string;
+  birthY: string;
+  birthM: string;
+  birthD: string;
+  licenNo0: string;
+  licenNo1: string;
+  licenNo2: string;
+  licenNo3: string;
+  ghostNum?: string;
+  driverId?: number; // ✅ 필수 → 선택으로 변경 (등록 전 진위확인 지원)
+}
+
+export interface OcrDriverLicenseInput {
+  imageBase64: string;
+}
+
+// ============================================================================
+// 정산 관련 신규 타입
+// ============================================================================
+
+export interface DriverSettlementSummary {
+  totalGrossAmount: number;
+  totalNetAmount: number;
+  totalDeliveries: number;
+  totalCount: number;
+}
+
+export interface GetDriverSettlementsOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  settlements?: DriverSettlement[] | null;
+  summary?: DriverSettlementSummary | null;
+}
+
+export interface GetDriverSettlementsInput {
+  driverId: number;
+  limit?: number;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+// ============================================================================
+// 기사 프로필 수정 신규 타입
+// ============================================================================
+
+export interface UpdateDriverProfileInput {
+  driverId: number;
+  name?: string;
+  phone?: string;
+  email?: string;
+  vehicleNumber?: string;
+  vehicleModel?: string;
+  vehicleType?: VehicleType; // ✅ 신규 추가
+  workingAreas?: string[];
+}
+
+export interface UpdateDriverProfileOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  driver?: DeliveryDriver | null;
+}
+
+// ============================================================================
+// 기사 목록 조회 Input 신규 타입
+// ============================================================================
+
+export interface GetDriversInput {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  isAvailable?: boolean;
+}
+
+// ============================================================================
+// ✅ 신규: 배달기사 본인 배송 조회 Input
+// ============================================================================
+
+export interface GetMyDeliveriesInput {
+  statuses?: DeliveryStatus[];
+  page?: number;
+  limit?: number;
+}
+
+// ============================================================================
 // ErrorInfo
 // ============================================================================
 
@@ -321,6 +438,27 @@ export interface CreateDeliveryDriverOutput {
   creationMessage?: string | null;
   approvalMessage?: string | null;
   notificationMessage?: string | null;
+}
+
+export interface GetDriversOutput {
+  drivers: DeliveryDriver[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface UpdateDriverStatusInput {
+  driverId: number;
+  status: DriverStatus;
+  reason?: string;
+}
+
+export interface UpdateDriverStatusOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  driver?: DeliveryDriver | null;
 }
 
 // ============================================================================
@@ -376,7 +514,6 @@ export interface CreateDeliveryInput {
 
 export interface CreateDeliveryDriverInput {
   userId: number;
-  driverCode: string;
   name: string;
   phone: string;
   email?: string;
@@ -397,6 +534,32 @@ export interface CreateDeliveryDriverInput {
 }
 
 // ============================================================================
+// ✅ 기사 배정 / 해제 타입 (schema-new-delivery.graphql 반영)
+// ============================================================================
+
+export interface AssignDriverInput {
+  deliveryId: number;
+  driverId: number;
+}
+
+export interface UnassignDriverInput {
+  deliveryId: number;
+  reason?: string;
+}
+
+export interface AssignDriverOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  delivery?: Delivery | null;
+}
+
+export interface UnassignDriverOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  delivery?: Delivery | null;
+}
+
+// ============================================================================
 // 서비스 인터페이스
 // ============================================================================
 
@@ -405,6 +568,12 @@ export interface IDeliveryService {
   listDeliveries(
     input: GetDeliveriesInput
   ): Promise<ApiResponse<GetDeliveriesOutput>>;
+  // ✅ 신규: 배달기사 본인 배송 조회
+  getMyDeliveries(
+    input: GetMyDeliveriesInput
+  ): Promise<ApiResponse<GetDeliveriesOutput>>;
+  // ✅ 신규: 본인 기사 프로필 조회
+  getMyDriverProfile(): Promise<ApiResponse<DeliveryDriver | null>>;
   trackDelivery(
     deliveryNumber: string
   ): Promise<ApiResponse<DeliveryTrackingInfo>>;
@@ -429,8 +598,39 @@ export interface IDeliveryService {
     lat: number,
     lng: number
   ): Promise<ApiResponse<DeliveryDriver>>;
+  // ✅ 신규
+  verifyDriverLicense(
+    input: VerifyDriverLicenseInput
+  ): Promise<ApiResponse<VerifyDriverLicenseOutput>>;
+  ocrDriverLicense(
+    input: OcrDriverLicenseInput
+  ): Promise<ApiResponse<OcrDriverLicenseOutput>>;
+  // ✅ 신규
+  getDriverById(id: number): Promise<ApiResponse<DeliveryDriver>>;
+  getDrivers(input: GetDriversInput): Promise<ApiResponse<GetDriversOutput>>; // ✅ 반환 타입 변경
+  getDriverSettlements(
+    input: GetDriverSettlementsInput
+  ): Promise<ApiResponse<GetDriverSettlementsOutput>>;
+  updateDriverProfile(
+    input: UpdateDriverProfileInput
+  ): Promise<ApiResponse<UpdateDriverProfileOutput>>;
+  // ✅ 신규
+  updateDriverStatus(
+    input: UpdateDriverStatusInput
+  ): Promise<ApiResponse<UpdateDriverStatusOutput>>;
+  // ✅ 신규: 기사 배정 / 해제
+  assignDriverToDelivery(
+    input: AssignDriverInput
+  ): Promise<ApiResponse<AssignDriverOutput>>;
+  unassignDriverFromDelivery(
+    input: UnassignDriverInput
+  ): Promise<ApiResponse<UnassignDriverOutput>>;
+  deleteDriver(driverId: number): Promise<ApiResponse<boolean>>;
+  deleteDrivers(driverIds: number[]): Promise<ApiResponse<number>>;
+  // ✅ 신규
+  deleteDelivery(deliveryId: number): Promise<ApiResponse<boolean>>;
+  deleteDeliveries(deliveryIds: number[]): Promise<ApiResponse<number>>;
 }
-
 // ============================================================================
 // Context 상태 타입
 // ============================================================================
@@ -481,6 +681,20 @@ export interface LiveDriverLocation {
   heading?: number;
   speed?: number;
   updatedAt: string;
+}
+
+// ✅ 신규: 소켓 위치 업데이트 페이로드 — 백엔드가 driverId 없이 deliveryId만 보낼 수 있음
+export interface DriverLocationPayload {
+  deliveryId: number;
+  driverId?: number; // optional — 백엔드 구현에 따라 없을 수 있음
+  location: {
+    lat: number;
+    lng: number;
+    accuracy?: number;
+    heading?: number;
+    speed?: number;
+    timestamp: string;
+  };
 }
 
 export interface DeliveryRealtimeState {

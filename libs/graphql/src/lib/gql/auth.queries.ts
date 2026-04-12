@@ -1,115 +1,132 @@
 import { gql } from '@apollo/client';
 import { USER_MEMBERSHIP_FIELDS } from './loyalty.queries.js';
 
-export const ERROR_INFO_FIELDS = gql`
-  fragment ErrorInfoFields on ErrorInfo {
+// ─── Shared Fragments ────────────────────────────────────────────────────────
+
+export const AUTH_ERROR_INFO_FIELDS = gql`
+  fragment AuthErrorInfoFields on ErrorInfo {
     code
     message
     details
   }
 `;
 
-// [수정됨] Auth Service에서도 인식 가능한 기본 유저 필드 (Membership 제외)
+export const PAGINATION_INFO_FIELDS = gql`
+  fragment PaginationInfoFields on PaginationInfo {
+    total
+    page
+    limit
+    totalPages
+    hasNextPage
+    hasPreviousPage
+  }
+`;
+
+// ─── User Fragments ───────────────────────────────────────────────────────────
+
+export const ACTIVATION_FIELDS = gql`
+  fragment ActivationFields on Activation {
+    id
+    twoFactorSecret
+    twoFactorActivated
+    emergencyEmailCode
+    emergencyEmailCodeExpiresAt
+    emailChangeToken
+    emailChangeExpiresAt
+    emailChangeNewEmail
+    resetPasswordToken
+    resetPasswordExpiresAt
+    socialLinkToken
+    socialLinkExpiresAt
+    socialLinkData
+    userId
+    createdAt
+    updatedAt
+  }
+`;
+
+export const AVATAR_FIELDS = gql`
+  fragment AvatarFields on Avatar {
+    id
+    url
+    altText
+    publicId
+    userId
+    createdAt
+    updatedAt
+  }
+`;
+
+export const BUSINESS_FIELDS = gql`
+  fragment BusinessFields on Business {
+    id
+    businessNumber
+    representativeName
+    businessName
+    establishmentDate
+    businessAddress
+    businessType
+    businessItem
+    businessStatusCode
+    isValidated
+    validatedAt
+    validationMethod
+    userId
+    createdAt
+    updatedAt
+  }
+`;
+
 export const CORE_USER_FIELDS = gql`
+  ${ACTIVATION_FIELDS}
+  ${AVATAR_FIELDS}
+  ${BUSINESS_FIELDS}
   fragment CoreUserFields on User {
     id
-    accessToken
-    avatarUrl
-    createdAt
-    deletedAt
     email
-    emailVerified
-    emailVerifiedAt
-    hasBusiness
+    password
+    name
+    phoneNumber
+    userType
+    role
     isActive
-    isSocialUser
-    lastLoginAt
+    rememberMe
     marketingConsent
     marketingConsentDate
     marketingConsentIp
     marketingConsentSource
-    name
-    password
-    phoneNumber
-    refreshToken
-    rememberMe
-    role
-    socialAccountsCount
+    emailVerified
+    emailVerifiedAt
     termsAccepted
     termsAcceptedAt
-    twoFactorEnabled
-    updatedAt
-    userType
-    telecomOperator
-    realPhoneNumber
-    realName
-    realGender
-    realBirthDate
-    isForeigner
-    identityVerifiedAt
+    accessToken
+    refreshToken
+    isSocialUser
     identityVerified
+    identityVerifiedAt
+    realName
+    realPhoneNumber
+    realBirthDate
+    realGender
     ci
+    telecomOperator
+    isForeigner
+    avatarUrl
+    hasBusiness
+    twoFactorEnabled
+    socialAccountsCount
+    createdAt
+    updatedAt
+    deletedAt
+    lastLoginAt
     activation {
-      twoFactorSecret
-      twoFactorActivated
-      userId
-      updatedAt
-      socialLinkToken
-      socialLinkExpiresAt
-      socialLinkData
-      resetPasswordToken
-      resetPasswordExpiresAt
-      id
-      emergencyEmailCodeExpiresAt
-      emergencyEmailCode
-      emailChangeToken
-      emailChangeNewEmail
-      emailChangeExpiresAt
-      deletedAt
+      ...ActivationFields
     }
     avatar {
-      userId
-      url
-      updatedAt
-      publicId
-      id
-      deletedAt
-      createdAt
-      altText
+      ...AvatarFields
     }
     business {
-      apiResponse {
-        data {
-          b_no
-          b_stt
-          b_stt_cd
-          end_dt
-          invoice_apply_dt
-          rbf_tax_type
-          rbf_tax_type_cd
-          tax_type
-          tax_type_cd
-          tax_type_change_dt
-          utcc_yn
-        }
-      }
-      businessAddress
-      businessItem
-      businessName
-      businessNumber
-      businessStatusCode
-      businessType
-      createdAt
-      deletedAt
-      establishmentDate
-      id
-      isValidated
-      representativeName
-      updatedAt
-      userId
-      validatedAt
-      validationData
-      validationMethod
+      ...BusinessFields
     }
   }
 `;
@@ -125,28 +142,13 @@ export const USER_FIELDS = gql`
   }
 `;
 
+// ─── Domain Fragments ─────────────────────────────────────────────────────────
+
 export const TWO_FACTOR_STATUS_FIELDS = gql`
   fragment TwoFactorStatusFields on TwoFactorStatus {
     isEnabled
     isSocialUser
     success
-  }
-`;
-
-export const BUSINESS_UPDATE_INFO_FIELDS = gql`
-  fragment BusinessUpdateInfoFields on BusinessUpdateInfo {
-    field
-    previousValue
-    newValue
-  }
-`;
-
-export const EMAIL_CHANGE_INFO_FIELDS = gql`
-  fragment EmailChangeInfoFields on EmailChangeInfo {
-    maskedEmail
-    originalEmail
-    isVerified
-    verifiedAt
   }
 `;
 
@@ -164,22 +166,28 @@ export const IDENTITY_VERIFICATION_FIELDS = gql`
     errorCode
     errorMessage
     expiresAt
+    createdAt
+    updatedAt
   }
 `;
 
-// 페이지네이션 정보
-export const PAGINATION_INFO_FIELDS = gql`
-  fragment PaginationInfoFields on PaginationInfo {
-    total
-    page
-    limit
-    totalPages
-    hasNextPage
-    hasPreviousPage
+export const EMAIL_CHANGE_INFO_FIELDS = gql`
+  fragment EmailChangeInfoFields on EmailChangeInfo {
+    maskedEmail
+    originalEmail
+    isVerified
+    verifiedAt
   }
 `;
 
-// 사용자 초대 정보
+export const BUSINESS_UPDATE_INFO_FIELDS = gql`
+  fragment BusinessUpdateInfoFields on BusinessUpdateInfo {
+    field
+    previousValue
+    newValue
+  }
+`;
+
 export const USER_INVITATION_FIELDS = gql`
   fragment UserInvitationFields on UserInvitation {
     id
@@ -200,7 +208,8 @@ export const USER_INVITATION_FIELDS = gql`
   }
 `;
 
-// 통계 관련 Fragments
+// ─── Stats Fragments ──────────────────────────────────────────────────────────
+
 export const OVERVIEW_STATS_FIELDS = gql`
   fragment OverviewStatsFields on OverviewStats {
     totalUsers
@@ -238,11 +247,503 @@ export const GROWTH_STATS_FIELDS = gql`
   }
 `;
 
-/**
- * Queries
- */
+// ─── Output Fragments ─────────────────────────────────────────────────────────
 
-// 현재 로그인한 사용자 조회
+export const REGISTER_USER_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment RegisterUserOutputFields on RegisterUserOutput {
+    success
+    message
+    verificationMessage
+    marketingConsentMessage
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const VERIFY_ACTIVATION_CODE_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment VerifyActivationCodeOutputFields on VerifyActivationCodeOutput {
+    success
+    verified
+    successMessage
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const RESEND_ACTIVATION_CODE_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ResendActivationCodeOutputFields on ResendActivationCodeOutput {
+    success
+    message
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const LOGIN_STEP1_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${CORE_USER_FIELDS}
+  fragment LoginStep1OutputFields on LoginUser1Output {
+    success
+    requires2FA
+    tempToken
+    accessToken
+    refreshToken
+    error {
+      ...AuthErrorInfoFields
+    }
+    user {
+      ...CoreUserFields
+    }
+  }
+`;
+
+export const LOGIN_STEP2_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment LoginStep2OutputFields on LoginUser2Output {
+    success
+    accessToken
+    refreshToken
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const REFRESH_TOKEN_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${CORE_USER_FIELDS}
+  fragment RefreshTokenOutputFields on RefreshTokenOutput {
+    success
+    accessToken
+    refreshToken
+    error {
+      ...AuthErrorInfoFields
+    }
+    user {
+      ...CoreUserFields
+    }
+  }
+`;
+
+export const DELETE_ACCOUNT_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment DeleteAccountOutputFields on DeleteAccountOutput {
+    success
+    message
+    deletedAt
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const GENERATE_2FA_QR_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment Generate2FAQROutputFields on Generate2FAQROutput {
+    success
+    qrCodeImage
+    manualEntryKey
+    statusMessage
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const ENABLE_2FA_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment Enable2FAOutputFields on Enable2FAOutput {
+    success
+    statusMessage
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const DISABLE_2FA_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment Disable2FAOutputFields on Disable2FAOutput {
+    success
+    statusMessage
+    accessToken
+    refreshToken
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const REQUEST_EMERGENCY_CODE_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment RequestEmergencyCodeOutputFields on RequestEmergencyCodeOutput {
+    success
+    statusMessage
+    emailSent
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const CHANGE_PASSWORD_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ChangePasswordOutputFields on ChangePasswordOutput {
+    success
+    statusMessage
+    emailSent
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const FORGOT_PASSWORD_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ForgotPasswordOutputFields on ForgotPasswordOutput {
+    success
+    statusMessage
+    emailSent
+    resetToken
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const RESET_PASSWORD_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ResetPasswordOutputFields on ResetPasswordOutput {
+    success
+    statusMessage
+    emailSent
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const UPDATE_NAME_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${CORE_USER_FIELDS}
+  fragment UpdateNameOutputFields on UpdateNameOutput {
+    success
+    statusMessage
+    newName
+    error {
+      ...AuthErrorInfoFields
+    }
+    user {
+      ...CoreUserFields
+    }
+  }
+`;
+
+export const CHANGE_EMAIL_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ChangeEmailOutputFields on ChangeEmailOutput {
+    success
+    statusMessage
+    verificationMessage
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const EMAIL_CHANGE_VERIFY_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${EMAIL_CHANGE_INFO_FIELDS}
+  fragment EmailChangeVerifyOutputFields on EmailChangeVerifyOutput {
+    success
+    statusMessage
+    completedAt
+    newEmail {
+      ...EmailChangeInfoFields
+    }
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const UPDATE_PHONE_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment UpdatePhoneOutputFields on UpdatePhoneOutput {
+    success
+    statusMessage
+    maskedPhoneNumber
+    updatedAt
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const UPDATE_BUSINESS_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${BUSINESS_UPDATE_INFO_FIELDS}
+  fragment UpdateBusinessOutputFields on UpdateBusinessOutput {
+    success
+    statusMessage
+    updatedAt
+    requiresRevalidation
+    changes {
+      ...BusinessUpdateInfoFields
+    }
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const DELETE_AVATAR_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment DeleteAvatarOutputFields on DeleteAvatarOutput {
+    success
+    message
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const SOCIAL_LOGIN_START_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment SocialLoginStartOutputFields on SocialLoginStartOutput {
+    success
+    loginUrl
+    provider
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const VERIFY_SOCIAL_EMAIL_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${CORE_USER_FIELDS}
+  fragment VerifySocialEmailOutputFields on VerifySocialEmailOutput {
+    success
+    accessToken
+    refreshToken
+    error {
+      ...AuthErrorInfoFields
+    }
+    user {
+      ...CoreUserFields
+    }
+  }
+`;
+
+export const RESEND_SOCIAL_ACTIVATION_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ResendSocialActivationOutputFields on ResendSocialActivationOutput {
+    success
+    message
+    verificationCode
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const UNLINK_SOCIAL_ACCOUNT_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment UnlinkSocialAccountOutputFields on UnlinkSocialAccountOutput {
+    success
+    message
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const IDENTITY_VERIFICATION_RESPONSE_FIELDS = gql`
+  ${IDENTITY_VERIFICATION_FIELDS}
+  fragment IdentityVerificationResponseFields on IdentityVerificationResponse {
+    success
+    message
+    identityVerificationId
+    errorCode
+    identityVerification {
+      ...IdentityVerificationFields
+    }
+  }
+`;
+
+export const NTS_VALIDATION_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment NTSValidationOutputFields on NTSValidationOutput {
+    success
+    isValid
+    statusCode
+    statusMessage
+    rawData
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const PAGINATED_USERS_RESPONSE_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${USER_FIELDS}
+  ${PAGINATION_INFO_FIELDS}
+  fragment PaginatedUsersResponseFields on PaginatedUsersResponse {
+    success
+    users {
+      ...UserFields
+    }
+    pagination {
+      ...PaginationInfoFields
+    }
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const USERS_STATS_RESPONSE_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${OVERVIEW_STATS_FIELDS}
+  ${VERIFICATION_STATS_FIELDS}
+  ${USER_TYPE_STATS_FIELDS}
+  ${GROWTH_STATS_FIELDS}
+  fragment UsersStatsResponseFields on UsersStatsResponse {
+    success
+    overview {
+      ...OverviewStatsFields
+    }
+    verification {
+      ...VerificationStatsFields
+    }
+    userTypes {
+      ...UserTypeStatsFields
+    }
+    growth {
+      ...GrowthStatsFields
+    }
+    roleDistribution
+    timestamp
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const INVITE_USER_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${USER_INVITATION_FIELDS}
+  fragment InviteUserOutputFields on InviteUserOutput {
+    success
+    invitationId
+    email
+    expiresAt
+    message
+    invitation {
+      ...UserInvitationFields
+    }
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const PAGINATED_INVITATIONS_RESPONSE_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${USER_INVITATION_FIELDS}
+  ${PAGINATION_INFO_FIELDS}
+  fragment PaginatedInvitationsResponseFields on PaginatedInvitationsResponse {
+    success
+    invitations {
+      ...UserInvitationFields
+    }
+    pagination {
+      ...PaginationInfoFields
+    }
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const CANCEL_INVITATION_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${USER_INVITATION_FIELDS}
+  fragment CancelInvitationOutputFields on CancelInvitationOutput {
+    success
+    invitation {
+      ...UserInvitationFields
+    }
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const RESEND_INVITATION_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment ResendInvitationOutputFields on ResendInvitationOutput {
+    success
+    expiresAt
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
+export const CREATE_GUEST_USER_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  ${CORE_USER_FIELDS}
+  fragment CreateGuestUserOutputFields on CreateGuestUserOutput {
+    success
+    message
+    error {
+      ...AuthErrorInfoFields
+    }
+    user {
+      ...CoreUserFields
+    }
+  }
+`;
+
+export const CHANGE_ROLE_OUTPUT_FIELDS = gql`
+  fragment ChangeRoleOutputFields on ChangeRoleOutput {
+    success
+    message
+    user {
+      id
+      email
+      name
+      role
+      userType
+    }
+  }
+`;
+
+export const ADMIN_MASTER_KEY_OUTPUT_FIELDS = gql`
+  fragment AdminMasterKeyOutputFields on AdminMasterKeyOutput {
+    success
+    message
+    user {
+      id
+      email
+      name
+      role
+      userType
+    }
+  }
+`;
+
+// ─── Auth Queries ─────────────────────────────────────────────────────────────
+
 export const GET_LOGGED_IN_USER = gql`
   ${USER_FIELDS}
   query GetLoggedInUser {
@@ -252,7 +753,6 @@ export const GET_LOGGED_IN_USER = gql`
   }
 `;
 
-// 2FA 상태 조회
 export const GET_2FA_STATUS = gql`
   ${TWO_FACTOR_STATUS_FIELDS}
   query Get2FAStatus {
@@ -262,29 +762,21 @@ export const GET_2FA_STATUS = gql`
   }
 `;
 
-// 소셜 로그인 URL 생성
 export const GET_SOCIAL_LOGIN_URL = gql`
+  ${SOCIAL_LOGIN_START_OUTPUT_FIELDS}
   query GetSocialLoginUrl($input: SocialLoginStartInput!) {
     getSocialLoginUrl(input: $input) {
-      success
-      error {
-        ...ErrorInfoFields
-      }
-      loginUrl
-      provider
+      ...SocialLoginStartOutputFields
     }
   }
-  ${ERROR_INFO_FIELDS}
 `;
 
-// 연결된 소셜 계정 제공자 목록
 export const GET_CONNECTED_SOCIAL_PROVIDERS = gql`
   query GetConnectedSocialProviders {
     getConnectedSocialProviders
   }
 `;
 
-// 본인인증 단건 조회
 export const GET_IDENTITY_VERIFICATION = gql`
   ${IDENTITY_VERIFICATION_FIELDS}
   query GetIdentityVerification($identityVerificationId: String!) {
@@ -294,14 +786,12 @@ export const GET_IDENTITY_VERIFICATION = gql`
   }
 `;
 
-// 본인인증 클라이언트 설정 조회 (JSON string)
 export const GET_IDENTITY_VERIFICATION_CONFIG = gql`
   query GetIdentityVerificationConfig {
     getIdentityVerificationConfig
   }
 `;
 
-// 본인인증 요청 데이터 생성 (JSON string)
 export const GENERATE_VERIFICATION_REQUEST = gql`
   query GenerateVerificationRequest(
     $identityVerificationId: String!
@@ -314,7 +804,6 @@ export const GENERATE_VERIFICATION_REQUEST = gql`
   }
 `;
 
-// 본인인증 URL 생성 (SSR용)
 export const GENERATE_VERIFICATION_URL = gql`
   query GenerateVerificationUrl(
     $identityVerificationId: String!
@@ -328,32 +817,18 @@ export const GENERATE_VERIFICATION_URL = gql`
 `;
 
 export const VALIDATE_BUSINESS_NUMBER = gql`
-  ${ERROR_INFO_FIELDS}
+  ${NTS_VALIDATION_OUTPUT_FIELDS}
   query ValidateBusinessNumber($businessNumber: String!) {
     validateBusinessNumber(businessNumber: $businessNumber) {
-      isValid
-      rawData
-      statusCode
-      statusMessage
-      success
-      error {
-        ...ErrorInfoFields
-      }
+      ...NTSValidationOutputFields
     }
   }
 `;
 
-/**
- * ========================================
- * 새로 추가: 관리자 전용 Queries
- * ========================================
- */
+// ─── Admin Queries ────────────────────────────────────────────────────────────
 
-// 전체 사용자 목록 조회 (관리자 전용)
 export const GET_ALL_USERS = gql`
-  ${USER_FIELDS}
-  ${PAGINATION_INFO_FIELDS}
-  ${ERROR_INFO_FIELDS}
+  ${PAGINATED_USERS_RESPONSE_FIELDS}
   query GetAllUsers(
     $page: Int
     $limit: Int
@@ -368,21 +843,11 @@ export const GET_ALL_USERS = gql`
       role: $role
       status: $status
     ) {
-      success
-      users {
-        ...UserFields
-      }
-      pagination {
-        ...PaginationInfoFields
-      }
-      error {
-        ...ErrorInfoFields
-      }
+      ...PaginatedUsersResponseFields
     }
   }
 `;
 
-// 특정 사용자 조회 (관리자 전용)
 export const GET_USER_BY_ID = gql`
   ${USER_FIELDS}
   query GetUserById($id: Int!) {
@@ -392,59 +857,24 @@ export const GET_USER_BY_ID = gql`
   }
 `;
 
-// 사용자 통계 (관리자 전용)
 export const GET_USERS_STATS = gql`
-  ${OVERVIEW_STATS_FIELDS}
-  ${VERIFICATION_STATS_FIELDS}
-  ${USER_TYPE_STATS_FIELDS}
-  ${GROWTH_STATS_FIELDS}
-  ${ERROR_INFO_FIELDS}
+  ${USERS_STATS_RESPONSE_FIELDS}
   query GetUsersStats {
     getUsersStats {
-      success
-      overview {
-        ...OverviewStatsFields
-      }
-      verification {
-        ...VerificationStatsFields
-      }
-      userTypes {
-        ...UserTypeStatsFields
-      }
-      growth {
-        ...GrowthStatsFields
-      }
-      roleDistribution
-      timestamp
-      error {
-        ...ErrorInfoFields
-      }
+      ...UsersStatsResponseFields
     }
   }
 `;
 
-// 초대 목록 조회
 export const GET_INVITATIONS = gql`
-  ${USER_INVITATION_FIELDS}
-  ${PAGINATION_INFO_FIELDS}
-  ${ERROR_INFO_FIELDS}
+  ${PAGINATED_INVITATIONS_RESPONSE_FIELDS}
   query GetInvitations($page: Int, $limit: Int, $status: InvitationStatus) {
     getInvitations(page: $page, limit: $limit, status: $status) {
-      success
-      invitations {
-        ...UserInvitationFields
-      }
-      pagination {
-        ...PaginationInfoFields
-      }
-      error {
-        ...ErrorInfoFields
-      }
+      ...PaginatedInvitationsResponseFields
     }
   }
 `;
 
-// ✅ 초대 토큰 검증 (공개 API)
 export const VERIFY_INVITATION_TOKEN = gql`
   query VerifyInvitationToken($token: String!) {
     verifyInvitationToken(token: $token) {
@@ -457,459 +887,260 @@ export const VERIFY_INVITATION_TOKEN = gql`
   }
 `;
 
-/**
- * Mutations
- */
+// ─── Auth Mutations ───────────────────────────────────────────────────────────
 
-// 회원가입
 export const REGISTER_USER = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
+  ${REGISTER_USER_OUTPUT_FIELDS}
   mutation RegisterUser($registerInput: RegisterUserInput!) {
     registerUser(registerInput: $registerInput) {
-      success
-      message
-      verificationMessage
-      marketingConsentMessage
-      error {
-        ...ErrorInfoFields
-      }
+      ...RegisterUserOutputFields
     }
   }
 `;
 
-// 이메일 인증 코드 확인
 export const VERIFY_ACTIVATION_CODE = gql`
-  ${ERROR_INFO_FIELDS}
+  ${VERIFY_ACTIVATION_CODE_OUTPUT_FIELDS}
   mutation VerifyActivationCode($verifyInput: VerifyActivationCodeInput!) {
     verifyActivationCode(verifyInput: $verifyInput) {
-      success
-      verified
-      successMessage
-      error {
-        ...ErrorInfoFields
-      }
+      ...VerifyActivationCodeOutputFields
     }
   }
 `;
 
-// 이메일 인증 코드 재발송
 export const RESEND_ACTIVATION_CODE = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
+  ${RESEND_ACTIVATION_CODE_OUTPUT_FIELDS}
   mutation ResendActivationCode($input: ResendActivationCodeInput!) {
     resendActivationCode(input: $input) {
-      success
-      message
-      error {
-        ...ErrorInfoFields
-      }
+      ...ResendActivationCodeOutputFields
     }
   }
 `;
 
-// 1단계 로그인
 export const LOGIN_STEP1 = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
+  ${LOGIN_STEP1_OUTPUT_FIELDS}
   mutation LoginStep1($loginInput: LoginUser1Input!) {
     loginStep1(loginInput: $loginInput) {
-      success
-      requires2FA
-      tempToken
-      accessToken
-      refreshToken
-      error {
-        ...ErrorInfoFields
-      }
-      user {
-        ...CoreUserFields
-      }
+      ...LoginStep1OutputFields
     }
   }
 `;
 
-// 2단계 로그인 (2FA)
 export const LOGIN_STEP2 = gql`
-  ${ERROR_INFO_FIELDS}
+  ${LOGIN_STEP2_OUTPUT_FIELDS}
   mutation LoginStep2($loginInput: LoginUser2Input!) {
     loginStep2(loginInput: $loginInput) {
-      success
-      accessToken
-      refreshToken
-      error {
-        ...ErrorInfoFields
-      }
+      ...LoginStep2OutputFields
     }
   }
 `;
 
-// 사용자 계정 탈퇴 (Soft Delete)
+export const REFRESH_TOKEN = gql`
+  ${REFRESH_TOKEN_OUTPUT_FIELDS}
+  mutation RefreshToken {
+    refreshToken {
+      ...RefreshTokenOutputFields
+    }
+  }
+`;
+
 export const DELETE_ACCOUNT = gql`
-  ${ERROR_INFO_FIELDS}
+  ${DELETE_ACCOUNT_OUTPUT_FIELDS}
   mutation DeleteAccount {
     deleteAccount {
-      deletedAt
-      message
-      success
-      error {
-        ...ErrorInfoFields
-      }
+      ...DeleteAccountOutputFields
     }
   }
 `;
 
-// 2FA QR 코드 생성
-export const GENERATE_2FA_QR = gql`
-  ${ERROR_INFO_FIELDS}
-  mutation Generate2FAQr {
-    generate2FAQR {
-      success
-      qrCodeImage
-      manualEntryKey
-      statusMessage
-      error {
-        ...ErrorInfoFields
-      }
-    }
-  }
-`;
-
-// 2FA 활성화
-export const ENABLE_2FA = gql`
-  ${ERROR_INFO_FIELDS}
-  mutation Enable2FA($input: Enable2FAInput!) {
-    enable2FA(input: $input) {
-      success
-      statusMessage
-      error {
-        ...ErrorInfoFields
-      }
-    }
-  }
-`;
-
-// 2FA 비활성화
-export const DISABLE_2FA = gql`
-  ${ERROR_INFO_FIELDS}
-  mutation Disable2FA($input: Disable2FAInput!) {
-    disable2FA(input: $input) {
-      success
-      statusMessage
-      accessToken
-      refreshToken
-      error {
-        ...ErrorInfoFields
-      }
-    }
-  }
-`;
-
-// 긴급 이메일 코드 요청 (2FA 복구)
-export const REQUEST_EMERGENCY_EMAIL_CODE = gql`
-  ${ERROR_INFO_FIELDS}
-  mutation RequestEmergencyEmailCode($input: RequestEmergencyCodeInput!) {
-    requestEmergencyEmailCode(input: $input) {
-      success
-      statusMessage
-      emailSent
-      error {
-        ...ErrorInfoFields
-      }
-    }
-  }
-`;
-
-// 로그인 과정에서 2FA 비활성화
-export const DISABLE_2FA_DURING_LOGIN = gql`
-  ${ERROR_INFO_FIELDS}
-  mutation Disable2FADuringLogin($input: Disable2FADuringLoginInput!) {
-    disable2FADuringLogin(input: $input) {
-      success
-      statusMessage
-      accessToken
-      refreshToken
-      error {
-        ...ErrorInfoFields
-      }
-    }
-  }
-`;
-
-// 로그아웃
 export const LOGOUT = gql`
   mutation Logout {
     logout
   }
 `;
 
-// 모든 디바이스에서 로그아웃
 export const LOGOUT_ALL = gql`
   mutation LogoutAll {
     logoutAll
   }
 `;
 
-// 토큰 갱신
-export const REFRESH_TOKEN = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
-  mutation RefreshToken {
-    refreshToken {
-      success
-      accessToken
-      refreshToken
-      error {
-        ...ErrorInfoFields
-      }
-      user {
-        ...CoreUserFields
-      }
+export const GENERATE_2FA_QR = gql`
+  ${GENERATE_2FA_QR_OUTPUT_FIELDS}
+  mutation Generate2FAQr {
+    generate2FAQR {
+      ...Generate2FAQROutputFields
     }
   }
 `;
 
-// 비밀번호 변경
+export const ENABLE_2FA = gql`
+  ${ENABLE_2FA_OUTPUT_FIELDS}
+  mutation Enable2FA($input: Enable2FAInput!) {
+    enable2FA(input: $input) {
+      ...Enable2FAOutputFields
+    }
+  }
+`;
+
+export const DISABLE_2FA = gql`
+  ${DISABLE_2FA_OUTPUT_FIELDS}
+  mutation Disable2FA($input: Disable2FAInput!) {
+    disable2FA(input: $input) {
+      ...Disable2FAOutputFields
+    }
+  }
+`;
+
+export const REQUEST_EMERGENCY_EMAIL_CODE = gql`
+  ${REQUEST_EMERGENCY_CODE_OUTPUT_FIELDS}
+  mutation RequestEmergencyEmailCode($input: RequestEmergencyCodeInput!) {
+    requestEmergencyEmailCode(input: $input) {
+      ...RequestEmergencyCodeOutputFields
+    }
+  }
+`;
+
+export const DISABLE_2FA_DURING_LOGIN = gql`
+  ${DISABLE_2FA_OUTPUT_FIELDS}
+  mutation Disable2FADuringLogin($input: Disable2FADuringLoginInput!) {
+    disable2FADuringLogin(input: $input) {
+      ...Disable2FAOutputFields
+    }
+  }
+`;
+
 export const CHANGE_PASSWORD = gql`
-  ${ERROR_INFO_FIELDS}
+  ${CHANGE_PASSWORD_OUTPUT_FIELDS}
   mutation ChangePassword($input: ChangePasswordInput!) {
     changePassword(input: $input) {
-      success
-      statusMessage
-      emailSent
-      error {
-        ...ErrorInfoFields
-      }
+      ...ChangePasswordOutputFields
     }
   }
 `;
 
-// 비밀번호 찾기(재설정 이메일 발송)
 export const FORGOT_PASSWORD = gql`
-  ${ERROR_INFO_FIELDS}
+  ${FORGOT_PASSWORD_OUTPUT_FIELDS}
   mutation ForgotPassword($input: ForgotPasswordInput!) {
     forgotPassword(input: $input) {
-      success
-      statusMessage
-      emailSent
-      resetToken
-      error {
-        ...ErrorInfoFields
-      }
+      ...ForgotPasswordOutputFields
     }
   }
 `;
 
-// 비밀번호 재설정
 export const RESET_PASSWORD = gql`
-  ${ERROR_INFO_FIELDS}
+  ${RESET_PASSWORD_OUTPUT_FIELDS}
   mutation ResetPassword($input: ResetPasswordInput!) {
     resetPassword(input: $input) {
-      success
-      statusMessage
-      emailSent
-      error {
-        ...ErrorInfoFields
-      }
+      ...ResetPasswordOutputFields
     }
   }
 `;
 
-// 이름 변경
 export const UPDATE_USER_NAME = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
+  ${UPDATE_NAME_OUTPUT_FIELDS}
   mutation UpdateUserName($input: UpdateNameInput!) {
     updateUserName(input: $input) {
-      success
-      statusMessage
-      newName
-      error {
-        ...ErrorInfoFields
-      }
-      user {
-        ...CoreUserFields
-      }
+      ...UpdateNameOutputFields
     }
   }
 `;
 
-// 이메일 변경 요청
 export const REQUEST_EMAIL_CHANGE = gql`
-  ${ERROR_INFO_FIELDS}
+  ${CHANGE_EMAIL_OUTPUT_FIELDS}
   mutation RequestEmailChange($input: ChangeEmailInput!) {
     requestEmailChange(input: $input) {
-      success
-      statusMessage
-      verificationMessage
-      error {
-        ...ErrorInfoFields
-      }
+      ...ChangeEmailOutputFields
     }
   }
 `;
 
-// 이메일 변경 확인
 export const VERIFY_EMAIL_CHANGE = gql`
-  ${ERROR_INFO_FIELDS}
-  ${EMAIL_CHANGE_INFO_FIELDS}
+  ${EMAIL_CHANGE_VERIFY_OUTPUT_FIELDS}
   mutation VerifyEmailChange($input: EmailChangeVerifyInput!) {
     verifyEmailChange(input: $input) {
-      success
-      statusMessage
-      completedAt
-      newEmail {
-        ...EmailChangeInfoFields
-      }
-      error {
-        ...ErrorInfoFields
-      }
+      ...EmailChangeVerifyOutputFields
     }
   }
 `;
 
-// 전화번호 변경
 export const UPDATE_PHONE_NUMBER = gql`
-  ${ERROR_INFO_FIELDS}
+  ${UPDATE_PHONE_OUTPUT_FIELDS}
   mutation UpdatePhoneNumber($input: UpdatePhoneInput!) {
     updatePhoneNumber(input: $input) {
-      success
-      statusMessage
-      maskedPhoneNumber
-      updatedAt
-      error {
-        ...ErrorInfoFields
-      }
+      ...UpdatePhoneOutputFields
     }
   }
 `;
 
-// 아바타  삭제
-export const DELETE_AVATAR = gql`
-  ${ERROR_INFO_FIELDS}
-  mutation DeleteAvatar($input: DeleteAvatarInput!) {
-    deleteAvatar(input: $input) {
-      message
-      success
-      error {
-        ...ErrorInfoFields
-      }
-    }
-  }
-`;
-
-// 사업자 정보 업데이트
 export const UPDATE_BUSINESS = gql`
-  ${ERROR_INFO_FIELDS}
-  ${BUSINESS_UPDATE_INFO_FIELDS}
+  ${UPDATE_BUSINESS_OUTPUT_FIELDS}
   mutation UpdateBusiness($input: UpdateBusinessInput!) {
     updateBusiness(input: $input) {
-      success
-      statusMessage
-      updatedAt
-      requiresRevalidation
-      changes {
-        ...BusinessUpdateInfoFields
-      }
-      error {
-        ...ErrorInfoFields
-      }
+      ...UpdateBusinessOutputFields
     }
   }
 `;
 
-// 소셜 이메일 인증 완료
+export const DELETE_AVATAR = gql`
+  ${DELETE_AVATAR_OUTPUT_FIELDS}
+  mutation DeleteAvatar($input: DeleteAvatarInput!) {
+    deleteAvatar(input: $input) {
+      ...DeleteAvatarOutputFields
+    }
+  }
+`;
+
 export const VERIFY_SOCIAL_EMAIL = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
+  ${VERIFY_SOCIAL_EMAIL_OUTPUT_FIELDS}
   mutation VerifySocialEmail($input: VerifySocialEmailInput!) {
     verifySocialEmail(input: $input) {
-      success
-      accessToken
-      refreshToken
-      error {
-        ...ErrorInfoFields
-      }
-      user {
-        ...CoreUserFields
-      }
+      ...VerifySocialEmailOutputFields
     }
   }
 `;
 
-// 소셜 이메일 인증 코드 재발송
 export const RESEND_SOCIAL_ACTIVATION_CODE = gql`
-  ${ERROR_INFO_FIELDS}
+  ${RESEND_SOCIAL_ACTIVATION_OUTPUT_FIELDS}
   mutation ResendSocialActivationCode($input: ResendSocialActivationInput!) {
     resendSocialActivationCode(input: $input) {
-      success
-      message
-      verificationCode
-      error {
-        ...ErrorInfoFields
-      }
+      ...ResendSocialActivationOutputFields
     }
   }
 `;
 
-// 소셜 계정 연결 해제
 export const UNLINK_SOCIAL_ACCOUNT = gql`
-  ${ERROR_INFO_FIELDS}
+  ${UNLINK_SOCIAL_ACCOUNT_OUTPUT_FIELDS}
   mutation UnlinkSocialAccount($input: UnlinkSocialAccountInput!) {
     unlinkSocialAccount(input: $input) {
-      success
-      message
-      error {
-        ...ErrorInfoFields
-      }
+      ...UnlinkSocialAccountOutputFields
     }
   }
 `;
 
-// 본인인증 요청 시작
 export const REQUEST_IDENTITY_VERIFICATION = gql`
-  ${IDENTITY_VERIFICATION_FIELDS}
+  ${IDENTITY_VERIFICATION_RESPONSE_FIELDS}
   mutation RequestIdentityVerification(
     $input: RequestIdentityVerificationInput!
   ) {
     requestIdentityVerification(input: $input) {
-      success
-      message
-      identityVerificationId
-      errorCode
-      identityVerification {
-        ...IdentityVerificationFields
-      }
+      ...IdentityVerificationResponseFields
     }
   }
 `;
 
-// 본인인증 결과 검증
 export const VERIFY_IDENTITY_VERIFICATION = gql`
-  ${ERROR_INFO_FIELDS}
-  ${IDENTITY_VERIFICATION_FIELDS}
+  ${IDENTITY_VERIFICATION_RESPONSE_FIELDS}
   mutation VerifyIdentityVerification(
     $input: VerifyIdentityVerificationInput!
   ) {
     verifyIdentityVerification(input: $input) {
-      success
-      message
-      identityVerificationId
-      errorCode
-      identityVerification {
-        ...IdentityVerificationFields
-      }
+      ...IdentityVerificationResponseFields
     }
   }
 `;
 
-/**
- * ========================================
- * 새로 추가: 관리자 전용 Mutations
- * ========================================
- */
+// ─── Admin Mutations ──────────────────────────────────────────────────────────
 
-// 관리자가 사용자 정보 수정
 export const UPDATE_USER_BY_ADMIN = gql`
   ${USER_FIELDS}
   mutation UpdateUserByAdmin($id: Int!, $input: UpdateUserByAdminInput!) {
@@ -919,7 +1150,6 @@ export const UPDATE_USER_BY_ADMIN = gql`
   }
 `;
 
-// 관리자가 사용자 삭제
 export const DELETE_USER_BY_ADMIN = gql`
   ${USER_FIELDS}
   mutation DeleteUserByAdmin($id: Int!) {
@@ -929,59 +1159,57 @@ export const DELETE_USER_BY_ADMIN = gql`
   }
 `;
 
-// 사용자 초대 (이메일 발송)
+export const DELETE_USERS_BY_ADMIN = gql`
+  mutation DeleteUsersByAdmin($ids: [Int!]!) {
+    deleteUsersByAdmin(ids: $ids)
+  }
+`;
+
 export const INVITE_USER = gql`
-  ${USER_INVITATION_FIELDS}
-  ${ERROR_INFO_FIELDS}
+  ${INVITE_USER_OUTPUT_FIELDS}
   mutation InviteUser($input: InviteUserInput!) {
     inviteUser(input: $input) {
-      success
-      invitationId
-      email
-      expiresAt
-      message
-      invitation {
-        ...UserInvitationFields
-      }
-      error {
-        ...ErrorInfoFields
-      }
+      ...InviteUserOutputFields
     }
   }
 `;
 
-// 초대 취소
 export const CANCEL_INVITATION = gql`
-  ${USER_INVITATION_FIELDS}
-  ${ERROR_INFO_FIELDS}
+  ${CANCEL_INVITATION_OUTPUT_FIELDS}
   mutation CancelInvitation($invitationId: Int!) {
     cancelInvitation(invitationId: $invitationId) {
-      success
-      invitation {
-        ...UserInvitationFields
-      }
-      error {
-        ...ErrorInfoFields
-      }
+      ...CancelInvitationOutputFields
     }
   }
 `;
 
-// 초대 재발송
 export const RESEND_INVITATION = gql`
-  ${ERROR_INFO_FIELDS}
+  ${RESEND_INVITATION_OUTPUT_FIELDS}
   mutation ResendInvitation($invitationId: Int!) {
     resendInvitation(invitationId: $invitationId) {
-      success
-      expiresAt
-      error {
-        ...ErrorInfoFields
-      }
+      ...ResendInvitationOutputFields
     }
   }
 `;
 
-// ✅ 초대 수락 (공개 API)
+export const DELETE_INVITATION = gql`
+  mutation DeleteInvitation($invitationId: Int!) {
+    deleteInvitation(invitationId: $invitationId) {
+      success
+      message
+    }
+  }
+`;
+
+export const DELETE_INVITATIONS = gql`
+  mutation DeleteInvitations($ids: [Int!]!) {
+    deleteInvitations(ids: $ids) {
+      success
+      deletedCount
+    }
+  }
+`;
+
 export const ACCEPT_INVITATION = gql`
   mutation AcceptInvitation($token: String!, $input: AcceptInvitationInput!) {
     acceptInvitation(token: $token, input: $input) {
@@ -993,80 +1221,33 @@ export const ACCEPT_INVITATION = gql`
   }
 `;
 
-// ✅ 마스터 키 승격 관련 추가
 export const PROMOTE_TO_SUPER_ADMIN_WITH_MASTER_KEY = gql`
+  ${ADMIN_MASTER_KEY_OUTPUT_FIELDS}
   mutation PromoteToSuperAdminWithMasterKey($input: AdminMasterKeyInput!) {
     promoteToSuperAdminWithMasterKey(input: $input) {
-      success
-      message
-      user {
-        id
-        email
-        name
-        role
-        userType
-      }
+      ...AdminMasterKeyOutputFields
     }
   }
 `;
 
 export const CHANGE_USER_ROLE = gql`
+  ${CHANGE_ROLE_OUTPUT_FIELDS}
   mutation ChangeUserRole($input: ChangeRoleInput!) {
     changeUserRole(input: $input) {
-      success
-      message
-      user {
-        id
-        email
-        name
-        role
-        userType
-      }
+      ...ChangeRoleOutputFields
     }
   }
 `;
 
-// ✅ 신규 추가: 관리자가 게스트 유저 즉시 생성 (이메일 인증 없음)
 export const CREATE_GUEST_USER_BY_ADMIN = gql`
-  ${ERROR_INFO_FIELDS}
-  ${CORE_USER_FIELDS}
+  ${CREATE_GUEST_USER_OUTPUT_FIELDS}
   mutation CreateGuestUserByAdmin($input: CreateGuestUserInput!) {
     createGuestUserByAdmin(input: $input) {
-      success
-      message
-      error {
-        ...ErrorInfoFields
-      }
-      user {
-        ...CoreUserFields
-      }
+      ...CreateGuestUserOutputFields
     }
   }
 `;
 
-// ✅ 신규: 관리자 사용자 다건 삭제 (삭제된 수 반환)
-export const DELETE_USERS_BY_ADMIN = gql`
-  mutation DeleteUsersByAdmin($ids: [Int!]!) {
-    deleteUsersByAdmin(ids: $ids)
-  }
-`;
-
-// ✅ 신규: 초대 단건 삭제 (Hard Delete)
-export const DELETE_INVITATION = gql`
-  mutation DeleteInvitation($invitationId: Int!) {
-    deleteInvitation(invitationId: $invitationId) {
-      success
-      message
-    }
-  }
-`;
-
-// ✅ 신규: 초대 다건 삭제 (Hard Delete)
-export const DELETE_INVITATIONS = gql`
-  mutation DeleteInvitations($ids: [Int!]!) {
-    deleteInvitations(ids: $ids) {
-      success
-      deletedCount
-    }
-  }
-`;
+// ─── Deprecated aliases (하위 호환) ──────────────────────────────────────────
+/** @deprecated AUTH_ERROR_INFO_FIELDS 로 교체 */
+export const ERROR_INFO_FIELDS = AUTH_ERROR_INFO_FIELDS;

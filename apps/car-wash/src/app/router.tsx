@@ -19,7 +19,7 @@ import {
 } from '@starcoex-platform/shadcn-ui';
 
 // 라우트 가드
-import { AuthGuard } from '../components/guards/auth-guard';
+import { AuthGuard } from '../components/guards/auth-guards';
 import BookingPage from '../pages/booking-page';
 
 export const router = createBrowserRouter([

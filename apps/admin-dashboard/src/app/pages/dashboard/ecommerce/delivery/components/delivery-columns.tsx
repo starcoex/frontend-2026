@@ -46,7 +46,14 @@ const PRIORITY_CONFIG: Record<
   URGENT: { label: '긴급', variant: 'destructive' },
 };
 
-export const deliveryColumns: ColumnDef<Delivery>[] = [
+interface DeliveryColumnsOptions {
+  onDeleted?: (deliveryId: number) => void; // ✅ 추가
+}
+
+// ✅ 팩토리 함수로 변경
+export const deliveryColumns = ({
+  onDeleted,
+}: DeliveryColumnsOptions = {}): ColumnDef<Delivery>[] => [
   {
     id: 'select',
     header: ({ table }) => (
@@ -170,6 +177,11 @@ export const deliveryColumns: ColumnDef<Delivery>[] = [
   {
     id: 'actions',
     enableHiding: false,
-    cell: ({ row }) => <DeliveryRowActions delivery={row.original} />,
+    cell: ({ row }) => (
+      <DeliveryRowActions
+        delivery={row.original}
+        onDeleted={onDeleted} // ✅ 추가
+      />
+    ),
   },
 ];

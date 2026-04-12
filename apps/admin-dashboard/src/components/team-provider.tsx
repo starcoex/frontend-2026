@@ -36,6 +36,9 @@ export const TeamProvider = ({ children, initialTeam }: TeamProviderProps) => {
 
   // ✅ 사용자의 팀 정보 가져오기
   const getUserTeam = (): TeamName => {
+    // ✅ DELIVERY 역할은 항상 Delivery 팀 강제 (localStorage 무시)
+    if (currentUser?.role === 'DELIVERY') return 'Delivery';
+
     // 1. 로컬 스토리지에서 저장된 팀 가져오기
     const savedTeam = localStorage.getItem('selectedTeam') as TeamName;
     if (savedTeam) return savedTeam;
@@ -90,6 +93,21 @@ export const TeamProvider = ({ children, initialTeam }: TeamProviderProps) => {
 
   // 사용자 로그인 시 팀 정보 자동 업데이트 (선택사항)
   useEffect(() => {
+    if (currentUser && !initialTeam) {
+      const userTeam = getUserTeam();
+      if (userTeam !== currentTeam) {
+        setCurrentTeam(userTeam);
+      }
+    }
+  }, [currentUser]);
+
+  // ✅ DELIVERY 역할 로그인/변경 시 팀 자동 전환
+  useEffect(() => {
+    if (currentUser?.role === 'DELIVERY') {
+      setCurrentTeam('Delivery');
+      return;
+    }
+
     if (currentUser && !initialTeam) {
       const userTeam = getUserTeam();
       if (userTeam !== currentTeam) {

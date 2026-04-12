@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import {
   ErrorAlert,
   LoadingSpinner,
@@ -9,9 +9,23 @@ import { useDelivery } from '@starcoex-frontend/delivery';
 import { DeliveryTable } from './components/delivery-table';
 
 export default function DeliveryPage() {
-  const { deliveries, isLoading, error, fetchDeliveries } = useDelivery();
+  const { deliveries, isLoading, error, fetchDeliveries, removeDelivery } =
+    useDelivery();
 
   useEffect(() => {
+    fetchDeliveries();
+  }, [fetchDeliveries]);
+
+  // ✅ 단건 삭제 후 로컬 상태에서 제거
+  const handleDeleted = useCallback(
+    (deliveryId: number) => {
+      removeDelivery(deliveryId);
+    },
+    [removeDelivery]
+  );
+
+  // ✅ 다건 삭제 후 목록 새로고침
+  const handleDeleteSuccess = useCallback(() => {
     fetchDeliveries();
   }, [fetchDeliveries]);
 
@@ -35,7 +49,13 @@ export default function DeliveryPage() {
 
       {error && <ErrorAlert error={error} onRetry={() => fetchDeliveries()} />}
 
-      {!error && <DeliveryTable data={deliveries} />}
+      {!error && (
+        <DeliveryTable
+          data={deliveries}
+          onDeleted={handleDeleted}
+          onDeleteSuccess={handleDeleteSuccess}
+        />
+      )}
     </>
   );
 }

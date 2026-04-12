@@ -29,13 +29,15 @@ interface TeamSwitcherProps {
 
 export const TeamSwitcher = ({ teams }: TeamSwitcherProps) => {
   const { isMobile } = useSidebar();
-  const { currentTeam, setCurrentTeam } = useTeamContext();
+  const { currentTeam, setCurrentTeam, userRole } = useTeamContext();
 
   // 현재 선택된 팀 찾기
   const activeTeam =
     teams.find((team) => team.name === currentTeam) || teams[0];
 
   const handleTeamChange = (teamName: string) => {
+    // ✅ DELIVERY 역할은 팀 전환 불가
+    if (userRole === 'DELIVERY') return;
     setCurrentTeam(teamName as TeamName);
   };
 
@@ -63,9 +65,11 @@ export const TeamSwitcher = ({ teams }: TeamSwitcherProps) => {
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
+            {/* ✅ DELIVERY 역할은 드롭다운 트리거 비활성화 */}
             <SidebarMenuButton
               size="lg"
-              className="ring-sidebar-primary/50 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:ring-1"
+              disabled={userRole === 'DELIVERY'}
+              className="ring-sidebar-primary/50 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:ring-1 disabled:cursor-default disabled:opacity-100"
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                 <activeTeam.logo className="size-8" />
@@ -76,38 +80,43 @@ export const TeamSwitcher = ({ teams }: TeamSwitcherProps) => {
                 </span>
                 <span className="truncate text-xs">{activeTeam.plan}</span>
               </div>
-              <ChevronsUpDown className="ml-auto" />
+              {/* ✅ DELIVERY 역할은 전환 아이콘 숨김 */}
+              {userRole !== 'DELIVERY' && (
+                <ChevronsUpDown className="ml-auto" />
+              )}
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            align="start"
-            side={isMobile ? 'bottom' : 'right'}
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Teams
-            </DropdownMenuLabel>
-            {teams.map((team, index) => (
-              <DropdownMenuItem
-                key={team.name}
-                onClick={() => handleTeamChange(team.name)}
-                className="gap-2 p-2 text-balance"
-              >
-                <div className="flex size-6 items-center justify-center rounded-sm border">
-                  <team.logo
-                    className={cn(
-                      'size-4 shrink-0',
-                      index === 0 && 'invert-0 dark:invert'
-                    )}
-                  />
-                </div>
-                {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-          </DropdownMenuContent>
+          {userRole !== 'DELIVERY' && (
+            <DropdownMenuContent
+              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+              align="start"
+              side={isMobile ? 'bottom' : 'right'}
+              sideOffset={4}
+            >
+              <DropdownMenuLabel className="text-muted-foreground text-xs">
+                Teams
+              </DropdownMenuLabel>
+              {teams.map((team, index) => (
+                <DropdownMenuItem
+                  key={team.name}
+                  onClick={() => handleTeamChange(team.name)}
+                  className="gap-2 p-2 text-balance"
+                >
+                  <div className="flex size-6 items-center justify-center rounded-sm border">
+                    <team.logo
+                      className={cn(
+                        'size-4 shrink-0',
+                        index === 0 && 'invert-0 dark:invert'
+                      )}
+                    />
+                  </div>
+                  {team.name}
+                  <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+            </DropdownMenuContent>
+          )}
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>

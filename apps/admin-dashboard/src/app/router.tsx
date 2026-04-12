@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AdminLayout } from './layout/admin-layout';
 import { AuthLayout } from './layout/auth-layout';
 import {
@@ -93,6 +93,15 @@ import DeliveryCreatePage from '@/app/pages/dashboard/ecommerce/delivery/create/
 import DeliveryDriversPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/delivery-drivers-page';
 import DeliveryTrackingPage from '@/app/pages/dashboard/ecommerce/delivery/tracking/delivery-tracking-page';
 import DeliveryDetailPage from '@/app/pages/dashboard/ecommerce/delivery/delivery-detail/delivery-detail-page';
+import DeliveryDriverCreatePage from '@/app/pages/dashboard/ecommerce/delivery/drivers/create/delivery-driver-create-page';
+import DeliveryDriverDetailPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/delivery-driver-detail-page';
+import DeliveryDriverEditPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/edit/delivery-driver-edit-page';
+import DeliveryEditPage from '@/app/pages/dashboard/ecommerce/delivery/edit/delivery-edit-page';
+import { DriverWithProvider } from '@/app/pages/teams/delivery/driver/driver-with-provider';
+import DriverDashboardPage from '@/app/pages/teams/delivery/driver/driver-dashboard-page';
+import DriverDeliveriesPage from '@/app/pages/teams/delivery/driver/deliveries/driver-deliveries-page';
+import DriverActivePage from '@/app/pages/teams/delivery/driver/active/driver-active-page';
+import DriverProfilePage from '@/app/pages/teams/delivery/driver/profile/driver-profile-page';
 
 const router = createBrowserRouter([
   // 🏠 메인 페이지
@@ -125,6 +134,17 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: [
       { index: true, element: <DashboardPage /> },
+      // 🚗 배달기사 전용
+      {
+        path: 'driver',
+        element: <DriverWithProvider />,
+        children: [
+          { path: 'dashboard', element: <DriverDashboardPage /> },
+          { path: 'deliveries', element: <DriverDeliveriesPage /> },
+          { path: 'active', element: <DriverActivePage /> },
+          { path: 'profile', element: <DriverProfilePage /> },
+        ],
+      },
 
       // 매출 현황
       { path: 'sales', element: <SalesPage /> },
@@ -310,9 +330,12 @@ const router = createBrowserRouter([
           { index: true, element: <DeliveryPage /> },
           { path: 'create', element: <DeliveryCreatePage /> },
           { path: 'drivers', element: <DeliveryDriversPage /> },
+          { path: 'drivers/create', element: <DeliveryDriverCreatePage /> },
+          { path: 'drivers/:id', element: <DeliveryDriverDetailPage /> }, // ✅ 추가
+          { path: 'drivers/:id/edit', element: <DeliveryDriverEditPage /> }, // ✅ 추가
           { path: 'tracking', element: <DeliveryTrackingPage /> },
           { path: ':id', element: <DeliveryDetailPage /> },
-          { path: ':id/edit', element: <div>배송 수정 (구현 예정)</div> },
+          { path: ':id/edit', element: <DeliveryEditPage /> }, // ✅ 구현 완료
         ],
       },
 
@@ -525,6 +548,11 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <div>개인정보처리방침 (구현 예정)</div> },
     ],
+  },
+  //  배달기사 전용 (기존 /driver 라우트 — /admin/driver로 리다이렉트)
+  {
+    path: '/driver/*',
+    element: <Navigate to="/admin/driver/dashboard" replace />,
   },
   { path: '*', element: <NotFoundError /> },
 ]);

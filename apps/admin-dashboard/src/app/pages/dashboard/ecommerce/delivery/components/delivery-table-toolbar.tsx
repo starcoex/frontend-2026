@@ -3,9 +3,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Cross2Icon } from '@radix-ui/react-icons';
 import type { Delivery } from '@starcoex-frontend/delivery';
+import { useDelivery } from '@starcoex-frontend/delivery';
 import {
   DataTableFacetedFilter,
   DataTableViewOptions,
+  BulkDeleteToolbar,
 } from '@starcoex-frontend/common';
 
 const DELIVERY_STATUS_OPTIONS = [
@@ -29,9 +31,14 @@ const DELIVERY_PRIORITY_OPTIONS = [
 
 interface DeliveryTableToolbarProps {
   table: Table<Delivery>;
+  onDeleteSuccess?: () => void; // ✅ 다건 삭제 후 새로고침
 }
 
-export function DeliveryTableToolbar({ table }: DeliveryTableToolbarProps) {
+export function DeliveryTableToolbar({
+  table,
+  onDeleteSuccess,
+}: DeliveryTableToolbarProps) {
+  const { deleteDeliveries } = useDelivery();
   const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
@@ -70,7 +77,15 @@ export function DeliveryTableToolbar({ table }: DeliveryTableToolbarProps) {
         </Button>
       )}
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        {/* ✅ BulkDeleteToolbar 패턴 — deleteDeliveries API 사용 */}
+        <BulkDeleteToolbar
+          table={table}
+          onDelete={(ids) => deleteDeliveries(ids)}
+          onSuccess={onDeleteSuccess}
+          itemLabel="배송"
+          deleteDescription="선택한 배송을 삭제합니다. 진행 중인 배송(픽업 완료, 배송 중)은 삭제되지 않을 수 있습니다."
+        />
         <DataTableViewOptions table={table} />
       </div>
     </div>

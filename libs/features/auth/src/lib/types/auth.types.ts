@@ -254,3 +254,26 @@ export interface IAuthService {
   // 유틸리티 메서드들 (추가)
   clearAuthCache(): void;
 }
+
+// ============================================================================
+// Context 상태 타입
+// ============================================================================
+
+export interface AuthState {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  isAuthenticated: boolean | null;
+  initialized: boolean;
+}
+
+export interface AuthContextActions {
+  setUser: (user: User | null) => void;
+  setLoading: () => void;
+  setError: (message: string | null) => void;
+  setLogout: () => void;
+  setInitialized: () => void;
+  clearError: () => void;
+}
+
+export type AuthContextValue = AuthState & AuthContextActions;

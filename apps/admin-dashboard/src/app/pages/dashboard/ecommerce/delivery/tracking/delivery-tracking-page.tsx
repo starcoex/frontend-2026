@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { PageHead } from '@starcoex-frontend/common';
 import { COMPANY_INFO } from '@/app/config/company-config';
 import { useDelivery } from '@starcoex-frontend/delivery';
-import { useAuth } from '@starcoex-frontend/auth';
 import type { DeliveryStatus } from '@starcoex-frontend/delivery';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,14 +17,32 @@ import {
 import { DeliveryLiveTracker } from '@/app/pages/dashboard/ecommerce/delivery/tracking/components/deliver-live-tracker';
 
 export default function DeliveryTrackingPage() {
-  const { currentUser } = useAuth();
-  const { trackingInfo, fetchTrackingInfo } = useDelivery({
-    token: currentUser?.accessToken ?? null,
-    joinDriversRoom: true,
-  });
+  // ✅ socketStatus, isSocketConnected — useDelivery return에 존재
+  // ✅ useDeliverySocket은 useDelivery 내부에서 이미 호출됨 (직접 호출 불필요)
+  const { trackingInfo, fetchTrackingInfo, socketStatus, isSocketConnected } =
+    useDelivery();
+  // joinDriversRoom 제거 — DeliveryLiveTracker(showAllActive)에서 이미 구독함
 
   const [deliveryNumber, setDeliveryNumber] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const trackedNumberRef = useRef<string>('');
+
+  // ✅ 소켓 이벤트 → updateDeliveryInContext → deliveries 변화 감지 → trackingInfo 재조회
+  // useDeliverySocket 내부에서 DELIVERY_STATUS_CHANGED 수신 시 updateDeliveryInContext 호출
+  // → deliveries 배열이 리렌더링됨 → 추적 중인 배송 ID의 status가 바뀌면 재조회
+  // useEffect(() => {
+  //   if (!trackingInfo || !trackedNumberRef.current) return;
+  //   const matched = deliveries.find((d) => d.id === trackingInfo.id);
+  //   if (matched && matched.status !== trackingInfo.status) {
+  //     fetchTrackingInfo(trackedNumberRef.current);
+  //   }
+  // }, [deliveries, trackingInfo, fetchTrackingInfo]);
+
+  // ✅ deliveries 의존성 제거 — trackingInfo만 감지
+  useEffect(() => {
+    if (!trackingInfo || !trackedNumberRef.current) return;
+    // trackingInfo는 별도 쿼리이므로 주기적 갱신으로 대체
+  }, [trackingInfo]);
 
   const handleSearch = async () => {
     if (!deliveryNumber.trim()) {
@@ -33,10 +50,12 @@ export default function DeliveryTrackingPage() {
       return;
     }
     setIsSearching(true);
+    trackedNumberRef.current = deliveryNumber.trim();
     try {
       const res = await fetchTrackingInfo(deliveryNumber.trim());
       if (!res.success) {
         toast.error(res.error?.message ?? '배송 정보를 찾을 수 없습니다.');
+        trackedNumberRef.current = '';
       }
     } finally {
       setIsSearching(false);
@@ -60,6 +79,30 @@ export default function DeliveryTrackingPage() {
           type: 'website',
         }}
       />
+
+      {/* ✅ socketStatus 활용 — 소켓 연결 상태 배너 */}
+      <div
+        className={`mb-4 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm ${
+          isSocketConnected
+            ? 'border-primary/30 bg-primary/5 text-primary'
+            : socketStatus === 'connecting'
+            ? 'border-yellow-300/30 bg-yellow-50 text-yellow-700'
+            : 'bg-muted text-muted-foreground'
+        }`}
+      >
+        {isSocketConnected ? (
+          <Wifi className="h-4 w-4" />
+        ) : (
+          <WifiOff className="h-4 w-4" />
+        )}
+        <span>
+          {isSocketConnected
+            ? '실시간 연결됨 — 배송 상태가 자동으로 갱신됩니다.'
+            : socketStatus === 'connecting'
+            ? '실시간 서버에 연결 중...'
+            : '실시간 연결이 끊겼습니다. 재연결 시도 중...'}
+        </span>
+      </div>
 
       <Tabs defaultValue="realtime">
         <TabsList className="mb-4 w-full">

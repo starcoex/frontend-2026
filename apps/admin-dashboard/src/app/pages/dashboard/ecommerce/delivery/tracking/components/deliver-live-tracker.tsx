@@ -5,14 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useDelivery } from '@starcoex-frontend/delivery';
-import { useAuth } from '@starcoex-frontend/auth';
 import type { Delivery } from '@starcoex-frontend/delivery';
 import {
   DELIVERY_STATUS_CONFIG,
   formatEstimatedTime,
 } from '@/app/pages/dashboard/ecommerce/delivery/data/delivery-data';
 import { DeliveryMapMarker } from '@/app/pages/dashboard/ecommerce/delivery/maps/components/delivery-map-market';
-import { DeliveryDriverStatusCard } from '@/app/pages/dashboard/ecommerce/delivery/drivers/components/delivery-driver.status-card';
+import { DeliveryDriverStatusCard } from '@/app/pages/dashboard/ecommerce/delivery/drivers/components/delivery-driver-status-card';
 import { DeliveryRealtimeMap } from '@/app/pages/dashboard/ecommerce/delivery/maps/components/delivery-realtime-map';
 
 interface DeliveryLiveTrackerProps {
@@ -22,11 +21,28 @@ interface DeliveryLiveTrackerProps {
 
 const DEFAULT_CENTER = { lat: 36.5, lng: 127.5 };
 
+// ✅ 공통 주소 파싱 함수 — 이중 직렬화 대응
+function parseAddressField(raw: unknown): string {
+  try {
+    let obj = raw;
+    // 문자열이면 1차 파싱
+    if (typeof obj === 'string') obj = JSON.parse(obj);
+    // 여전히 문자열이면 2차 파싱 (이중 직렬화)
+    if (typeof obj === 'string') obj = JSON.parse(obj);
+    if (obj && typeof obj === 'object') {
+      const { address, detail } = obj as Record<string, string>;
+      return [address, detail].filter(Boolean).join(', ') || '주소 정보 없음';
+    }
+    return '주소 정보 없음';
+  } catch {
+    return '주소 정보 없음';
+  }
+}
+
 export function DeliveryLiveTracker({
   deliveryId,
   showAllActive = false,
 }: DeliveryLiveTrackerProps) {
-  const { currentUser } = useAuth();
   const {
     deliveries,
     currentDelivery,
@@ -38,7 +54,6 @@ export function DeliveryLiveTracker({
     fetchDeliveryById,
     fetchDeliveries,
   } = useDelivery({
-    token: currentUser?.accessToken ?? null,
     deliveryId,
     joinDriversRoom: showAllActive,
   });
@@ -48,25 +63,65 @@ export function DeliveryLiveTracker({
   );
   const [singleMapCenter, setSingleMapCenter] = useState(DEFAULT_CENTER);
 
+  const ACTIVE_STATUSES = [
+    'IN_TRANSIT',
+    'PICKED_UP',
+    'ACCEPTED',
+    'DRIVER_ASSIGNED',
+  ] as const;
+  const INACTIVE_STATUSES = ['DELIVERED', 'FAILED', 'CANCELLED', 'RETURNED'];
+
   useEffect(() => {
     if (deliveryId) {
       fetchDeliveryById(deliveryId);
     } else if (showAllActive) {
       fetchDeliveries({
-        statuses: ['IN_TRANSIT', 'PICKED_UP', 'ACCEPTED', 'DRIVER_ASSIGNED'],
+        statuses: [...ACTIVE_STATUSES],
         includeDriver: true,
         limit: 50,
       });
     }
   }, [deliveryId, showAllActive]);
 
+  // 단일 추적: currentDelivery → selectedDelivery 동기화
   useEffect(() => {
     if (deliveryId && currentDelivery) {
       setSelectedDelivery(currentDelivery);
     }
   }, [deliveryId, currentDelivery]);
 
-  // 단일 추적 시 기사 위치 업데이트 → 지도 중심 이동
+  // ✅ 소켓 업데이트 시 selectedDelivery 동기화
+  useEffect(() => {
+    if (!selectedDelivery) return;
+    const updated = deliveries.find((d) => d.id === selectedDelivery.id);
+
+    if (!updated) {
+      // deliveries에서 사라진 경우 (삭제 등)
+      setSelectedDelivery(null);
+      return;
+    }
+
+    if (updated.status !== selectedDelivery.status) {
+      // ✅ 비활성 상태가 되면 즉시 null 처리 (렌더 전에)
+      if (INACTIVE_STATUSES.includes(updated.status)) {
+        unsubscribeDelivery(updated.id);
+        setSelectedDelivery(null);
+      } else {
+        setSelectedDelivery(updated);
+      }
+    }
+  }, [deliveries, selectedDelivery]);
+
+  // // ✅ 비활성 상태 배송 자동 해제
+  // useEffect(() => {
+  //   if (!showAllActive || !selectedDelivery) return;
+  //   if (INACTIVE_STATUSES.includes(selectedDelivery.status)) {
+  //     unsubscribeDelivery(selectedDelivery.id);
+  //     setSelectedDelivery(null);
+  //   }
+  // }, [deliveries, showAllActive, selectedDelivery, unsubscribeDelivery]);
+
+  // 기사 위치 업데이트 시 지도 중심 이동
   useEffect(() => {
     if (!deliveryId || !selectedDelivery?.driverId) return;
     const loc = liveLocations[selectedDelivery.driverId];
@@ -75,7 +130,15 @@ export function DeliveryLiveTracker({
     }
   }, [liveLocations, deliveryId, selectedDelivery]);
 
-  // ── 단일 배송 추적 뷰 ──────────────────────────────────────────────────────
+  const handleSelectDelivery = useCallback(
+    (d: Delivery) => {
+      setSelectedDelivery(d);
+      subscribeDelivery(d.id);
+    },
+    [subscribeDelivery]
+  );
+
+  // ── 단일 배송 추적 뷰 ──────────────────────────────────────────
 
   if (deliveryId && selectedDelivery) {
     const d = selectedDelivery;
@@ -84,7 +147,6 @@ export function DeliveryLiveTracker({
 
     return (
       <div className="space-y-4">
-        {/* 연결 상태 배너 */}
         <div
           className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm ${
             isSocketConnected
@@ -105,7 +167,6 @@ export function DeliveryLiveTracker({
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          {/* 단일 배송 지도 */}
           <div className="space-y-4 lg:col-span-2">
             <Card>
               <CardContent className="p-0">
@@ -125,7 +186,6 @@ export function DeliveryLiveTracker({
               </CardContent>
             </Card>
 
-            {/* 배송 정보 */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -145,9 +205,9 @@ export function DeliveryLiveTracker({
                       <MapPin className="text-primary h-3.5 w-3.5" />
                       픽업 주소
                     </div>
+                    {/* ✅ parseAddressField 사용 */}
                     <p className="text-muted-foreground pl-5 text-xs">
-                      {(d.pickupAddress as { address?: string }).address ??
-                        JSON.stringify(d.pickupAddress)}
+                      {parseAddressField(d.pickupAddress)}
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -155,9 +215,9 @@ export function DeliveryLiveTracker({
                       <MapPin className="text-destructive h-3.5 w-3.5" />
                       배송 주소
                     </div>
+                    {/* ✅ parseAddressField 사용 */}
                     <p className="text-muted-foreground pl-5 text-xs">
-                      {(d.deliveryAddress as { address?: string }).address ??
-                        JSON.stringify(d.deliveryAddress)}
+                      {parseAddressField(d.deliveryAddress)}
                     </p>
                   </div>
                 </div>
@@ -174,7 +234,7 @@ export function DeliveryLiveTracker({
 
                 {driverLocation ? (
                   <div className="rounded-md bg-muted px-3 py-2 text-xs">
-                    <p className="font-medium">📍 기사 현재 위치 (실시간)</p>
+                    <p className="font-medium">기사 현재 위치 (실시간)</p>
                     <p className="text-muted-foreground mt-1">
                       위도: {driverLocation.lat.toFixed(6)} / 경도:{' '}
                       {driverLocation.lng.toFixed(6)}
@@ -197,7 +257,6 @@ export function DeliveryLiveTracker({
             </Card>
           </div>
 
-          {/* 기사 상태 카드 */}
           <div>
             {d.driver ? (
               <DeliveryDriverStatusCard
@@ -222,27 +281,40 @@ export function DeliveryLiveTracker({
     );
   }
 
-  // ── 전체 활성 배송 대시보드 뷰 ────────────────────────────────────────────
+  // ── 전체 활성 배송 대시보드 뷰 ─────────────────────────────────
+
+  // ✅ 활성 상태 배송만 필터링 (소켓으로 비활성화된 것 제외)
+  const activeDeliveries = deliveries.filter(
+    (d) => !INACTIVE_STATUSES.includes(d.status)
+  );
 
   const activeDrivers = Object.values(
-    deliveries.reduce((acc, d) => {
+    activeDeliveries.reduce((acc, d) => {
       if (d.driver && !acc[d.driver.id]) acc[d.driver.id] = d.driver;
       return acc;
     }, {} as Record<number, NonNullable<(typeof deliveries)[0]['driver']>>)
   );
 
-  const handleSelectDelivery = useCallback(
-    (d: Delivery) => {
-      setSelectedDelivery(d);
-      subscribeDelivery(d.id);
-    },
-    [subscribeDelivery]
-  );
-
   return (
     <div className="space-y-4">
+      {/* ✅ 진행 중인 배송 건수 표시 */}
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm">
+          진행 중인 배송{' '}
+          <span className="text-foreground font-semibold">
+            {activeDeliveries.length}건
+          </span>
+        </p>
+        <p className="text-muted-foreground text-sm">
+          활성 기사{' '}
+          <span className="text-foreground font-semibold">
+            {activeDrivers.length}명
+          </span>
+        </p>
+      </div>
+
       <DeliveryRealtimeMap
-        deliveries={deliveries}
+        deliveries={activeDeliveries}
         liveLocations={liveLocations}
         socketStatus={socketStatus}
         onDeliverySelect={handleSelectDelivery}
@@ -273,22 +345,29 @@ export function DeliveryLiveTracker({
               <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
                 <div>
                   <p className="text-muted-foreground text-xs">상태</p>
+                  {/* ✅ optional chaining으로 undefined 방어 */}
                   <Badge
                     variant={
-                      DELIVERY_STATUS_CONFIG[selectedDelivery.status].variant
+                      DELIVERY_STATUS_CONFIG[selectedDelivery.status]
+                        ?.variant ?? 'outline'
                     }
                   >
-                    {DELIVERY_STATUS_CONFIG[selectedDelivery.status].label}
+                    {DELIVERY_STATUS_CONFIG[selectedDelivery.status]?.label ??
+                      selectedDelivery.status}
                   </Badge>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">배송 주소</p>
+                  <p className="text-muted-foreground text-xs">픽업 주소</p>
+                  {/* ✅ parseAddressField 사용 */}
                   <p className="text-xs">
-                    {(
-                      selectedDelivery.deliveryAddress as {
-                        address?: string;
-                      }
-                    ).address ?? '-'}
+                    {parseAddressField(selectedDelivery.pickupAddress)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">배송 주소</p>
+                  {/* ✅ parseAddressField 사용 */}
+                  <p className="text-xs">
+                    {parseAddressField(selectedDelivery.deliveryAddress)}
                   </p>
                 </div>
                 {selectedDelivery.estimatedTime && (
@@ -298,6 +377,16 @@ export function DeliveryLiveTracker({
                     </p>
                     <p className="text-xs font-medium">
                       {formatEstimatedTime(selectedDelivery.estimatedTime)}
+                    </p>
+                  </div>
+                )}
+                {selectedDelivery.driver && (
+                  <div>
+                    <p className="text-muted-foreground text-xs">배달기사</p>
+                    {/* ✅ driver.totalDeliveries 올바르게 표시 */}
+                    <p className="text-xs font-medium">
+                      {selectedDelivery.driver.name} · 총{' '}
+                      {selectedDelivery.driver.totalDeliveries}건
                     </p>
                   </div>
                 )}

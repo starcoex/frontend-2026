@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useCallback } from 'react';
+import { connectDeliverySocket } from '../socket';
 import { useDeliveryContext } from '../context';
-import { DELIVERY_SOCKET_EVENTS, DELIVERY_SOCKET_NAMESPACE } from '../types';
+import { DELIVERY_SOCKET_EVENTS } from '../types';
 import type {
   DriverLocationPayload,
   DeliveryStatusChangedPayload,
@@ -10,29 +10,23 @@ import type {
   DeliveryCancelledPayload,
   DeliveryCompletedPayload,
 } from '../types';
-import type { DeliveryStatus } from '../types';
+import type { DeliveryStatus, VehicleType } from '../types';
 
 interface UseDeliverySocketOptions {
-  /** 인증 토큰 */
-  token: string | null;
-  /** 서버 URL (기본값: 현재 origin) */
+  token?: string | null;
   serverUrl?: string;
-  /** 특정 배송 ID 구독 (배송 추적 페이지용) */
   deliveryId?: number;
-  /** 드라이버 룸 구독 (관리자/기사 관리 페이지용) */
   joinDriversRoom?: boolean;
-  /** 새 배송 요청 수신 콜백 */
   onNewDeliveryRequest?: (payload: NewDeliveryRequestPayload) => void;
+  enabled?: boolean;
 }
 
 export const useDeliverySocket = ({
-  token,
-  serverUrl,
   deliveryId,
   joinDriversRoom = false,
   onNewDeliveryRequest,
+  enabled = true,
 }: UseDeliverySocketOptions) => {
-  const socketRef = useRef<Socket | null>(null);
   const {
     setSocketStatus,
     setLiveLocation,
@@ -43,166 +37,207 @@ export const useDeliverySocket = ({
     liveLocations,
   } = useDeliveryContext();
 
-  // ── 소켓 연결 ──────────────────────────────────────────────────────────────
-
+  // ── 싱글톤 소켓 이벤트 등록 ────────────────────────────────────────────────
   useEffect(() => {
-    // 토큰 없으면 연결하지 않음
-    if (!token) return;
+    if (!enabled) {
+      setSocketStatus('disconnected');
+      return;
+    }
 
-    const url = serverUrl ?? globalThis.location?.origin ?? '';
+    const socket = connectDeliverySocket();
+    setSocketStatus(socket.connected ? 'connected' : 'connecting');
 
-    setSocketStatus('connecting');
-
-    const socket = io(`${url}${DELIVERY_SOCKET_NAMESPACE}`, {
-      auth: { token },
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
-    });
-
-    socketRef.current = socket;
-
-    // ── 연결 이벤트 ──────────────────────────────────────────────────────────
-
-    socket.on(DELIVERY_SOCKET_EVENTS.CONNECT, () => {
+    const onConnect = () => {
       setSocketStatus('connected');
-      console.info('[DeliverySocket] 연결됨');
-
-      // 드라이버 룸 구독 (관리자용)
       if (joinDriversRoom) {
         socket.emit(DELIVERY_SOCKET_EVENTS.JOIN_DRIVERS);
+        console.info('[DeliverySocket] drivers 룸 구독 요청');
       }
-    });
+    };
 
-    socket.on(DELIVERY_SOCKET_EVENTS.DISCONNECT, (reason: string) => {
-      setSocketStatus('disconnected');
-      console.info('[DeliverySocket] 연결 해제:', reason);
-    });
+    const onDisconnect = (reason: string) => {
+      if (reason !== 'io client disconnect') {
+        setSocketStatus('disconnected');
+        console.info('[DeliverySocket] 연결 해제:', reason);
+      }
+    };
 
-    socket.on(DELIVERY_SOCKET_EVENTS.CONNECT_ERROR, (err: Error) => {
+    const onConnectError = (err: Error) => {
       setSocketStatus('error');
       console.error('[DeliverySocket] 연결 오류:', err.message);
-    });
+    };
 
-    // ── 실시간 이벤트 핸들러 ─────────────────────────────────────────────────
-
-    socket.on(
-      DELIVERY_SOCKET_EVENTS.DRIVER_LOCATION_UPDATED,
-      (payload: DriverLocationPayload) => {
-        setLiveLocation({
-          driverId: payload.driverId,
+    const onDriverLocationUpdated = (payload: DriverLocationPayload) => {
+      const resolvedDriverId = payload.driverId ?? payload.deliveryId;
+      setLiveLocation({
+        driverId: resolvedDriverId,
+        lat: payload.location.lat,
+        lng: payload.location.lng,
+        accuracy: payload.location.accuracy,
+        heading: payload.location.heading,
+        speed: payload.location.speed,
+        updatedAt: payload.location.timestamp,
+      });
+      updateDeliveryInContext(payload.deliveryId, {
+        currentLocation: {
           lat: payload.location.lat,
           lng: payload.location.lng,
-          accuracy: payload.location.accuracy,
-          heading: payload.location.heading,
-          speed: payload.location.speed,
-          updatedAt: payload.location.timestamp,
-        });
-        // currentLocation도 Delivery에 반영
-        updateDeliveryInContext(payload.deliveryId, {
-          currentLocation: {
-            lat: payload.location.lat,
-            lng: payload.location.lng,
-          },
-        });
-      }
-    );
+        },
+        ...(payload.driverId ? { driverId: payload.driverId } : {}),
+      });
+    };
 
+    const onDeliveryStatusChanged = (payload: DeliveryStatusChangedPayload) => {
+      console.info('[DeliverySocket] 상태 변경 수신:', payload);
+      updateDeliveryInContext(payload.deliveryId, {
+        status: payload.toStatus as DeliveryStatus,
+      });
+    };
+
+    const onDriverAssigned = (payload: DriverAssignedPayload) => {
+      console.info('[DeliverySocket] 기사 배정 수신:', payload);
+      updateDeliveryInContext(payload.deliveryId, {
+        driverId: payload.driverId,
+        status: 'DRIVER_ASSIGNED',
+        assignedAt: payload.assignedAt,
+        estimatedTime: payload.estimatedTime ?? undefined,
+        driver: {
+          id: payload.driverId,
+          name: payload.driverName,
+          phone: payload.driverPhone,
+          vehicleType: payload.vehicleType as VehicleType,
+          vehicleNumber: payload.vehicleNumber ?? null,
+          status: 'ACTIVE' as const,
+          isAvailable: false,
+          driverCode: '',
+          userId: 0,
+          createdAt: payload.assignedAt,
+          updatedAt: payload.assignedAt,
+          createdById: 0,
+          updatedById: 0,
+          totalDeliveries: 0,
+          maxConcurrentOrders: 1,
+          paymentType: 'PER_DELIVERY' as const,
+          workingAreas: {},
+          deliveries: [],
+          settlements: [],
+          ratings: [],
+        },
+      });
+    };
+
+    const onDeliveryCancelled = (payload: DeliveryCancelledPayload) => {
+      updateDeliveryInContext(payload.deliveryId, {
+        status: 'CANCELLED',
+        cancelledAt: payload.cancelledAt,
+        cancelReason: payload.reason ?? undefined,
+      });
+    };
+
+    const onDeliveryCompleted = (payload: DeliveryCompletedPayload) => {
+      updateDeliveryInContext(payload.deliveryId, {
+        status: 'DELIVERED',
+        deliveredAt: payload.deliveredAt,
+      });
+    };
+
+    const onNewDeliveryRequestHandler = (
+      payload: NewDeliveryRequestPayload
+    ) => {
+      onNewDeliveryRequest?.(payload);
+    };
+
+    // 이미 connected면 onConnect 수동 호출
+    if (socket.connected) {
+      onConnect();
+    }
+
+    socket.on(DELIVERY_SOCKET_EVENTS.CONNECT, onConnect);
+    socket.on(DELIVERY_SOCKET_EVENTS.DISCONNECT, onDisconnect);
+    socket.on(DELIVERY_SOCKET_EVENTS.CONNECT_ERROR, onConnectError);
+    socket.on(
+      DELIVERY_SOCKET_EVENTS.DRIVER_LOCATION_UPDATED,
+      onDriverLocationUpdated
+    );
     socket.on(
       DELIVERY_SOCKET_EVENTS.DELIVERY_STATUS_CHANGED,
-      (payload: DeliveryStatusChangedPayload) => {
-        updateDeliveryInContext(payload.deliveryId, {
-          status: payload.toStatus as DeliveryStatus,
-        });
-      }
+      onDeliveryStatusChanged
     );
-
-    socket.on(
-      DELIVERY_SOCKET_EVENTS.DRIVER_ASSIGNED,
-      (payload: DriverAssignedPayload) => {
-        updateDeliveryInContext(payload.deliveryId, {
-          driverId: payload.driverId,
-          status: 'DRIVER_ASSIGNED',
-          assignedAt: payload.assignedAt,
-          estimatedTime: payload.estimatedTime ?? undefined,
-        });
-      }
-    );
-
-    socket.on(
-      DELIVERY_SOCKET_EVENTS.DELIVERY_CANCELLED,
-      (payload: DeliveryCancelledPayload) => {
-        updateDeliveryInContext(payload.deliveryId, {
-          status: 'CANCELLED',
-          cancelledAt: payload.cancelledAt,
-          cancelReason: payload.reason ?? undefined,
-        });
-      }
-    );
-
-    socket.on(
-      DELIVERY_SOCKET_EVENTS.DELIVERY_COMPLETED,
-      (payload: DeliveryCompletedPayload) => {
-        updateDeliveryInContext(payload.deliveryId, {
-          status: 'DELIVERED',
-          deliveredAt: payload.deliveredAt,
-        });
-      }
-    );
-
+    socket.on(DELIVERY_SOCKET_EVENTS.DRIVER_ASSIGNED, onDriverAssigned);
+    socket.on(DELIVERY_SOCKET_EVENTS.DELIVERY_CANCELLED, onDeliveryCancelled);
+    socket.on(DELIVERY_SOCKET_EVENTS.DELIVERY_COMPLETED, onDeliveryCompleted);
     socket.on(
       DELIVERY_SOCKET_EVENTS.NEW_DELIVERY_REQUEST,
-      (payload: NewDeliveryRequestPayload) => {
-        onNewDeliveryRequest?.(payload);
-      }
+      onNewDeliveryRequestHandler
     );
 
     return () => {
+      // ✅ 이벤트 리스너만 제거 — 소켓 연결은 유지
       if (joinDriversRoom) {
         socket.emit(DELIVERY_SOCKET_EVENTS.LEAVE_DRIVERS);
       }
-      socket.disconnect();
-      socketRef.current = null;
-      setSocketStatus('disconnected');
+      socket.off(DELIVERY_SOCKET_EVENTS.CONNECT, onConnect);
+      socket.off(DELIVERY_SOCKET_EVENTS.DISCONNECT, onDisconnect);
+      socket.off(DELIVERY_SOCKET_EVENTS.CONNECT_ERROR, onConnectError);
+      socket.off(
+        DELIVERY_SOCKET_EVENTS.DRIVER_LOCATION_UPDATED,
+        onDriverLocationUpdated
+      );
+      socket.off(
+        DELIVERY_SOCKET_EVENTS.DELIVERY_STATUS_CHANGED,
+        onDeliveryStatusChanged
+      );
+      socket.off(DELIVERY_SOCKET_EVENTS.DRIVER_ASSIGNED, onDriverAssigned);
+      socket.off(
+        DELIVERY_SOCKET_EVENTS.DELIVERY_CANCELLED,
+        onDeliveryCancelled
+      );
+      socket.off(
+        DELIVERY_SOCKET_EVENTS.DELIVERY_COMPLETED,
+        onDeliveryCompleted
+      );
+      socket.off(
+        DELIVERY_SOCKET_EVENTS.NEW_DELIVERY_REQUEST,
+        onNewDeliveryRequestHandler
+      );
+      // ✅ disconnectDeliverySocket 호출 완전 제거
     };
-  }, [token, serverUrl, joinDriversRoom]);
+  }, [joinDriversRoom, enabled]);
 
   // ── 특정 배송 구독/해제 ────────────────────────────────────────────────────
-
   useEffect(() => {
-    const socket = socketRef.current;
-    if (!socket || !deliveryId) return;
+    if (!enabled || !deliveryId) return;
 
+    // ✅ connectDeliverySocket — 이미 연결된 소켓 반환, 새 연결 없음
+    const socket = connectDeliverySocket();
     socket.emit(DELIVERY_SOCKET_EVENTS.JOIN_DELIVERY, { deliveryId });
     addSubscribedDelivery(deliveryId);
 
     return () => {
       socket.emit(DELIVERY_SOCKET_EVENTS.LEAVE_DELIVERY, { deliveryId });
       removeSubscribedDelivery(deliveryId);
+      // ✅ disconnectDeliverySocket 호출 제거
     };
-  }, [deliveryId]);
-
-  // ── 외부에서 수동으로 배송 구독/해제 ─────────────────────────────────────
+  }, [deliveryId, enabled]);
 
   const subscribeDelivery = useCallback(
     (id: number) => {
-      const socket = socketRef.current;
-      if (!socket) return;
+      if (!enabled) return;
+      const socket = connectDeliverySocket();
       socket.emit(DELIVERY_SOCKET_EVENTS.JOIN_DELIVERY, { deliveryId: id });
       addSubscribedDelivery(id);
     },
-    [addSubscribedDelivery]
+    [addSubscribedDelivery, enabled]
   );
 
   const unsubscribeDelivery = useCallback(
     (id: number) => {
-      const socket = socketRef.current;
-      if (!socket) return;
+      if (!enabled) return;
+      const socket = connectDeliverySocket();
       socket.emit(DELIVERY_SOCKET_EVENTS.LEAVE_DELIVERY, { deliveryId: id });
       removeSubscribedDelivery(id);
     },
-    [removeSubscribedDelivery]
+    [removeSubscribedDelivery, enabled]
   );
 
   return {

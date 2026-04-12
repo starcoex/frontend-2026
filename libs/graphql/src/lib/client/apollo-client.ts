@@ -65,22 +65,45 @@ const getAuthGraphQLUri = (isDev: boolean): string =>
 
 const createCache = (): InMemoryCache =>
   new InMemoryCache({
+    dataIdFromObject(responseObject) {
+      if (responseObject.id) {
+        return `${responseObject.__typename}:${responseObject.id}`;
+      }
+      return false;
+    },
     typePolicies: {
       Query: {
         fields: {
           getLoggedInUser: { merge: false },
-          // ✅ findCategoryTree: 항상 incoming으로 교체 (network-only 사용 중이므로)
           findCategoryTree: {
             merge(_existing, incoming) {
               return incoming;
             },
           },
-          // ✅ listCategories도 동일하게 처리
           listCategories: {
             merge(_existing, incoming) {
               return incoming;
             },
           },
+        },
+      },
+      Order: {
+        fields: {
+          OrderStatusHistory: { merge: false },
+          items: { merge: false },
+        },
+      },
+      Delivery: {
+        fields: {
+          statusHistory: { merge: false },
+          ratings: { merge: false },
+        },
+      },
+      DeliveryDriver: {
+        fields: {
+          deliveries: { merge: false },
+          settlements: { merge: false },
+          ratings: { merge: false },
         },
       },
     },

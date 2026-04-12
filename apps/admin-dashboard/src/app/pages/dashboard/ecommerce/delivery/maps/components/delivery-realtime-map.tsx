@@ -48,9 +48,11 @@ export function DeliveryRealtimeMap({
     )
   );
 
-  const liveCount = activeDeliveries.filter(
-    (d) => d.driverId != null && liveLocations[d.driverId]
-  ).length;
+  // ✅ driverId 또는 deliveryId(fallback) 기준으로 실시간 추적 건수 계산
+  const liveCount = activeDeliveries.filter((d) => {
+    const key = d.driverId ?? d.id;
+    return !!liveLocations[key];
+  }).length;
 
   // 실시간 위치 업데이트 시 지도 중심 이동 (선택된 배송이 있을 때)
   useEffect(() => {
@@ -70,8 +72,9 @@ export function DeliveryRealtimeMap({
     (delivery: Delivery) => {
       onDeliverySelect?.(delivery);
 
-      const loc =
-        delivery.driverId != null ? liveLocations[delivery.driverId] : null;
+      // ✅ driverId 우선, 없으면 deliveryId fallback
+      const locKey = delivery.driverId ?? delivery.id;
+      const loc = liveLocations[locKey];
       const currentLoc = delivery.currentLocation as {
         lat: number;
         lng: number;
@@ -155,10 +158,9 @@ export function DeliveryRealtimeMap({
             >
               {/* 배송 마커 렌더링 */}
               {activeDeliveries.map((delivery) => {
-                const liveLocation =
-                  delivery.driverId != null
-                    ? liveLocations[delivery.driverId]
-                    : undefined;
+                // ✅ driverId 우선, 없으면 deliveryId fallback
+                const locKey = delivery.driverId ?? delivery.id;
+                const liveLocation = liveLocations[locKey];
 
                 return (
                   <DeliveryMapMarker
@@ -189,9 +191,9 @@ export function DeliveryRealtimeMap({
               </p>
               <div className="max-h-40 space-y-1.5 overflow-y-auto pr-1">
                 {activeDeliveries.map((delivery) => {
-                  const isTracking =
-                    delivery.driverId != null &&
-                    !!liveLocations[delivery.driverId];
+                  // ✅ driverId 우선, 없으면 deliveryId fallback
+                  const locKey = delivery.driverId ?? delivery.id;
+                  const isTracking = !!liveLocations[locKey];
                   const isSelected = delivery.id === selectedDeliveryId;
 
                   return (
