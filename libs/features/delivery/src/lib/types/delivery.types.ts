@@ -354,6 +354,143 @@ export interface GetDriverSettlementsInput {
 }
 
 // ============================================================================
+// ✅ 신규: 정산 관련 Input/Output 타입 (schema-delivery.graphql 반영)
+// ============================================================================
+
+export interface SettlementSummaryOutput {
+  totalCount: number;
+  totalNetAmount: number;
+  pendingCount: number;
+  calculatedCount: number;
+  approvedCount: number;
+  paidCount: number;
+}
+
+export interface BulkSettlementOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  successCount: number;
+  failCount: number;
+  failedIds: number[];
+  settlements: DriverSettlement[];
+}
+
+export interface GetSettlementsByPeriodInput {
+  dateFrom: string;
+  dateTo: string;
+  driverId?: number;
+}
+
+export interface CloseSettlementInput {
+  settlementId: number;
+  deductions?: number;
+  notes?: string;
+}
+
+export interface CloseSettlementBulkInput {
+  settlementIds: number[];
+  deductionRate?: number;
+  notes?: string;
+}
+
+export interface ApproveSettlementInput {
+  settlementId: number;
+  notes?: string;
+}
+
+export interface ApproveSettlementBulkInput {
+  settlementIds: number[];
+  notes?: string;
+}
+
+export interface ProcessPaymentInput {
+  settlementId: number;
+  paymentMethod: string;
+  notes?: string;
+}
+
+export interface ProcessPaymentBulkInput {
+  settlementIds: number[];
+  paymentMethod: string;
+  notes?: string;
+}
+
+// ============================================================================
+// ✅ 신규: 배달비 정책 타입 (schema-new-delivery.graphql 반영)
+// ============================================================================
+
+export interface DeliveryFeePolicy {
+  id: number;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description?: string | null;
+  baseFee: number;
+  driverRatio: number;
+  platformFee: number;
+  perKmFee?: number | null;
+  freeKm?: number | null;
+  highPriorityRate?: number | null;
+  urgentPriorityRate?: number | null;
+  isActive: boolean;
+  isDefault: boolean;
+}
+
+export interface DeliveryFeePolicyOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  policy?: DeliveryFeePolicy | null;
+}
+
+export interface DeliveryFeePoliciesOutput {
+  error?: DeliveryErrorInfo | null;
+  success?: boolean | null;
+  policies?: DeliveryFeePolicy[] | null;
+}
+
+export interface CalculateFeeOutput {
+  deliveryFee: number;
+  driverFee: number;
+  platformFee: number;
+  feePolicyId?: number | null;
+}
+
+export interface CalculateFeeInput {
+  distanceKm?: number;
+  priority?: string;
+  policyId?: number;
+}
+
+export interface CreateDeliveryFeePolicyInput {
+  name: string;
+  description?: string;
+  baseFee: number;
+  driverRatio: number;
+  platformFee?: number;
+  perKmFee?: number;
+  freeKm?: number;
+  highPriorityRate?: number;
+  urgentPriorityRate?: number;
+  isDefault?: boolean;
+}
+
+export interface UpdateDeliveryFeePolicyInput {
+  id: number;
+  name?: string;
+  description?: string;
+  baseFee?: number;
+  driverRatio?: number;
+  platformFee?: number;
+  perKmFee?: number;
+  freeKm?: number;
+  highPriorityRate?: number;
+  urgentPriorityRate?: number;
+  isDefault?: boolean;
+  isActive?: boolean;
+}
+
+// ============================================================================
 // 기사 프로필 수정 신규 타입
 // ============================================================================
 
@@ -510,6 +647,7 @@ export interface CreateDeliveryInput {
   additionalFees?: Record<string, unknown>;
   deliveryOptions?: Record<string, unknown>;
   constraints?: Record<string, unknown>;
+  feePolicyId?: number; // ✅ 신규
 }
 
 export interface CreateDeliveryDriverInput {
@@ -630,6 +768,51 @@ export interface IDeliveryService {
   // ✅ 신규
   deleteDelivery(deliveryId: number): Promise<ApiResponse<boolean>>;
   deleteDeliveries(deliveryIds: number[]): Promise<ApiResponse<number>>;
+  // ✅ 신규: 정산 관련
+  mySettlements(
+    driverId: number,
+    limit?: number
+  ): Promise<ApiResponse<DriverSettlement[]>>;
+  settlementsByPeriod(
+    input: GetSettlementsByPeriodInput
+  ): Promise<ApiResponse<DriverSettlement[]>>;
+  settlementSummary(
+    dateFrom: string,
+    dateTo: string
+  ): Promise<ApiResponse<SettlementSummaryOutput>>;
+  closeSettlement(
+    input: CloseSettlementInput
+  ): Promise<ApiResponse<DriverSettlement>>;
+  closeSettlementBulk(
+    input: CloseSettlementBulkInput
+  ): Promise<ApiResponse<BulkSettlementOutput>>;
+  approveSettlement(
+    input: ApproveSettlementInput
+  ): Promise<ApiResponse<DriverSettlement>>;
+  approveSettlementBulk(
+    input: ApproveSettlementBulkInput
+  ): Promise<ApiResponse<BulkSettlementOutput>>;
+  processSettlementPayment(
+    input: ProcessPaymentInput
+  ): Promise<ApiResponse<DriverSettlement>>;
+  processSettlementPaymentBulk(
+    input: ProcessPaymentBulkInput
+  ): Promise<ApiResponse<BulkSettlementOutput>>;
+  // ✅ 신규: 배달비 정책
+  deliveryFeePolicies(
+    onlyActive?: boolean
+  ): Promise<ApiResponse<DeliveryFeePoliciesOutput>>;
+  defaultDeliveryFeePolicy(): Promise<ApiResponse<DeliveryFeePolicyOutput>>;
+  calculateDeliveryFee(
+    input: CalculateFeeInput
+  ): Promise<ApiResponse<CalculateFeeOutput>>;
+  createDeliveryFeePolicy(
+    input: CreateDeliveryFeePolicyInput
+  ): Promise<ApiResponse<DeliveryFeePolicyOutput>>;
+  updateDeliveryFeePolicy(
+    input: UpdateDeliveryFeePolicyInput
+  ): Promise<ApiResponse<DeliveryFeePolicyOutput>>;
+  deleteDeliveryFeePolicy(id: number): Promise<ApiResponse<boolean>>;
 }
 // ============================================================================
 // Context 상태 타입

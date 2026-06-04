@@ -33,6 +33,7 @@ export const NOTICE_FIELDS = gql`
     updatedBy
     publishedBy
     archivedBy
+    deletedBy
     sourceSuggestionId
     metadata
   }
@@ -95,6 +96,7 @@ export const MANUAL_FIELDS = gql`
     updatedBy
     publishedBy
     archivedBy
+    deletedBy
     relatedManualIds
     metadata
     publishedAt
@@ -230,6 +232,15 @@ export const GET_NOTICES = gql`
   }
 `;
 
+export const GET_ADMIN_NOTICES = gql`
+  ${GET_NOTICES_OUTPUT_FIELDS}
+  query GetAdminNotices($input: GetNoticesInput!) {
+    adminNotices(input: $input) {
+      ...GetNoticesOutputFields
+    }
+  }
+`;
+
 export const GET_NOTICE_BY_ID = gql`
   ${NOTICE_FIELDS}
   query GetNoticeById($id: Int!) {
@@ -244,6 +255,22 @@ export const GET_PUBLISHED_NOTICES = gql`
   query GetPublishedNotices($targetApp: String) {
     publishedNotices(targetApp: $targetApp) {
       ...NoticeFields
+    }
+  }
+`;
+
+export const GET_NOTICE_STATS = gql`
+  query GetNoticeStats {
+    noticeStats {
+      success
+      error {
+        code
+        message
+        details
+      }
+      totalCount
+      statusCounts
+      typeCounts
     }
   }
 `;
@@ -287,14 +314,20 @@ export const ARCHIVE_NOTICE = gql`
 `;
 
 export const DELETE_NOTICE = gql`
-  mutation DeleteNotice($id: Int!) {
-    deleteNotice(id: $id)
+  mutation DeleteNotice($id: Int!, $hardDelete: Boolean! = false) {
+    deleteNotice(id: $id, hardDelete: $hardDelete)
   }
 `;
 
-export const DELETE_NOTICES = gql`
-  mutation DeleteNotices($ids: [Int!]!) {
-    deleteNotices(ids: $ids)
+export const BULK_DELETE_NOTICES = gql`
+  mutation BulkDeleteNotices($ids: [Int!]!, $hardDelete: Boolean! = false) {
+    bulkDeleteNotices(ids: $ids, hardDelete: $hardDelete) {
+      success
+      message
+      successCount
+      failCount
+      failedIds
+    }
   }
 `;
 
@@ -324,6 +357,21 @@ export const GET_MANUAL_CATEGORIES = gql`
     $targetApp: String
   ) {
     manualCategories(targetBusiness: $targetBusiness, targetApp: $targetApp) {
+      ...ManualCategoryFields
+    }
+  }
+`;
+
+export const GET_ADMIN_MANUAL_CATEGORIES = gql`
+  ${MANUAL_CATEGORY_FIELDS}
+  query GetAdminManualCategories(
+    $targetBusiness: NoticeBusinessType
+    $targetApp: String
+  ) {
+    adminManualCategories(
+      targetBusiness: $targetBusiness
+      targetApp: $targetApp
+    ) {
       ...ManualCategoryFields
     }
   }
@@ -359,6 +407,15 @@ export const GET_MANUALS = gql`
   ${GET_MANUALS_OUTPUT_FIELDS}
   query GetManuals($input: GetManualsInput!) {
     manuals(input: $input) {
+      ...GetManualsOutputFields
+    }
+  }
+`;
+
+export const GET_ADMIN_MANUALS = gql`
+  ${GET_MANUALS_OUTPUT_FIELDS}
+  query GetAdminManuals($input: GetManualsInput!) {
+    adminManuals(input: $input) {
       ...GetManualsOutputFields
     }
   }
@@ -403,6 +460,17 @@ export const GET_MANUAL_HISTORIES = gql`
   }
 `;
 
+export const GET_MANUAL_STATS = gql`
+  query GetManualStats {
+    manualStats {
+      total
+      draft
+      published
+      archived
+    }
+  }
+`;
+
 export const CREATE_MANUAL = gql`
   ${CREATE_MANUAL_OUTPUT_FIELDS}
   mutation CreateManual($input: CreateManualInput!) {
@@ -440,13 +508,19 @@ export const ARCHIVE_MANUAL = gql`
 `;
 
 export const DELETE_MANUAL = gql`
-  mutation DeleteManual($id: Int!) {
-    deleteManual(id: $id)
+  mutation DeleteManual($id: Int!, $hardDelete: Boolean! = false) {
+    deleteManual(id: $id, hardDelete: $hardDelete)
   }
 `;
 
-export const DELETE_MANUALS = gql`
-  mutation DeleteManuals($ids: [Int!]!) {
-    deleteManuals(ids: $ids)
+export const BULK_DELETE_MANUALS = gql`
+  mutation BulkDeleteManuals($ids: [Int!]!, $hardDelete: Boolean! = false) {
+    bulkDeleteManuals(ids: $ids, hardDelete: $hardDelete) {
+      success
+      message
+      successCount
+      failCount
+      failedIds
+    }
   }
 `;

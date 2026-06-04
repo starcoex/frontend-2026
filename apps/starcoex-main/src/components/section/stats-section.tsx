@@ -11,7 +11,7 @@ export const StatsSection = () => {
           title="숫자로 보는 스타코엑스"
           icon={BarChart3}
           description={
-            '하이브리드 서비스 플랫폼의 성과와 고객 만족도를 확인하세요'
+            '별표주유소와 제라게 손세차의 성과와 고객 만족도를 확인하세요'
           }
         />
       </div>

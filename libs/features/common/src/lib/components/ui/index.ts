@@ -23,3 +23,6 @@ export * from './popover';
 export * from './combobox';
 export * from './command';
 export * from './avatar';
+export * from './aspect-ratio';
+export * from './breadcrumb';
+export * from './switch';

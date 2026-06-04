@@ -2,7 +2,7 @@ import React from 'react';
 
 import { APP_CONFIG } from '../config/app.config';
 import { PageHead } from '@starcoex-frontend/common';
-import { ServicesSection } from '@/components/sections/home/services-section';
+import { ServicesSection } from '../../components/sections/about/services-section';
 
 export const ServicesPage: React.FC = () => {
   return (

@@ -17,6 +17,9 @@ import {
   SEND_EMAIL,
   RETRY_EMAIL,
   ADMIN_GET_ALL_NOTIFICATIONS,
+  GET_EMAIL_STATS,
+  EMAIL_HEALTH_CHECK,
+  SEARCH_EMAILS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -39,7 +42,7 @@ import type {
   GetEmailsOutput,
   SendEmailInput,
   SendEmailOutput,
-  GetAllNotificationsInput,
+  GetAllNotificationsInput, SearchEmailsInput,
 } from '../types';
 
 export class NotificationsService implements INotificationsService {
@@ -297,6 +300,49 @@ export class NotificationsService implements INotificationsService {
       return { success: true, data: res.data.getEmailById };
     }
     return res as unknown as ApiResponse<Email>;
+  }
+
+  /**
+   * schema: searchEmails → String 반환 (raw JSON 문자열)
+   * limit/offset은 Float 타입으로 전달
+   */
+  async searchEmails(input: SearchEmailsInput): Promise<ApiResponse<string>> {
+    const res = await this.query<{ searchEmails: string }>(SEARCH_EMAILS, {
+      toEmail: input.toEmail,
+      subject: input.subject,
+      templateName: input.templateName,
+      status: input.status,
+      limit: input.limit,
+      offset: input.offset,
+    });
+    if (res.success && res.data?.searchEmails !== undefined) {
+      return { success: true, data: res.data.searchEmails };
+    }
+    return res as unknown as ApiResponse<string>;
+  }
+
+  /**
+   * schema: getEmailStats → String 반환 (관리자 전용)
+   */
+  async getEmailStats(): Promise<ApiResponse<string>> {
+    const res = await this.query<{ getEmailStats: string }>(GET_EMAIL_STATS);
+    if (res.success && res.data?.getEmailStats !== undefined) {
+      return { success: true, data: res.data.getEmailStats };
+    }
+    return res as unknown as ApiResponse<string>;
+  }
+
+  /**
+   * schema: emailHealthCheck → String!
+   */
+  async emailHealthCheck(): Promise<ApiResponse<string>> {
+    const res = await this.query<{ emailHealthCheck: string }>(
+      EMAIL_HEALTH_CHECK
+    );
+    if (res.success && res.data?.emailHealthCheck !== undefined) {
+      return { success: true, data: res.data.emailHealthCheck };
+    }
+    return res as unknown as ApiResponse<string>;
   }
 
   // ============================================================================

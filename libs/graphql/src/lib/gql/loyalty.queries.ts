@@ -289,3 +289,206 @@ export const ACCUMULATE_STARS = gql`
     }
   }
 `;
+
+// ===== Admin Queries =====
+
+// [관리자] 유저 멤버십 상세 조회
+export const ADMIN_GET_USER_MEMBERSHIP = gql`
+  ${USER_MEMBERSHIP_FIELDS}
+  query AdminGetUserMembership($userId: Int!) {
+    adminGetUserMembership(userId: $userId) {
+      membership {
+        ...UserMembershipFields
+      }
+      totalActivities
+      totalCoupons
+      joinedAt
+    }
+  }
+`;
+
+// ✅ 신규: [관리자] 멤버십 설정 DB 엔티티 조회 (flat 구조)
+export const ADMIN_GET_MEMBERSHIP_CONFIG = gql`
+  query AdminGetMembershipConfig {
+    adminGetMembershipConfig {
+      id
+      welcomeStars
+      welcomeCouponDays
+      couponCost
+      starExpiryYears
+      tierThresholdShine
+      tierThresholdStar
+      earningRateGas
+      earningRateOil
+      earningRateCarCare
+      updatedAt
+      updatedBy
+    }
+  }
+`;
+
+// ===== Admin Mutations =====
+
+// ✅ 신규: [관리자] 멤버십 설정 수정
+export const ADMIN_UPDATE_MEMBERSHIP_CONFIG = gql`
+  mutation AdminUpdateMembershipConfig($input: UpdateMembershipConfigInput!) {
+    adminUpdateMembershipConfig(input: $input) {
+      success
+      message
+      config {
+        id
+        welcomeStars
+        welcomeCouponDays
+        couponCost
+        starExpiryYears
+        tierThresholdShine
+        tierThresholdStar
+        earningRateGas
+        earningRateOil
+        earningRateCarCare
+        updatedAt
+        updatedBy
+      }
+    }
+  }
+`;
+
+// [관리자] 유저 멤버십 등급 수동 변경
+export const ADMIN_ADJUST_USER_TIER = gql`
+  ${LOYALTY_ERROR_INFO_FIELDS}
+  ${USER_MEMBERSHIP_FIELDS}
+  mutation AdminAdjustUserTier($input: AdjustUserTierInput!) {
+    adminAdjustUserTier(input: $input) {
+      success
+      message
+      membership {
+        ...UserMembershipFields
+      }
+      previousTier
+      newTier
+    }
+  }
+`;
+
+// [관리자] 유저 별 수동 적립/차감
+export const ADMIN_ADJUST_USER_STARS = gql`
+  ${USER_MEMBERSHIP_FIELDS}
+  mutation AdminAdjustUserStars($input: AdjustUserStarsInput!) {
+    adminAdjustUserStars(input: $input) {
+      success
+      message
+      membership {
+        ...UserMembershipFields
+      }
+      adjustedAmount
+      previousStars
+      currentStars
+    }
+  }
+`;
+
+// [관리자] 유저 멤버십 초기화
+export const ADMIN_RESET_USER_MEMBERSHIP = gql`
+  mutation AdminResetUserMembership($input: ResetUserMembershipInput!) {
+    adminResetUserMembership(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
+// [관리자] 전체 멤버십 목록 (등급 필터 + 페이지네이션)
+export const ADMIN_GET_MEMBERSHIP_LIST = gql`
+  ${USER_MEMBERSHIP_FIELDS}
+  query AdminGetMembershipList($input: AdminMembershipListInput!) {
+    adminGetMembershipList(input: $input) {
+      memberships {
+        ...UserMembershipFields
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
+// [관리자] 유저 별 적립/사용/소멸 히스토리
+export const ADMIN_GET_USER_STAR_HISTORY = gql`
+  query AdminGetUserStarHistory($input: AdminStarHistoryInput!) {
+    adminGetUserStarHistory(input: $input) {
+      histories {
+        id
+        userId
+        amount
+        reason
+        category
+        expiresAt
+        usedAmount
+        referenceId
+        createdAt
+        updatedAt
+        deletedAt
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
+// [관리자] 유저 쿠폰 목록 조회
+export const ADMIN_GET_USER_COUPONS = gql`
+  ${REWARD_COUPON_FIELDS}
+  query AdminGetUserCoupons($input: AdminCouponListInput!) {
+    adminGetUserCoupons(input: $input) {
+      coupons {
+        ...RewardCouponFields
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
+// ===== 신규 Admin Mutations =====
+
+// [관리자] 유저에게 쿠폰 수동 발급
+export const ADMIN_ISSUE_COUPON = gql`
+  ${REWARD_COUPON_FIELDS}
+  mutation AdminIssueCoupon($input: AdminIssueCouponInput!) {
+    adminIssueCoupon(input: $input) {
+      success
+      message
+      coupon {
+        ...RewardCouponFields
+      }
+    }
+  }
+`;
+
+// [관리자] 유저 쿠폰 강제 취소
+export const ADMIN_REVOKE_COUPON = gql`
+  mutation AdminRevokeCoupon($input: AdminRevokeCouponInput!) {
+    adminRevokeCoupon(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
+// [관리자] 프로모션 쿠폰 일괄 발급
+export const ADMIN_BULK_ISSUE_COUPONS = gql`
+  mutation AdminBulkIssueCoupons($input: AdminBulkIssueCouponInput!) {
+    adminBulkIssueCoupons(input: $input) {
+      success
+      message
+      totalCount
+      successCount
+      failCount
+      results {
+        userId
+        success
+        couponCode
+        errorMessage
+      }
+    }
+  }
+`;

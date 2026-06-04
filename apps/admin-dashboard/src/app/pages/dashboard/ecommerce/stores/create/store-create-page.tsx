@@ -18,7 +18,7 @@ export default function StoreCreatePage() {
         og={{
           title: `매장 추가 - ${COMPANY_INFO.name}`,
           description: '새로운 매장을 빠르고 쉽게 등록하세요',
-          image: '/images/og-store-create.jpg',
+          image: '/images/og-queue-create.jpg',
           type: 'website',
         }}
       />

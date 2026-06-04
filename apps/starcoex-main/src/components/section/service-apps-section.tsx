@@ -7,11 +7,11 @@ const ServiceAppsSection = () => {
     <section className="">
       <div className="border-b">
         <SectionHeader
-          iconTitle="하이브리드 서비스 앱"
-          title="각 서비스별 전용 앱"
+          iconTitle="전용 앱 준비중"
+          title="각 서비스별 전용 앱을 준비하고 있습니다"
           icon={Smartphone}
           description={
-            '포털 가입 후 각 서비스의 전용 앱에서 자동 로그인으로 더욱 편리하게 이용하세요'
+            '별표주유소·제라게 외부 손세차·난방유 배달 전용 앱을 준비 중입니다. 출시 전까지는 매장 방문 또는 전화(064-713-2002)로 편리하게 이용하세요.'
           }
         />
       </div>

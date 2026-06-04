@@ -1,6 +1,8 @@
 import {
   IconBarbell,
+  IconBook,
   IconBoxSeam,
+  IconBriefcase,
   IconBuildingStore,
   IconCalendar,
   IconCar,
@@ -14,19 +16,23 @@ import {
   IconGasStation,
   IconGift,
   IconLayoutDashboard,
+  IconMapPin,
+  IconMessage,
   IconNotification,
   IconPackage,
   IconPhoto,
   IconReportAnalytics,
   IconSettings,
-  IconShoppingBag,
   IconShoppingCart,
+  IconSpeakerphone,
   IconStar,
+  IconTag,
   IconTags,
   IconTool,
   IconTruck,
   IconUser,
   IconUsers,
+  IconWallet,
 } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 import {
@@ -43,7 +49,8 @@ import {
   ZeragaeLogo,
 } from '@starcoex-frontend/common';
 
-// 기본 사이드바 데이터
+// ─── 팀 목록 ──────────────────────────────────────────────────────────────────
+
 export const baseSidebarData = {
   teams: [
     {
@@ -53,7 +60,7 @@ export const baseSidebarData = {
           format="png"
           width={20}
           height={20}
-          className={cn('invert dark:invert-0', className)}
+          className={cn('object-contain', className)}
         />
       ),
       plan: '통합 관리 시스템',
@@ -65,7 +72,7 @@ export const baseSidebarData = {
           format="png"
           width={20}
           height={20}
-          className={cn('invert dark:invert-0', className)}
+          className={cn('object-contain', className)}
         />
       ),
       plan: '별표 주유소 관리',
@@ -77,7 +84,7 @@ export const baseSidebarData = {
           format="png"
           width={20}
           height={20}
-          className={cn('invert dark:invert-0', className)}
+          className={cn('object-contain', className)}
         />
       ),
       plan: '제라게 카케어',
@@ -89,7 +96,7 @@ export const baseSidebarData = {
           format="png"
           width={20}
           height={20}
-          className={cn('invert dark:invert-0', className)}
+          className={cn('object-contain', className)}
         />
       ),
       plan: '난방유 배달',
@@ -97,39 +104,24 @@ export const baseSidebarData = {
   ],
 };
 
-// 팀별 네비게이션 그룹 정의
-export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
-  // 공통 기본 그룹
-  const baseGroups: NavGroup[] = [
-    {
-      title: '대시 보드',
-      items: [
-        {
-          title: '관리 시스템',
-          url: '/admin',
-          icon: IconLayoutDashboard,
-          items: [{ title: '요약 분석', url: '/admin' }],
-        },
-        // ✅ Sales 대시보드 추가
-        {
-          title: '매출 현황',
-          url: '/admin/sales',
-          icon: IconChartLine,
-        },
-      ],
-    },
-  ];
+// ─── 팀별 네비게이션 그룹 ─────────────────────────────────────────────────────
 
-  // 팀별 특화 메뉴
+export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
   const teamSpecificGroups: Record<string, NavGroup[]> = {
+    // =========================================================================
+    // StarcoexMain
+    // 역할: 전사 크로스커팅 관심사만 담당
+    //       (각 서비스 세부 관리는 팀 스위치로 해당 팀에서 처리)
+    // =========================================================================
     StarcoexMain: [
+      // 1. 건의사항 통합
       {
         title: '건의사항 관리',
         items: [
           {
             title: '건의사항',
             url: '/admin/suggestions',
-            icon: IconChecklist, // 또는 새로운 아이콘
+            icon: IconChecklist,
             items: [
               { title: '전체 건의사항', url: '/admin/suggestions' },
               { title: '대기중', url: '/admin/suggestions/pending' },
@@ -137,37 +129,77 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '진행중', url: '/admin/suggestions/in-progress' },
               { title: '완료됨', url: '/admin/suggestions/completed' },
               { title: '거부됨', url: '/admin/suggestions/rejected' },
-              { title: '통계 분석', url: '/admin/suggestions/analytics' },
             ],
           },
         ],
       },
+
+      // 2. 전사 통합 관리 (사용자·권한·로열티·분석·알림)
       {
         title: '통합 관리',
         items: [
           {
             title: '사용자 관리',
-            url: '/admin/users', // ✅ /admin/users로 수정
+            url: '/admin/users',
             icon: IconUsers,
             items: [
               { title: '전체 사용자', url: '/admin/users' },
-              { title: '관리자', url: '/admin/users/admins' }, // ✅ /admin 추가
-              { title: '일반 회원', url: '/admin/users/members' }, // ✅ /admin 추가
-              { title: '배달원', url: '/admin/users/drivers' }, // ✅ /admin 추가
-              { title: '초대 관리', url: '/admin/users/invitations' }, // ✅ 아이콘 없이 서브메뉴로만
+              { title: '관리자', url: '/admin/users/admins' },
+              { title: '일반 회원', url: '/admin/users/members' },
+              { title: '배달원', url: '/admin/users/drivers' },
+              { title: '초대 관리', url: '/admin/users/invitations' },
             ],
           },
           {
-            title: '시스템 분석',
-            url: '/admin/analytics', // ✅ /admin 추가
-            icon: IconReportAnalytics,
+            title: '로열티 관리',
+            url: '/admin/loyalty',
+            icon: IconStar,
             items: [
-              { title: '통합 대시보드', url: '/admin/analytics' },
-              { title: '매출 분석', url: '/admin/analytics/revenue' },
-              { title: '사용자 분석', url: '/admin/analytics/users' },
-              { title: '서비스 성능', url: '/admin/analytics/performance' },
+              { title: '회원 등급 목록', url: '/admin/loyalty' },
+              { title: '별 히스토리', url: '/admin/loyalty/star-history' },
+              { title: '별 적립 이벤트', url: '/admin/loyalty/star-events' },
+              { title: '멤버십 설정', url: '/admin/loyalty/settings' },
             ],
           },
+          {
+            title: '프로모션 관리',
+            url: '/admin/promotions',
+            icon: IconTag,
+            items: [
+              { title: '프로모션 목록', url: '/admin/promotions' },
+              { title: '프로모션 생성', url: '/admin/promotions/create' },
+            ],
+          },
+          {
+            title: '리뷰 관리',
+            url: '/admin/reviews',
+            icon: IconStar,
+            items: [
+              { title: '리뷰 목록', url: '/admin/reviews' },
+              { title: '스코프 관리', url: '/admin/reviews/scopes' },
+            ],
+          },
+          {
+            title: '채용 공고 관리',
+            url: '/admin/jobs',
+            icon: IconBriefcase,
+            items: [
+              { title: '공고 목록', url: '/admin/jobs' },
+              { title: '공고 추가', url: '/admin/jobs/create' },
+              { title: '지원자 관리', url: '/admin/jobs/applications' },
+            ],
+          },
+          // {
+          //   title: '시스템 분석',
+          //   url: '/admin/analytics',
+          //   icon: IconReportAnalytics,
+          //   items: [
+          //     { title: '통합 대시보드', url: '/admin/analytics' },
+          //     { title: '매출 분석', url: '/admin/analytics/revenue' },
+          //     { title: '사용자 분석', url: '/admin/analytics/users' },
+          //     { title: '서비스 성능', url: '/admin/analytics/performance' },
+          //   ],
+          // },
           {
             title: '알림 관리',
             url: '/admin/notifications',
@@ -180,7 +212,8 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
-      // ✅ 상품/주문 관리 그룹 추가
+
+      // 3. 커머스 관리 (전사 공통 커머스 인프라)
       {
         title: '커머스 관리',
         items: [
@@ -202,16 +235,16 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '제품 목록', url: '/admin/products' },
               { title: '제품 추가', url: '/admin/products/create' },
               { title: '재고 현황', url: '/admin/products/inventory' },
-              { title: '제품 설정', url: '/admin/products/settings' }, // ✅ 추가
+              { title: '제품 설정', url: '/admin/products/settings' },
             ],
           },
           {
-            title: '재고 관리', // ✅ StoreInventory 기반 신규
+            title: '재고 관리',
             url: '/admin/inventory',
             icon: IconBoxSeam,
             items: [
               { title: '재고 현황', url: '/admin/inventory' },
-              { title: '재고 추가', url: '/admin/inventory/create' }, // ← 추가
+              { title: '재고 추가', url: '/admin/inventory/create' },
               { title: '재고 부족', url: '/admin/inventory/low-stock' },
             ],
           },
@@ -221,27 +254,38 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconFileInvoice,
             items: [
               { title: '주문 목록', url: '/admin/orders' },
-              { title: '주문 추가', url: '/admin/orders/create' }, // ✅ detail → create
+              { title: '주문 추가', url: '/admin/orders/create' },
               { title: '주문 통계', url: '/admin/orders/stats' },
+            ],
+          },
+          {
+            title: '대기열 관리',
+            url: '/admin/queue',
+            icon: IconChecklist,
+            items: [
+              { title: '대기열 목록', url: '/admin/queue' },
+              { title: '대기 수기 등록', url: '/admin/queue/create' }, // ✅ 추가
+              { title: '대기열 통계', url: '/admin/queue/stats' },
             ],
           },
           {
             title: '장바구니 관리',
             url: '/admin/cart',
             icon: IconShoppingCart,
-            items: [{ title: '장바구니 목록', url: '/admin/cart' }],
-          },
-          // ✅ 배송 관리 추가
-          {
-            title: '배송 관리',
-            url: '/admin/delivery',
-            icon: IconTruck,
             items: [
-              { title: '배송 목록', url: '/admin/delivery' },
-              { title: '배송 추가', url: '/admin/delivery/create' },
-              { title: '기사 관리', url: '/admin/delivery/drivers' },
-              { title: '기사 추가', url: '/admin/delivery/drivers/create' },
-              { title: '배송 추적', url: '/admin/delivery/tracking' },
+              { title: '장바구니 목록', url: '/admin/cart' },
+              { title: '상품 추가', url: '/admin/cart/create' },
+            ],
+          },
+          {
+            title: '주소 관리',
+            url: '/admin/addresses',
+            icon: IconMapPin,
+            items: [
+              { title: '주소 목록', url: '/admin/addresses' },
+              { title: '주소 검색 · 저장', url: '/admin/addresses/create' },
+              { title: '통계', url: '/admin/addresses/stats' },
+              { title: '검색 로그', url: '/admin/addresses/logs' },
             ],
           },
           {
@@ -253,7 +297,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '카테고리 계층', url: '/admin/categories/hierarchy' },
             ],
           },
-          // ✅ 매장 관리 추가
           {
             title: '매장 관리',
             url: '/admin/stores',
@@ -261,16 +304,21 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             items: [
               { title: '매장 목록', url: '/admin/stores' },
               { title: '매장 추가', url: '/admin/stores/create' },
-              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
-              { title: '매장 설정', url: '/admin/stores/settings' }, // ✅ 추가
+              { title: '브랜드 목록', url: '/admin/stores/brands' },
+              { title: '매장 설정', url: '/admin/stores/settings' },
             ],
+          },
+          {
+            title: '채팅 관리',
+            url: '/admin/chats',
+            icon: IconMessage,
+            items: [{ title: '채팅방 목록', url: '/admin/chats' }],
           },
         ],
       },
-
-      // ✅ 예약 관리 그룹 (신규)
+      // 4. 예약 & 워크인 — ✅ StarcoexMain에서 전체 현황 조회 목적으로 추가
       {
-        title: '예약 관리',
+        title: '예약 & 워크인',
         items: [
           {
             title: '예약 관리',
@@ -279,25 +327,87 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             items: [
               { title: '예약 목록', url: '/admin/reservations' },
               { title: '예약 추가', url: '/admin/reservations/create' },
-              {
-                title: '서비스 설정',
-                url: '/admin/reservations/services',
-              },
-              {
-                title: '예약 캘린더',
-                url: '/admin/reservations/calendar',
-              },
-              { title: '워크인 관리', url: '/admin/walk-ins' },
+              { title: '예약 캘린더', url: '/admin/reservations/calendar' },
+              { title: '서비스 설정', url: '/admin/reservations/services' },
+            ],
+          },
+          {
+            title: '워크인 관리',
+            url: '/admin/walk-ins',
+            icon: IconCarCrane,
+            items: [
+              { title: '워크인 목록', url: '/admin/walk-ins' },
               { title: '주유 워크인', url: '/admin/fuel-walk-ins' },
               { title: '난방유 배달', url: '/admin/heating-oil-deliveries' },
+            ],
+          },
+        ],
+      },
+
+      // 5. 배송 관리 — ✅ 전사 배송 현황 모니터링 목적
+      {
+        title: '배송 관리',
+        items: [
+          {
+            title: '배송 관리',
+            url: '/admin/delivery',
+            icon: IconTruck,
+            items: [
+              { title: '전체 배송 목록', url: '/admin/delivery' },
+              { title: '배송 등록', url: '/admin/delivery/create' },
+              { title: '배송 추적', url: '/admin/delivery/tracking' },
+            ],
+          },
+          {
+            title: '기사 관리',
+            url: '/admin/delivery/drivers',
+            icon: IconUser,
+            items: [
+              { title: '기사 목록', url: '/admin/delivery/drivers' },
+              { title: '기사 등록', url: '/admin/delivery/drivers/create' },
+            ],
+          },
+          {
+            title: '정산 관리',
+            url: '/admin/delivery/settlements',
+            icon: IconWallet,
+            items: [
+              { title: '전체 정산 목록', url: '/admin/delivery/settlements' },
+            ],
+          },
+        ],
+      },
+
+      // 6. 공지 & 매뉴얼
+      {
+        title: '공지 & 매뉴얼',
+        items: [
+          {
+            title: '공지 관리',
+            url: '/admin/notices',
+            icon: IconSpeakerphone,
+            items: [
+              { title: '공지 목록', url: '/admin/notices' },
+              { title: '공지 추가', url: '/admin/notices/create' },
+            ],
+          },
+          {
+            title: '매뉴얼 관리',
+            url: '/admin/notices/manuals',
+            icon: IconBook,
+            items: [
+              { title: '매뉴얼 목록', url: '/admin/notices/manuals' },
+              { title: '매뉴얼 추가', url: '/admin/notices/manuals/create' },
               {
-                title: '배달 등록',
-                url: '/admin/heating-oil-deliveries/create',
+                title: '카테고리 관리',
+                url: '/admin/notices/manuals/categories',
               },
             ],
           },
         ],
       },
+
+      // 5. 미디어 & 자산
       {
         title: '미디어 & 자산',
         items: [
@@ -313,159 +423,12 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
-      {
-        title: '서비스별 현황',
-        items: [
-          {
-            title: '주유소 현황',
-            url: '/admin/services/gas-stations',
-            icon: IconGasStation,
-          },
-          {
-            title: '카케어 현황',
-            url: '/admin/services/car-care',
-            icon: IconCarCrane,
-          },
-          {
-            title: '배달 현황',
-            url: '/admin/services/delivery',
-            icon: IconTruck,
-          },
-        ],
-      },
-      // ✅ 통합 관리용 팀별 메뉴 추가
-      {
-        title: '주유소 관리',
-        items: [
-          {
-            title: '매장 관리',
-            url: '/stores',
-            icon: IconBuildingStore,
-            items: [
-              { title: '매장 목록', url: '/admin/stores' },
-              { title: '매장 추가', url: '/admin/stores/create' },
-              { title: '브랜드 관리', url: '/admin/stores/brands' },
-            ],
-          },
-          {
-            title: '유류 상품',
-            url: '/fuel-products',
-            icon: IconBoxSeam,
-            items: [
-              { title: '유류 종류', url: '/fuel-products/types' },
-              { title: '유류 재고', url: '/fuel-products/inventory' },
-              { title: '가격 관리', url: '/fuel-products/pricing' },
-            ],
-          },
-          {
-            title: '차량 관리',
-            url: '/vehicles',
-            icon: IconCar,
-            items: [
-              { title: '등록 차량', url: '/vehicles' },
-              { title: '차량 히스토리', url: '/vehicles/history' },
-            ],
-          },
-        ],
-      },
-      {
-        title: '카케어 관리',
-        items: [
-          {
-            title: '서비스 상품',
-            url: '/service-products',
-            icon: IconTags,
-            items: [
-              { title: '세차 서비스', url: '/service-products/wash' },
-              { title: '정비 서비스', url: '/service-products/maintenance' },
-              { title: '서비스 패키지', url: '/service-products/packages' },
-            ],
-          },
-          {
-            title: '예약 관리',
-            url: '/reservations',
-            icon: IconChecklist,
-            items: [
-              { title: '예약 현황', url: '/reservations' },
-              { title: '예약 일정', url: '/reservations/schedule' },
-              { title: '대기 관리', url: '/reservations/queue' },
-            ],
-          },
-          {
-            title: '리뷰 관리',
-            url: '/reviews',
-            icon: IconStar,
-          },
-          {
-            title: '프로모션',
-            url: '/promotions',
-            icon: IconGift,
-            items: [
-              { title: '이벤트 관리', url: '/promotions/events' },
-              { title: '쿠폰 관리', url: '/promotions/coupons' },
-            ],
-          },
-          // ✅ 매장 관리 추가
-          {
-            title: '매장 관리',
-            url: '/admin/stores',
-            icon: IconBuildingStore,
-            items: [
-              { title: '매장 목록', url: '/admin/stores' },
-              { title: '매장 추가', url: '/admin/stores/create' },
-              { title: '브랜드 관리', url: '/admin/stores/brands' },
-            ],
-          },
-        ],
-      },
-      {
-        title: '배달 관리',
-        items: [
-          {
-            title: '배달 상품',
-            url: '/delivery-products',
-            icon: IconShoppingCart,
-            items: [
-              { title: '난방유 상품', url: '/delivery-products/heating-oil' },
-              { title: '배달 지역', url: '/delivery-products/areas' },
-              { title: '배달료 관리', url: '/delivery-products/fees' },
-            ],
-          },
-          {
-            title: '배달원 관리',
-            url: '/drivers',
-            icon: IconUser,
-            items: [
-              { title: '배달원 목록', url: '/drivers' },
-              { title: '배달원 등록', url: '/drivers/register' },
-              { title: '성과 관리', url: '/drivers/performance' },
-            ],
-          },
-          {
-            title: '배달 현황',
-            url: '/delivery-status',
-            icon: IconTruck,
-            items: [
-              { title: '실시간 추적', url: '/delivery-status/tracking' },
-              { title: '배달 완료', url: '/delivery-status/completed' },
-              { title: '배달 지연', url: '/delivery-status/delayed' },
-            ],
-          },
-          // ✅ 매장/거점 관리 추가
-          {
-            title: '거점 관리',
-            url: '/admin/stores',
-            icon: IconBuildingStore,
-            items: [
-              { title: '거점 목록', url: '/admin/stores' },
-              { title: '거점 추가', url: '/admin/stores/create' },
-              { title: '브랜드 관리', url: '/admin/stores/brands' },
-            ],
-          },
-        ],
-      },
     ],
 
+    // =========================================================================
+    // StarOil — 주유소 전담
+    // 예약·워크인 포함 (주유소 특화)
+    // =========================================================================
     StarOil: [
       {
         title: '건의 및 개선',
@@ -475,7 +438,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             url: '/suggestions',
             icon: IconChecklist,
             items: [
-              { title: '전체 건의사항', url: '/suggestions' }, // ✅ 추가
+              { title: '전체 건의사항', url: '/suggestions' },
               { title: '새 건의사항', url: '/suggestions/create' },
               { title: '내 건의사항', url: '/suggestions/my' },
               { title: '안전 관련', url: '/suggestions/safety' },
@@ -490,13 +453,13 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         items: [
           {
             title: '매장 관리',
-            url: '/stores',
+            url: '/admin/stores',
             icon: IconBuildingStore,
             items: [
               { title: '매장 목록', url: '/admin/stores' },
               { title: '매장 추가', url: '/admin/stores/create' },
-              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
-              { title: '브랜드 추가', url: '/admin/stores/brands/create' }, // ✅ 추가
+              { title: '브랜드 목록', url: '/admin/stores/brands' },
+              { title: '브랜드 추가', url: '/admin/stores/brands/create' },
             ],
           },
           {
@@ -536,6 +499,31 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         ],
       },
       {
+        title: '예약 & 워크인',
+        items: [
+          {
+            title: '예약 관리',
+            url: '/admin/reservations',
+            icon: IconCalendar,
+            items: [
+              { title: '예약 목록', url: '/admin/reservations' },
+              { title: '예약 추가', url: '/admin/reservations/create' },
+              { title: '예약 캘린더', url: '/admin/reservations/calendar' },
+              { title: '서비스 설정', url: '/admin/reservations/services' },
+            ],
+          },
+          {
+            title: '워크인 관리',
+            url: '/admin/walk-ins',
+            icon: IconGasStation,
+            items: [
+              { title: '워크인 목록', url: '/admin/walk-ins' },
+              { title: '주유 워크인', url: '/admin/fuel-walk-ins' },
+            ],
+          },
+        ],
+      },
+      {
         title: '운영 분석',
         items: [
           {
@@ -552,6 +540,10 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
       },
     ],
 
+    // =========================================================================
+    // Zeragae — 카케어 전담
+    // 예약·서비스·프로모션 포함
+    // =========================================================================
     Zeragae: [
       {
         title: '건의 및 개선',
@@ -561,7 +553,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             url: '/suggestions',
             icon: IconChecklist,
             items: [
-              { title: '전체 건의사항', url: '/suggestions' }, // ✅ 추가
+              { title: '전체 건의사항', url: '/suggestions' },
               { title: '새 건의사항', url: '/suggestions/create' },
               { title: '내 건의사항', url: '/suggestions/my' },
               { title: '세차 서비스', url: '/suggestions/wash-service' },
@@ -575,6 +567,17 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         title: '카케어 관리',
         items: [
           {
+            title: '매장 관리',
+            url: '/admin/stores',
+            icon: IconBuildingStore,
+            items: [
+              { title: '매장 목록', url: '/admin/stores' },
+              { title: '매장 추가', url: '/admin/stores/create' },
+              { title: '브랜드 목록', url: '/admin/stores/brands' },
+              { title: '매장 설정', url: '/admin/stores/settings' },
+            ],
+          },
+          {
             title: '서비스 상품',
             url: '/service-products',
             icon: IconTags,
@@ -582,27 +585,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '세차 서비스', url: '/service-products/wash' },
               { title: '정비 서비스', url: '/service-products/maintenance' },
               { title: '서비스 패키지', url: '/service-products/packages' },
-            ],
-          },
-          {
-            title: '매장 관리',
-            url: '/admin/stores',
-            icon: IconBuildingStore,
-            items: [
-              { title: '매장 목록', url: '/admin/stores' },
-              { title: '매장 추가', url: '/admin/stores/create' },
-              { title: '브랜드 목록', url: '/admin/stores/brands' }, // ✅ 수정
-              { title: '매장 설정', url: '/admin/stores/settings' }, // ✅ 추가
-            ],
-          },
-          {
-            title: '예약 관리',
-            url: '/reservations',
-            icon: IconChecklist,
-            items: [
-              { title: '예약 현황', url: '/reservations' },
-              { title: '예약 일정', url: '/reservations/schedule' },
-              { title: '대기 관리', url: '/reservations/queue' },
             ],
           },
           {
@@ -631,39 +613,44 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
+      {
+        title: '예약 관리',
+        items: [
+          {
+            title: '예약 관리',
+            url: '/reservations',
+            icon: IconCalendar,
+            items: [
+              { title: '예약 현황', url: '/reservations' },
+              { title: '예약 일정', url: '/reservations/schedule' },
+              { title: '대기 관리', url: '/reservations/queue' },
+            ],
+          },
+        ],
+      },
     ],
 
+    // =========================================================================
+    // Delivery — 배달 전담
+    // 기사/관리자 역할 분리 구조 유지
+    // =========================================================================
     Delivery: [
       {
         title: '건의 및 개선',
         items: [
           {
             title: '건의사항',
-            url: '/suggestions',
+            url: '/admin/suggestions',
             icon: IconChecklist,
-            items: [
-              { title: '전체 건의사항', url: '/suggestions' },
-              { title: '새 건의사항', url: '/suggestions/create' },
-              { title: '내 건의사항', url: '/suggestions/my' },
-              { title: '배달 경로', url: '/suggestions/routes' },
-              { title: '안전 관련', url: '/suggestions/safety' },
-              { title: '차량 관련', url: '/suggestions/vehicle' },
-              { title: '고객 응대', url: '/suggestions/customer' },
-            ],
+            items: [{ title: '내 건의사항', url: '/admin/suggestions' }],
           },
         ],
       },
-      // ✅ 배달기사 전용 메뉴 — URL을 /admin/driver/*로 수정
       {
-        title: '내 배송',
+        title: '배송 현황',
         items: [
           {
-            title: '대시보드',
-            url: '/admin/driver/dashboard',
-            icon: IconLayoutDashboard,
-          },
-          {
-            title: '내 배송 목록',
+            title: '배송 목록',
             url: '/admin/driver/deliveries',
             icon: IconTruck,
           },
@@ -672,13 +659,26 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             url: '/admin/driver/active',
             icon: IconBoxSeam,
           },
+        ],
+      },
+      {
+        title: '내 정산',
+        items: [
           {
-            title: '내 프로필',
-            url: '/admin/driver/profile',
-            icon: IconUser,
+            title: '정산 내역',
+            url: '/admin/driver/settlements',
+            icon: IconWallet,
+            items: [
+              { title: '전체 내역', url: '/admin/driver/settlements' },
+              {
+                title: '지급 완료',
+                url: '/admin/driver/settlements?status=paid',
+              },
+            ],
           },
         ],
       },
+      // ADMIN / SUPER_ADMIN 전용 — filterMenuByRole에서 DELIVERY 역할 제거
       {
         title: '배달 관리',
         items: [
@@ -687,56 +687,44 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             url: '/admin/delivery',
             icon: IconTruck,
             items: [
-              { title: '배송 목록', url: '/admin/delivery' },
-              { title: '배송 추가', url: '/admin/delivery/create' },
+              { title: '전체 배송 목록', url: '/admin/delivery' },
+              { title: '배송 등록', url: '/admin/delivery/create' },
               { title: '배송 추적', url: '/admin/delivery/tracking' },
             ],
           },
-          // {
-          //   title: '기사 관리',
-          //   url: '/admin/delivery/drivers',
-          //   icon: IconUser,
-          //   items: [{ title: '기사 목록', url: '/admin/delivery/drivers' }],
-          // },
           {
-            title: '주문 관리',
-            url: '/admin/orders',
-            icon: IconShoppingBag,
+            title: '기사 관리',
+            url: '/admin/delivery/drivers',
+            icon: IconUser,
             items: [
-              { title: '주문 목록', url: '/admin/orders' },
-              { title: '실시간 주문', url: '/admin/orders/live' },
-              { title: '주문 히스토리', url: '/admin/orders/history' },
-              { title: '주문 통계', url: '/admin/orders/stats' },
-            ],
-          },
-          // {
-          //   title: '거점 관리',
-          //   url: '/admin/stores',
-          //   icon: IconBuildingStore,
-          //   items: [
-          //     { title: '거점 목록', url: '/admin/stores' },
-          //     { title: '거점 추가', url: '/admin/stores/create' },
-          //     { title: '브랜드 목록', url: '/admin/stores/brands' },
-          //     { title: '매장 설정', url: '/admin/stores/settings' },
-          //   ],
-          // },
-          {
-            title: '배달 상품',
-            url: '/delivery-products',
-            icon: IconShoppingCart,
-            items: [
-              { title: '난방유 상품', url: '/delivery-products/heating-oil' },
-              { title: '배달 지역', url: '/delivery-products/areas' },
-              { title: '배달료 관리', url: '/delivery-products/fees' },
+              { title: '기사 목록', url: '/admin/delivery/drivers' },
+              { title: '기사 등록', url: '/admin/delivery/drivers/create' },
             ],
           },
           {
-            title: '재고 관리',
-            url: '/admin/inventory',
-            icon: IconPackage,
+            title: '배달비 정책',
+            url: '/admin/delivery/pricing',
+            icon: IconCoin,
+            items: [{ title: '정책 목록', url: '/admin/delivery/pricing' }],
+          },
+          {
+            title: '정산 관리',
+            url: '/admin/delivery/settlements',
+            icon: IconWallet,
             items: [
-              { title: '재고 현황', url: '/admin/inventory' },
-              { title: '난방유 재고', url: '/admin/inventory/low-stock' },
+              { title: '전체 정산 목록', url: '/admin/delivery/settlements' },
+              {
+                title: '정산 대기',
+                url: '/admin/delivery/settlements?status=PENDING',
+              },
+              {
+                title: '승인 대기',
+                url: '/admin/delivery/settlements?status=CALCULATED',
+              },
+              {
+                title: '지급 처리',
+                url: '/admin/delivery/settlements?status=APPROVED',
+              },
             ],
           },
         ],
@@ -744,7 +732,83 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
     ],
   };
 
-  // 공통 설정 그룹 (모든 팀에 공통)
+  // ─── Delivery 팀 전용 baseGroups ──────────────────────────────────────────
+  if (teamName === 'Delivery') {
+    const deliveryBaseGroups: NavGroup[] = [
+      {
+        title: '대시보드',
+        items: [
+          {
+            title: '관리 시스템',
+            url: '/admin',
+            icon: IconLayoutDashboard,
+            items: [{ title: '요약 분석', url: '/admin' }],
+          },
+          {
+            title: '매출 현황',
+            url: '/admin/driver/dashboard',
+            icon: IconChartLine,
+            items: [{ title: '대시보드', url: '/admin/driver/dashboard' }],
+          },
+        ],
+      },
+    ];
+
+    const deliverySettingsGroup: NavGroup = {
+      title: '설정',
+      items: [
+        {
+          title: '시스템 설정',
+          icon: IconSettings,
+          items: [
+            { title: '일반 설정', icon: IconTool, url: '/admin/settings' },
+            {
+              title: '내 프로필',
+              icon: IconUser,
+              url: '/admin/driver/profile',
+            },
+            {
+              title: '알림 설정',
+              icon: IconNotification,
+              url: '/admin/settings/notifications',
+            },
+          ],
+        },
+      ],
+    };
+
+    return [
+      ...deliveryBaseGroups,
+      ...(teamSpecificGroups['Delivery'] ?? []),
+      deliverySettingsGroup,
+    ];
+  }
+
+  // ─── 공통 baseGroups (Delivery 제외) ──────────────────────────────────────
+  const baseGroups: NavGroup[] = [
+    {
+      title: '대시 보드',
+      items: [
+        {
+          title: '관리 시스템',
+          url: '/admin',
+          icon: IconLayoutDashboard,
+          items: [{ title: '요약 분석', url: '/admin' }],
+        },
+        {
+          title: '시스템 분석',
+          url: '/admin/analytics',
+          icon: IconReportAnalytics,
+        },
+        {
+          title: '매출 현황',
+          url: '/admin/sales',
+          icon: IconChartLine,
+        },
+      ],
+    },
+  ];
+
   const settingsGroup: NavGroup = {
     title: '설정',
     items: [
@@ -752,21 +816,9 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         title: '시스템 설정',
         icon: IconSettings,
         items: [
-          {
-            title: '일반 설정',
-            icon: IconTool,
-            url: '/admin/settings',
-          },
-          {
-            title: '프로필',
-            icon: IconUser,
-            url: '/admin/settings/profile',
-          },
-          {
-            title: '결제',
-            icon: IconCoin,
-            url: '/admin/settings/billing',
-          },
+          { title: '일반 설정', icon: IconTool, url: '/admin/settings' },
+          { title: '프로필', icon: IconUser, url: '/admin/settings/profile' },
+          { title: '결제', icon: IconCoin, url: '/admin/settings/billing' },
           {
             title: '알림 설정',
             icon: IconNotification,
@@ -784,37 +836,33 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
   ];
 };
 
+// ─── 역할별 메뉴 필터 ─────────────────────────────────────────────────────────
+
 export const filterMenuByRole = (
   navGroups: NavGroup[],
   userRole: UserRole
 ): NavGroup[] => {
   try {
-    // ADMIN, SUPER_ADMIN → 모든 메뉴 표시
     if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
       return navGroups;
     }
 
-    // DELIVERY → Delivery 팀 메뉴 전체 표시
-    // (team-provider에서 teamName='Delivery'로 강제되므로
-    //  이미 Delivery 팀 메뉴만 들어온 상태 — 추가 필터 불필요)
     if (userRole === 'DELIVERY') {
-      return navGroups;
+      return navGroups.filter((group) => group.title !== '배달 관리');
     }
 
-    // 여기에 다른 권한 처리가 있다면 그것도 확인
-    const rolePermissions: { [key: string]: string[] } = {
-      USER: ['dashboard', 'settings'], // 대시보드와 설정만
-      // DELIVERY: ['dashboard', 'orders', 'delivery', 'settings'], // 배달 관련
+    const rolePermissions: Record<string, string[]> = {
+      USER: ['dashboard', 'settings'],
     };
 
-    const allowedMenus: string[] = rolePermissions[userRole] || [];
+    const allowedMenus = rolePermissions[userRole] ?? [];
 
     return navGroups
       .map((group) => ({
         ...group,
         items: group.items.filter((item) =>
-          allowedMenus.some((menu: string) => {
-            const itemUrl = item.url || '';
+          allowedMenus.some((menu) => {
+            const itemUrl = item.url ?? '';
             const itemTitle = item.title.toLowerCase();
             return (
               itemUrl.includes(menu) ||
@@ -825,27 +873,25 @@ export const filterMenuByRole = (
         ),
       }))
       .filter((group) => group.items.length > 0);
-  } catch (error) {
+  } catch {
     return [];
   }
 };
 
-// 최종 사이드바 데이터 생성 함수
+// ─── 최종 사이드바 데이터 생성 ────────────────────────────────────────────────
+
 export const getSidebarData = (
   teamName: TeamName,
   userRole: UserRole,
-  userData?: User // 사용자 정보 추가 (선택적)
+  userData?: User
 ): SidebarData => {
-  // ✅ DELIVERY 역할은 항상 Delivery 팀 메뉴 사용
   const resolvedTeamName: TeamName =
     userRole === 'DELIVERY' ? 'Delivery' : teamName;
 
-  // const navGroups = getNavGroupsByTeam(teamName);
   const navGroups = getNavGroupsByTeam(resolvedTeamName);
   const filteredNavGroups = filterMenuByRole(navGroups, userRole);
 
-  // ✅ 실제 사용자 정보 또는 기본값 사용
-  const user = userData || {
+  const user = userData ?? {
     name: 'Guest User',
     email: 'guest@starcoex.com',
     avatar: '/avatars/default.png',

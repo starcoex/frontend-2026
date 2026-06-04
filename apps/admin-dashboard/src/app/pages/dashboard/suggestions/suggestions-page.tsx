@@ -8,15 +8,41 @@ import { SuggestionsAnalyticsPage } from './suggestions-analytics-page';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { PATH_STATUS_MAP } from './data/suggestion-data';
+import { useAuth } from '@starcoex-frontend/auth';
 
 const SuggestionsPage = () => {
   const location = useLocation();
-  const { suggestions, isLoading, error, fetchSuggestions, setSuggestions } =
-    useSuggestions();
+  const { currentUser } = useAuth(); // ✅ 추가
+  const {
+    suggestions,
+    isLoading,
+    error,
+    fetchSuggestions,
+    fetchMySuggestions,
+    setSuggestions,
+  } = useSuggestions();
 
   const pathSegment = location.pathname.split('/').pop() ?? '';
   const statusFilter = PATH_STATUS_MAP[pathSegment];
   const isAnalytics = pathSegment === 'analytics';
+  const isMy = pathSegment === 'my';
+
+  // ✅ DELIVERY 역할은 항상 내 건의사항만 조회 가능 (백엔드 권한)
+  const isDeliveryRole = currentUser?.role === 'DELIVERY';
+
+  useEffect(() => {
+    if (isAnalytics) return;
+    setSuggestions([]);
+
+    if (isMy || isDeliveryRole) {
+      // 내 건의사항 또는 DELIVERY 역할 → getMySuggestions API
+      fetchMySuggestions(statusFilter ? { status: statusFilter } : undefined);
+    } else {
+      // ADMIN/SUPER_ADMIN → 전체 또는 상태별 필터 조회
+      fetchSuggestions(statusFilter ? { status: statusFilter } : undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, isDeliveryRole]);
 
   useEffect(() => {
     if (isAnalytics) return;

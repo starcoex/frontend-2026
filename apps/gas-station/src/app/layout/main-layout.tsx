@@ -8,19 +8,18 @@ import { Header } from '@/components/header/header';
 import { Footer } from '@/components/footer/footer';
 import { QuickActionFab } from '@/components/quick-action-fab';
 import { useAuth } from '@starcoex-frontend/auth';
+import { OfflineIndicator, PwaInstallBanner } from '@starcoex-frontend/pwa';
 
 export const MainLayout: React.FC = () => {
   const { initialized, checkAuthStatus } = useAuth();
 
-  // 인증 상태 초기화 (토큰이 있으면 사용자 정보 로드)
   useEffect(() => {
     if (!initialized) {
       checkAuthStatus().catch((error) => {
-        // 토큰이 없거나 만료된 경우 - 정상적인 비로그인 상태
         console.debug('메인 레이아웃 인증 상태 확인:', error);
       });
     }
-  }, [initialized, checkAuthStatus]);
+  }, []); // ✅ 마운트 시 1회만
 
   return (
     <TooltipProvider>
@@ -41,6 +40,11 @@ export const MainLayout: React.FC = () => {
         />
         <div className="min-h-screen transition-all duration-300">
           <Header />
+          {/* PWA 배너 */}
+          <div className="mx-4 mt-2 space-y-2">
+            <OfflineIndicator />
+            <PwaInstallBanner />
+          </div>
           <main className="flex-1">
             <Outlet />
           </main>

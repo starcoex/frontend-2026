@@ -68,6 +68,7 @@ export const APP_CONFIG = {
     verifySocial: '/auth/verify-social',
     verifySocialCode: '/auth/verify-social-code',
     dashboard: '/dashboard',
+    onboarding: '/onboarding', // ✅ 추가
     terms: '/terms',
     privacy: '/privacy',
   },

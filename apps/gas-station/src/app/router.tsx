@@ -1,4 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
 import {
   ErrorBoundary,
   ForgotPasswordPage,
@@ -9,151 +10,230 @@ import {
   VerifySocialEmailCodePage,
   VerifySocialEmailPage,
 } from '@starcoex-frontend/common';
-import { DashboardLayout } from '@/app/layout/dashboard-layout';
 import { MainLayout } from '@/app/layout/main-layout';
 import { AuthLayout } from '@/app/layout/auth-layout';
-import { HomePage } from '@/app/pages/home-page';
-import { MembershipPage } from '@/app/pages/membership-page';
-import { LocationPage } from '@/app/pages/location-page';
-import AboutPage from '@/app/pages/about-page';
-import { FaqPage } from '@/app/pages/faq-page';
-import ContactPage from '@/app/pages/contact-page';
-import { PricesPage } from '@/app/pages/prices-page';
-import { ProcessPage } from '@/app/pages/process-page';
-import { ServicesPage } from '@/app/pages/wash/services-page';
-import { ServiceDetailPage } from '@/app/pages/wash/service-detail-page';
-import { CarWashPage } from '@/app/pages/wash/car-wash-page';
-import { PurchasePage } from '@/app/pages/purchase/purchase-page';
-import { ProfilePage } from '@/app/pages/profile/profile-page';
-import { LoginPage } from '@/app/pages/auth/login';
-import { RegisterTypePage } from '@/app/pages/auth/register-type-page';
-import { PersonalRegisterPage } from '@/app/pages/auth/personal-register-page';
-import { GiftClaimPage } from '@/app/pages/gift/gift-claim-page';
-import { CouponsPage } from '@/app/pages/coupons/coupons-page';
-import { CouponDetailPage } from '@/app/pages/coupons/coupon-detail-page';
-import { CouponExchangePage } from '@/app/pages/coupons/coupon-excahange-page';
-import { CouponGiftPage } from '@/app/pages/coupons/coupon-gift-page';
-import OrdersPage from '@/app/pages/orders/orders-page';
-import OrderDetailPage from '@/app/pages/orders/orders-detail-page';
-import { NotificationsPage } from '@/app/pages/notifications/notifications-page';
-import { CartPage } from '@/app/pages/cart/cart-page';
+import { DashboardLayout } from '@/app/layout/dashboard-layout';
+import { BottomNav } from '@/components/button-nav/bottom-nav';
+
+// ─── 로딩 컴포넌트 ───────────────────────────────────────────────────────────
+const Loading = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+  </div>
+);
+const S = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
+  <Suspense fallback={<Loading />}>
+    <Component />
+  </Suspense>
+);
+
+// ─── 공개 페이지 ─────────────────────────────────────────────────────────────
+const HomePage = lazy(() =>
+  import('@/app/pages/home-page').then((m) => ({ default: m.HomePage }))
+);
+const PricesPage = lazy(() =>
+  import('@/app/pages/prices-page').then((m) => ({ default: m.PricesPage }))
+);
+const MembershipPage = lazy(() =>
+  import('@/app/pages/membership-page').then((m) => ({
+    default: m.MembershipPage,
+  }))
+);
+const LocationPage = lazy(() =>
+  import('@/app/pages/location-page').then((m) => ({ default: m.LocationPage }))
+);
+const AboutPage = lazy(() =>
+  import('@/app/pages/about-page').then((m) => ({ default: m.default }))
+);
+const ProcessPage = lazy(() =>
+  import('@/app/pages/process-page').then((m) => ({ default: m.ProcessPage }))
+);
+const FaqPage = lazy(() =>
+  import('@/app/pages/faq-page').then((m) => ({ default: m.FaqPage }))
+);
+const ContactPage = lazy(() =>
+  import('@/app/pages/contact-page').then((m) => ({ default: m.default }))
+);
+
+// ─── 구매 ────────────────────────────────────────────────────────────────────
+const PurchasePage = lazy(() =>
+  import('@/app/pages/purchase/purchase-page').then((m) => ({
+    default: m.PurchasePage,
+  }))
+);
+const ServicesPage = lazy(() =>
+  import('@/app/pages/wash/services-page').then((m) => ({
+    default: m.ServicesPage,
+  }))
+);
+const ServiceDetailPage = lazy(() =>
+  import('@/app/pages/wash/service-detail-page').then((m) => ({
+    default: m.ServiceDetailPage,
+  }))
+);
+const CarWashPage = lazy(() =>
+  import('@/app/pages/wash/car-wash-page').then((m) => ({
+    default: m.CarWashPage,
+  }))
+);
+
+// ─── 주문 / 알림 / 장바구니 ──────────────────────────────────────────────────
+const OrdersPage = lazy(() =>
+  import('@/app/pages/orders/orders-page').then((m) => ({ default: m.default }))
+);
+const OrderDetailPage = lazy(() =>
+  import('@/app/pages/orders/orders-detail-page').then((m) => ({
+    default: m.default,
+  }))
+);
+const NotificationsPage = lazy(() =>
+  import('@/app/pages/notifications/notifications-page').then((m) => ({
+    default: m.NotificationsPage,
+  }))
+);
+const CartPage = lazy(() =>
+  import('@/app/pages/cart/cart-page').then((m) => ({ default: m.CartPage }))
+);
+const GasChatWithProvider = lazy(() =>
+  import('@/app/pages/chat/gas-chat-with-provider').then((m) => ({
+    default: m.GasChatWithProvider,
+  }))
+);
+const GiftClaimPage = lazy(() =>
+  import('@/app/pages/gift/gift-claim-page').then((m) => ({
+    default: m.GiftClaimPage,
+  }))
+);
+
+// ─── 인증 페이지 ─────────────────────────────────────────────────────────────
+const LoginPage = lazy(() =>
+  import('@/app/pages/auth/login').then((m) => ({ default: m.LoginPage }))
+);
+const RegisterTypePage = lazy(() =>
+  import('@/app/pages/auth/register-type-page').then((m) => ({
+    default: m.RegisterTypePage,
+  }))
+);
+const PersonalRegisterPage = lazy(() =>
+  import('@/app/pages/auth/personal-register-page').then((m) => ({
+    default: m.PersonalRegisterPage,
+  }))
+);
+
+// ─── 대시보드 (인증 필요) ────────────────────────────────────────────────────
+const ProfilePage = lazy(() =>
+  import('@/app/pages/profile/profile-page').then((m) => ({
+    default: m.ProfilePage,
+  }))
+);
+const CouponsPage = lazy(() =>
+  import('@/app/pages/coupons/coupons-page').then((m) => ({
+    default: m.CouponsPage,
+  }))
+);
+const CouponDetailPage = lazy(() =>
+  import('@/app/pages/coupons/coupon-detail-page').then((m) => ({
+    default: m.CouponDetailPage,
+  }))
+);
+const CouponExchangePage = lazy(() =>
+  import('@/app/pages/coupons/coupon-excahange-page').then((m) => ({
+    default: m.CouponExchangePage,
+  }))
+);
+const CouponGiftPage = lazy(() =>
+  import('@/app/pages/coupons/coupon-gift-page').then((m) => ({
+    default: m.CouponGiftPage,
+  }))
+);
+
+// ─── AppShell: BottomNav 전역 제공 (Router 컨텍스트 내부) ────────────────────
+const AppShell = () => (
+  <>
+    <Outlet />
+    <BottomNav />
+  </>
+);
 
 export const router = createBrowserRouter([
-  // 🏠 메인 사이트 (공개)
   {
-    path: '/',
-    element: <MainLayout />,
+    element: <AppShell />,
     errorElement: <ErrorBoundary />,
     children: [
-      // 홈
-      { index: true, element: <HomePage /> },
+      // 🏠 공개 페이지
+      {
+        path: '/',
+        element: <MainLayout />,
+        children: [
+          { index: true, element: S(HomePage) },
 
-      // 최상위 메뉴
-      { path: 'prices', element: <PricesPage /> },
-      { path: 'membership', element: <MembershipPage /> },
-      { path: 'location', element: <LocationPage /> },
+          // 최상위 메뉴
+          { path: 'prices', element: S(PricesPage) },
+          { path: 'membership', element: S(MembershipPage) },
+          { path: 'location', element: S(LocationPage) },
 
-      // 구매 메뉴
-      { path: 'fuel', element: <PurchasePage /> },
-      { path: 'services', element: <ServicesPage /> },
-      { path: 'services/:serviceId', element: <ServiceDetailPage /> },
-      { path: 'fuel/car-wash-coupon', element: <CarWashPage /> },
+          // 구매 메뉴
+          { path: 'fuel', element: S(PurchasePage) },
+          { path: 'services', element: S(ServicesPage) },
+          { path: 'services/:serviceId', element: S(ServiceDetailPage) },
+          { path: 'fuel/car-wash-coupon', element: S(CarWashPage) },
 
-      { path: '/orders', element: <OrdersPage /> },
-      { path: '/orders/:id', element: <OrderDetailPage /> },
+          // 주문
+          { path: 'orders', element: S(OrdersPage) },
+          { path: 'orders/:id', element: S(OrderDetailPage) },
 
-      // 회사 정보 메뉴
-      { path: 'about', element: <AboutPage /> },
-      { path: 'process', element: <ProcessPage /> },
-      { path: 'faq', element: <FaqPage /> },
-      { path: 'contact', element: <ContactPage /> },
-      // 🔔 알림 페이지 (로그인 사용자)
-      { path: 'notifications', element: <NotificationsPage /> },
-      { path: 'cart', element: <CartPage /> },
+          // 회사 정보
+          { path: 'about', element: S(AboutPage) },
+          { path: 'process', element: S(ProcessPage) },
+          { path: 'faq', element: S(FaqPage) },
+          { path: 'contact', element: S(ContactPage) },
 
-      // 🎁 선물 수령 페이지 (비로그인도 접근 가능, 수령 시 로그인 필요)
-      { path: 'gift/claim', element: <GiftClaimPage /> },
+          // 로그인 사용자 기능
+          { path: 'notifications', element: S(NotificationsPage) },
+          { path: 'cart', element: S(CartPage) },
+          { path: 'chat', element: S(GasChatWithProvider) },
+
+          // 선물 수령 (비로그인 접근 가능, 수령 시 로그인 필요)
+          { path: 'gift/claim', element: S(GiftClaimPage) },
+        ],
+      },
+
+      // 🔐 대시보드 (인증 필요) - BottomNav 숨김
+      {
+        path: '/dashboard',
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: S(ProfilePage) },
+          { path: 'coupons', element: S(CouponsPage) },
+          { path: 'coupons/:code', element: S(CouponDetailPage) },
+          { path: 'coupons/exchange', element: S(CouponExchangePage) },
+          { path: 'coupons/gift', element: S(CouponGiftPage) },
+          { path: 'coupons/gift/:code', element: S(CouponGiftPage) },
+        ],
+      },
+
+      // 🔑 인증 - BottomNav 숨김
+      {
+        path: '/auth',
+        element: <AuthLayout />,
+        children: [
+          { path: 'login', element: S(LoginPage) },
+          { path: 'register', element: S(RegisterTypePage) },
+          { path: 'register/personal', element: S(PersonalRegisterPage) },
+          { path: 'verify-email', element: <VerifyEmailPage /> },
+          { path: 'verify-social', element: <VerifySocialEmailPage /> },
+          {
+            path: 'verify-social-code',
+            element: <VerifySocialEmailCodePage />,
+          },
+          { path: 'forgot-password', element: <ForgotPasswordPage /> },
+          { path: 'reset-password', element: <ResetPasswordPage /> },
+          { path: 'verify-phone', element: <VerifyPhonePage /> },
+        ],
+      },
+
+      // 🚫 404
+      { path: '*', element: <NotFoundPage /> },
     ],
-  },
-
-  // 🔐 대시보드 (인증 필요)
-  {
-    path: '/dashboard',
-    element: <DashboardLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <ProfilePage />,
-      },
-
-      // 🎫 쿠폰 관련 페이지들 (인증 필요)
-      { path: 'coupons', element: <CouponsPage /> },
-      { path: 'coupons/:code', element: <CouponDetailPage /> },
-      { path: 'coupons/exchange', element: <CouponExchangePage /> },
-      { path: 'coupons/gift', element: <CouponGiftPage /> },
-      { path: 'coupons/gift/:code', element: <CouponGiftPage /> }, // 특정 쿠폰 선물
-    ],
-  },
-
-  // 📦 추적 (인증 필요)
-  {
-    path: '/tracking',
-    element: <MainLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [],
-  },
-
-  // 🔑 인증 페이지들
-  {
-    path: '/auth',
-    element: <AuthLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        path: 'login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'register',
-        element: <RegisterTypePage />,
-      },
-      {
-        path: 'register/personal',
-        element: <PersonalRegisterPage />, // 개인 회원가입 (소셜 로그인 포함)
-      },
-      {
-        path: 'verify-email',
-        element: <VerifyEmailPage />,
-      },
-      // 소셜 이메일 인증
-      {
-        path: 'verify-social',
-        element: <VerifySocialEmailPage />,
-      },
-      // 소셜 이메일 인증 코드 입력
-      {
-        path: 'verify-social-code',
-        element: <VerifySocialEmailCodePage />,
-      },
-      {
-        path: 'forgot-password',
-        element: <ForgotPasswordPage />,
-      },
-      {
-        path: 'reset-password',
-        element: <ResetPasswordPage />,
-      },
-      {
-        path: 'verify-phone',
-        element: <VerifyPhonePage />,
-      },
-    ],
-  },
-
-  // 🚫 404 페이지
-  {
-    path: '*',
-    element: <NotFoundPage />,
   },
 ]);

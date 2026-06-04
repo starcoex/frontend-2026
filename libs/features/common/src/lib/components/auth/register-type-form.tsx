@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Mail } from 'lucide-react';
+import { CheckCircle, Mail, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@starcoex-frontend/auth';
 import { SocialProvider } from '@starcoex-frontend/graphql';
 import { Button, CardContent } from '../ui';
@@ -8,6 +8,7 @@ import { SocialLoginButtons } from './social-login-button';
 
 export interface RegisterTypeFormProps {
   onEmailRegister: () => void;
+  onIdentityRegister?: () => void;
   onSocialSuccess?: (provider: SocialProvider) => void;
   onSocialError?: (error: string) => void;
   loginPath?: string;
@@ -21,6 +22,7 @@ export interface RegisterTypeFormProps {
 export const RegisterTypeForm: React.FC<RegisterTypeFormProps> = ({
   onEmailRegister,
   onSocialSuccess,
+  onIdentityRegister,
   onSocialError,
   loginPath = '/auth/login',
   className = 'space-y-4',
@@ -53,8 +55,8 @@ export const RegisterTypeForm: React.FC<RegisterTypeFormProps> = ({
         className="space-y-3"
       />
 
-      {/* 구분선 */}
-      <div className="relative">
+      {/* 구분선 - 1회만 표시 */}
+      <div className="relative my-2">
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t" />
         </div>
@@ -70,6 +72,23 @@ export const RegisterTypeForm: React.FC<RegisterTypeFormProps> = ({
         <EmailButtonWrapper>{emailButton}</EmailButtonWrapper>
       ) : (
         emailButton
+      )}
+
+      {/* 본인인증 회원가입 버튼 (onIdentityRegister 전달 시에만 노출) */}
+      {onIdentityRegister && (
+        <div className="space-y-1.5 pt-1">
+          <Button
+            type="button"
+            variant="outline"
+            className={buttonClassName}
+            onClick={onIdentityRegister}
+            disabled={isLoading}
+          >
+            <ShieldCheck className="h-5 w-5 mr-3 text-primary" />
+            <span>본인인증으로 가입하기</span>
+            <CheckCircle className="ml-auto h-4 w-4 opacity-60 group-hover:opacity-100 transition-all" />
+          </Button>
+        </div>
       )}
 
       {/* 로그인 링크 */}

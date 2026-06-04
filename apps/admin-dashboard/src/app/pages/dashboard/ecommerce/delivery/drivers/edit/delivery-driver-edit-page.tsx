@@ -37,6 +37,7 @@ import type {
 } from '@starcoex-frontend/delivery';
 import { DELIVERY_ROUTES } from '@/app/constants/delivery-routes';
 import { DRIVER_STATUS_CONFIG } from '@/app/pages/dashboard/ecommerce/delivery/data/delivery-data';
+import { WorkingAreasInput } from '@/app/pages/dashboard/ecommerce/delivery/drivers/components/working-areas-input';
 
 const STATUS_OPTIONS: { value: DriverStatus; label: string }[] = [
   { value: 'PENDING', label: '승인 대기' },
@@ -61,8 +62,9 @@ const editSchema = z.object({
   vehicleType: z.enum(['BICYCLE', 'MOTORCYCLE', 'CAR', 'TRUCK']), // ✅ 추가
   vehicleNumber: z.string().optional(),
   vehicleModel: z.string().optional(),
-  workingAreas: z.string(),
-  // 상태 변경 (UpdateDriverStatusInput)
+  workingAreas: z // ✅ string → string[]
+    .array(z.string().min(1))
+    .min(1, '담당 지역을 1개 이상 입력해주세요.'),
   status: z.enum(['PENDING', 'ACTIVE', 'INACTIVE', 'SUSPENDED', 'TERMINATED']),
   statusReason: z.string().optional(),
 });
@@ -98,9 +100,7 @@ export default function DeliveryDriverEditPage() {
             vehicleType: d.vehicleType, // ✅ 추가
             vehicleNumber: d.vehicleNumber ?? '',
             vehicleModel: d.vehicleModel ?? '',
-            workingAreas: ((d.workingAreas as unknown as string[]) ?? []).join(
-              ', '
-            ),
+            workingAreas: (d.workingAreas as unknown as string[]) ?? [], // ✅ string[] 직접
             status: d.status,
             statusReason: '',
           });
@@ -112,11 +112,6 @@ export default function DeliveryDriverEditPage() {
   const onSubmit = async (data: EditFormValues) => {
     if (!driver) return;
 
-    const workingAreas = data.workingAreas
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
     // 1. 프로필 수정
     const profileRes = await updateDriverProfile({
       driverId: driver.id,
@@ -126,7 +121,7 @@ export default function DeliveryDriverEditPage() {
       vehicleType: data.vehicleType, // ✅ 추가
       vehicleNumber: data.vehicleNumber || undefined,
       vehicleModel: data.vehicleModel || undefined,
-      workingAreas,
+      workingAreas: data.workingAreas, // ✅ 이미 string[]
     });
 
     if (!profileRes.success) {
@@ -330,7 +325,7 @@ export default function DeliveryDriverEditPage() {
               </CardContent>
             </Card>
 
-            {/* 근무 지역 */}
+            {/* 근무 지역 — 태그 입력 */}
             <Card>
               <CardHeader>
                 <CardTitle>근무 지역</CardTitle>
@@ -340,16 +335,10 @@ export default function DeliveryDriverEditPage() {
                   control={form.control}
                   name="workingAreas"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="제주시, 서귀포시, 애월읍"
-                        />
-                      </FormControl>
-                      <FormDescription>콤마(,)로 구분하여 입력</FormDescription>
-                      <FormMessage />
-                    </FormItem>
+                    <WorkingAreasInput
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   )}
                 />
               </CardContent>

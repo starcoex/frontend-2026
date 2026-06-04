@@ -87,6 +87,13 @@ export const StoresLayout = () => {
     fetchServiceTypes,
   ]);
 
+  // ✅ 매장 목록 페이지로 돌아올 때마다 stores 재조회
+  useEffect(() => {
+    if (location.pathname === STORE_ROUTES.LIST) {
+      fetchStores();
+    }
+  }, [location.pathname, fetchStores]);
+
   const config = useMemo((): BreadcrumbConfig => {
     const pathname = location.pathname;
     const staticConfig = PATH_TO_CONFIG_MAP[pathname];

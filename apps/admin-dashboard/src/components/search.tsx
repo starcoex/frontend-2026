@@ -1,5 +1,5 @@
 import { IconSearch } from '@tabler/icons-react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useSearch } from '@/components/search-provider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

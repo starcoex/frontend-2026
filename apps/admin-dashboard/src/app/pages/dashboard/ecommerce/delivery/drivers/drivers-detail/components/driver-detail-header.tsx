@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Power, PowerOff } from 'lucide-react';
+import { ChevronLeft, Power, PowerOff, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -11,6 +11,7 @@ interface Props {
   driver: DeliveryDriver;
   onToggleAvailability: () => void;
   onDeactivate: () => void;
+  onApprove: () => void; // ✅ 신규
   isLoading: boolean;
 }
 
@@ -18,6 +19,7 @@ export function DriverDetailHeader({
   driver,
   onToggleAvailability,
   onDeactivate,
+  onApprove, // ✅ 신규
   isLoading,
 }: Props) {
   const navigate = useNavigate();
@@ -58,16 +60,32 @@ export function DriverDetailHeader({
       </div>
 
       <div className="flex items-center gap-2">
-        {/* 가용 상태 토글 */}
-        <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
-          <span className="text-muted-foreground text-sm">가용</span>
-          <Switch
-            checked={driver.isAvailable}
-            onCheckedChange={onToggleAvailability}
-            disabled={driver.status !== 'ACTIVE' || isLoading}
-          />
-        </div>
-        {/* 비활성화 버튼 */}
+        {/* ✅ 신규: PENDING 승인 버튼 */}
+        {driver.status === 'PENDING' && (
+          <Button
+            variant="default"
+            onClick={onApprove}
+            disabled={isLoading}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <CheckCircle className="mr-2 h-4 w-4" />
+            승인 (활성화)
+          </Button>
+        )}
+
+        {/* 가용 상태 토글 — ACTIVE 상태에서만 */}
+        {driver.status === 'ACTIVE' && (
+          <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+            <span className="text-muted-foreground text-sm">가용</span>
+            <Switch
+              checked={driver.isAvailable}
+              onCheckedChange={onToggleAvailability}
+              disabled={isLoading}
+            />
+          </div>
+        )}
+
+        {/* 비활성화 버튼 — ACTIVE 상태에서만 */}
         {driver.status === 'ACTIVE' && (
           <Button
             variant="outline"
@@ -79,10 +97,23 @@ export function DriverDetailHeader({
             비활성화
           </Button>
         )}
+
         {driver.status === 'INACTIVE' && (
           <Badge variant="secondary" className="px-3 py-2">
             <Power className="mr-1 h-3 w-3" />
             비활성
+          </Badge>
+        )}
+
+        {driver.status === 'SUSPENDED' && (
+          <Badge variant="warning" className="px-3 py-2">
+            일시 정지
+          </Badge>
+        )}
+
+        {driver.status === 'TERMINATED' && (
+          <Badge variant="destructive" className="px-3 py-2">
+            해지됨
           </Badge>
         )}
       </div>

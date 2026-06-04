@@ -140,7 +140,7 @@ export const DELIVERY_DRIVER_FIELDS = gql`
 
 /**
  * Delivery Fragment
- * - order, store 관계 추가 (스키마 반영, Federation stub)
+ * - order, queue 관계 추가 (스키마 반영, Federation stub)
  * - driver, statusHistory, ratings은 기존 Fragment 재사용
  */
 export const DELIVERY_FIELDS = gql`
@@ -600,5 +600,248 @@ export const UNASSIGN_DRIVER_FROM_DELIVERY = gql`
         ...DeliveryFields
       }
     }
+  }
+`;
+
+// ============================================================================
+// ✅ 신규: 정산 Queries
+// ============================================================================
+
+export const MY_SETTLEMENTS = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  query MySettlements($driverId: Int!, $limit: Int) {
+    mySettlements(driverId: $driverId, limit: $limit) {
+      ...DriverSettlementFields
+    }
+  }
+`;
+
+export const SETTLEMENTS_BY_PERIOD = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  query SettlementsByPeriod($input: GetSettlementsByPeriodInput!) {
+    settlementsByPeriod(input: $input) {
+      ...DriverSettlementFields
+    }
+  }
+`;
+
+export const SETTLEMENT_SUMMARY = gql`
+  query SettlementSummary($dateFrom: String!, $dateTo: String!) {
+    settlementSummary(dateFrom: $dateFrom, dateTo: $dateTo) {
+      totalCount
+      totalNetAmount
+      pendingCount
+      calculatedCount
+      approvedCount
+      paidCount
+    }
+  }
+`;
+
+// ============================================================================
+// ✅ 신규: 정산 Mutations
+// ============================================================================
+
+export const CLOSE_SETTLEMENT = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  mutation CloseSettlement($input: CloseSettlementInput!) {
+    closeSettlement(input: $input) {
+      ...DriverSettlementFields
+    }
+  }
+`;
+
+export const CLOSE_SETTLEMENT_BULK = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  mutation CloseSettlementBulk($input: CloseSettlementBulkInput!) {
+    closeSettlementBulk(input: $input) {
+      error {
+        code
+        message
+        details
+      }
+      success
+      successCount
+      failCount
+      failedIds
+      settlements {
+        ...DriverSettlementFields
+      }
+    }
+  }
+`;
+
+export const APPROVE_SETTLEMENT = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  mutation ApproveSettlement($input: ApproveSettlementInput!) {
+    approveSettlement(input: $input) {
+      ...DriverSettlementFields
+    }
+  }
+`;
+
+export const APPROVE_SETTLEMENT_BULK = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  mutation ApproveSettlementBulk($input: ApproveSettlementBulkInput!) {
+    approveSettlementBulk(input: $input) {
+      error {
+        code
+        message
+        details
+      }
+      success
+      successCount
+      failCount
+      failedIds
+      settlements {
+        ...DriverSettlementFields
+      }
+    }
+  }
+`;
+
+export const PROCESS_SETTLEMENT_PAYMENT = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  mutation ProcessSettlementPayment($input: ProcessPaymentInput!) {
+    processSettlementPayment(input: $input) {
+      ...DriverSettlementFields
+    }
+  }
+`;
+
+export const PROCESS_SETTLEMENT_PAYMENT_BULK = gql`
+  ${DRIVER_SETTLEMENT_FIELDS}
+  mutation ProcessSettlementPaymentBulk($input: ProcessPaymentBulkInput!) {
+    processSettlementPaymentBulk(input: $input) {
+      error {
+        code
+        message
+        details
+      }
+      success
+      successCount
+      failCount
+      failedIds
+      settlements {
+        ...DriverSettlementFields
+      }
+    }
+  }
+`;
+
+// ============================================================================
+// ✅ 신규: 배달비 정책 Fragment
+// ============================================================================
+
+export const DELIVERY_FEE_POLICY_FIELDS = gql`
+  fragment DeliveryFeePolicyFields on DeliveryFeePolicy {
+    id
+    deletedAt
+    createdAt
+    updatedAt
+    name
+    description
+    baseFee
+    driverRatio
+    platformFee
+    perKmFee
+    freeKm
+    highPriorityRate
+    urgentPriorityRate
+    isActive
+    isDefault
+  }
+`;
+
+// ============================================================================
+// ✅ 신규: 배달비 정책 Queries
+// ============================================================================
+
+export const DELIVERY_FEE_POLICIES = gql`
+  ${DELIVERY_FEE_POLICY_FIELDS}
+  query DeliveryFeePolicies($onlyActive: Boolean) {
+    deliveryFeePolicies(onlyActive: $onlyActive) {
+      error {
+        code
+        message
+        details
+      }
+      success
+      policies {
+        ...DeliveryFeePolicyFields
+      }
+    }
+  }
+`;
+
+export const DEFAULT_DELIVERY_FEE_POLICY = gql`
+  ${DELIVERY_FEE_POLICY_FIELDS}
+  query DefaultDeliveryFeePolicy {
+    defaultDeliveryFeePolicy {
+      error {
+        code
+        message
+        details
+      }
+      success
+      policy {
+        ...DeliveryFeePolicyFields
+      }
+    }
+  }
+`;
+
+export const CALCULATE_DELIVERY_FEE = gql`
+  query CalculateDeliveryFee($input: CalculateFeeInput!) {
+    calculateDeliveryFee(input: $input) {
+      deliveryFee
+      driverFee
+      platformFee
+      feePolicyId
+    }
+  }
+`;
+
+// ============================================================================
+// ✅ 신규: 배달비 정책 Mutations
+// ============================================================================
+
+export const CREATE_DELIVERY_FEE_POLICY = gql`
+  ${DELIVERY_FEE_POLICY_FIELDS}
+  mutation CreateDeliveryFeePolicy($input: CreateDeliveryFeePolicyInput!) {
+    createDeliveryFeePolicy(input: $input) {
+      error {
+        code
+        message
+        details
+      }
+      success
+      policy {
+        ...DeliveryFeePolicyFields
+      }
+    }
+  }
+`;
+
+export const UPDATE_DELIVERY_FEE_POLICY = gql`
+  ${DELIVERY_FEE_POLICY_FIELDS}
+  mutation UpdateDeliveryFeePolicy($input: UpdateDeliveryFeePolicyInput!) {
+    updateDeliveryFeePolicy(input: $input) {
+      error {
+        code
+        message
+        details
+      }
+      success
+      policy {
+        ...DeliveryFeePolicyFields
+      }
+    }
+  }
+`;
+
+export const DELETE_DELIVERY_FEE_POLICY = gql`
+  mutation DeleteDeliveryFeePolicy($id: Int!) {
+    deleteDeliveryFeePolicy(id: $id)
   }
 `;

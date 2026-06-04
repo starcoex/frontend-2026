@@ -4,10 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
   AlertCircleIcon,
-  Badge,
-  ChevronLeft,
   ImageIcon,
-  Loader2,
   Pencil,
   PlusIcon,
   RefreshCwIcon,
@@ -39,7 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useMedia } from '@starcoex-frontend/media';
 import { useCategories } from '@starcoex-frontend/categories';
@@ -48,6 +45,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useProducts } from '@starcoex-frontend/products';
 import type { Product } from '@starcoex-frontend/products';
 import Barcode from 'react-barcode';
+import { Badge } from '@/components/ui/badge';
 import { InventoryMutateDrawer } from '@/app/pages/dashboard/ecommerce/products/inventory/components/inventory-mutate-drawer';
 import {
   AlertDialog,
@@ -59,6 +57,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { FormPageHeader } from '@starcoex-frontend/common';
+import { InventoryEditDrawer } from '@/app/pages/dashboard/ecommerce/products/inventory/edit/inventory-edit-drawer';
 
 // ─── SKU 유틸 ────────────────────────────────────────────────────────────────
 const SKU_MODES = [
@@ -130,7 +130,6 @@ interface FilePreview {
   preview: string;
 }
 
-// 기존 이미지 (URL 기반)
 interface ExistingImage {
   url: string;
   removed: boolean;
@@ -140,6 +139,9 @@ interface EditProductFormProps {
   product: Product;
 }
 
+// ─── ProductInventory 타입 (product.inventories 항목) ────────────────────────
+type ProductInventoryItem = NonNullable<Product['inventories']>[number];
+
 export default function EditProductForm({ product }: EditProductFormProps) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -148,26 +150,27 @@ export default function EditProductForm({ product }: EditProductFormProps) {
   const { brands, fetchBrands, stores, fetchStores } = useStores();
   const { categoryTree, fetchCategoryTree } = useCategories();
 
-  // ─── 재고 관련 상태 ───────────────────────────────────────────────────────────
-  const [inventories, setInventories] = useState(product.inventories ?? []);
-  const [inventoryDrawerOpen, setInventoryDrawerOpen] = useState(false);
-  const [editingInventory, setEditingInventory] = useState<
-    (typeof inventories)[number] | undefined
-  >(undefined);
+  // ─── 재고 관련 상태 ─────────────────────────────────────────────────────────
+  const [inventories, setInventories] = useState<ProductInventoryItem[]>(
+    product.inventories ?? []
+  );
+  const [addInventoryOpen, setAddInventoryOpen] = useState(false);
+  const [editingInventory, setEditingInventory] =
+    useState<ProductInventoryItem | null>(null);
   const [deletingInventoryId, setDeletingInventoryId] = useState<number | null>(
     null
   );
   const [isDeletingInventory, setIsDeletingInventory] = useState(false);
 
-  // ─── 기존 이미지 상태 (삭제 가능) ────────────────────────────────────────
+  // ─── 이미지 상태 ─────────────────────────────────────────────────────────────
   const [existingImages, setExistingImages] = useState<ExistingImage[]>(
     product.imageUrls.map((url) => ({ url, removed: false }))
   );
-  // ─── 새 이미지 상태 ───────────────────────────────────────────────────────
   const [files, setFiles] = useState<FilePreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  // ─── SKU 모드 (기존 SKU는 'manual' 로 시작) ───────────────────────────────
+
+  // ─── SKU 모드 ────────────────────────────────────────────────────────────────
   const [skuMode, setSkuMode] = useState<SKUMode>('manual');
 
   useEffect(() => {
@@ -222,20 +225,30 @@ export default function EditProductForm({ product }: EditProductFormProps) {
     }
   }, [skuMode, categoryIdValue]);
 
-  // 재고 Drawer 닫힐 때 목록 갱신
-  const handleInventoryDrawerClose = useCallback(
+  // ─── 재고 Drawer 핸들러 ──────────────────────────────────────────────────────
+  const handleAddInventoryClose = useCallback(
     async (open: boolean) => {
-      setInventoryDrawerOpen(open);
+      setAddInventoryOpen(open);
       if (!open) {
-        setEditingInventory(undefined);
-        // 최신 재고 목록 반영
         const res = await fetchProductById(product.id);
-        if (res?.data?.inventories) setInventories(res?.data?.inventories);
+        if (res?.data?.inventories) setInventories(res.data.inventories);
       }
     },
     [fetchProductById, product.id]
   );
 
+  const handleEditInventoryClose = useCallback(
+    async (open: boolean) => {
+      if (!open) {
+        setEditingInventory(null);
+        const res = await fetchProductById(product.id);
+        if (res?.data?.inventories) setInventories(res.data.inventories);
+      }
+    },
+    [fetchProductById, product.id]
+  );
+
+  // ─── 재고 삭제 ───────────────────────────────────────────────────────────────
   const handleDeleteInventory = async () => {
     if (!deletingInventoryId) return;
     setIsDeletingInventory(true);
@@ -255,7 +268,7 @@ export default function EditProductForm({ product }: EditProductFormProps) {
     }
   };
 
-  // ─── 기존 이미지 삭제 토글 ────────────────────────────────────────────────
+  // ─── 이미지 핸들러 ───────────────────────────────────────────────────────────
   const toggleRemoveExisting = useCallback((url: string) => {
     setExistingImages((prev) =>
       prev.map((img) =>
@@ -264,7 +277,6 @@ export default function EditProductForm({ product }: EditProductFormProps) {
     );
   }, []);
 
-  // ─── 새 파일 관련 ─────────────────────────────────────────────────────────
   const validateFile = useCallback((file: File): string | null => {
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
     if (!validTypes.includes(file.type))
@@ -345,15 +357,13 @@ export default function EditProductForm({ product }: EditProductFormProps) {
     [addFiles]
   );
 
-  // ─── 폼 제출 ───────────────────────────────────────────────────────────────
+  // ─── 폼 제출 ─────────────────────────────────────────────────────────────────
   async function onSubmit(data: FormValues) {
     try {
-      // 남아있는 기존 이미지 URL
       let imageUrls = existingImages
         .filter((i) => !i.removed)
         .map((i) => i.url);
 
-      // 새 이미지 업로드
       if (files.length > 0 && currentUser?.id) {
         const uploadResult = await uploadMedia(
           files.map((f) => f.file),
@@ -403,41 +413,29 @@ export default function EditProductForm({ product }: EditProductFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* 헤더 */}
-        <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-              <Link to={`/admin/products/${product.id}`}>
-                <ChevronLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold tracking-tight">
-              제품 수정: {product.name}
-            </h1>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate(`/admin/products/${product.id}`)}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                '저장하기'
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* ─── 헤더 ── */}
+        <FormPageHeader
+          backTo={`/admin/products/${product.id}`}
+          title="제품 수정"
+          subtitle={product.name}
+          actions={[
+            {
+              label: '취소',
+              variant: 'secondary',
+              onClick: () => navigate(`/admin/products/${product.id}`),
+            },
+            {
+              label: '저장하기',
+              loadingLabel: '저장 중...',
+              type: 'submit',
+              isLoading: isSubmitting,
+              disabled: isSubmitting,
+            },
+          ]}
+        />
 
         <div className="grid gap-4 lg:grid-cols-6">
-          {/* ─── 좌측 ──────────────────────────────────────────────────────── */}
+          {/* ─── 좌측 ── */}
           <div className="space-y-4 lg:col-span-4">
             {/* 제품 정보 */}
             <Card>
@@ -472,7 +470,6 @@ export default function EditProductForm({ product }: EditProductFormProps) {
                   )}
                 />
 
-                {/* SKU + 바코드 */}
                 <div className="grid gap-4 lg:grid-cols-2">
                   {/* SKU */}
                   <FormField
@@ -621,7 +618,6 @@ export default function EditProductForm({ product }: EditProductFormProps) {
                 <CardTitle>제품 이미지</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* ── 기존 이미지 (삭제 가능) ─────────────────────────────── */}
                 {existingImages.length > 0 && (
                   <div>
                     <p className="text-muted-foreground mb-2 text-sm">
@@ -646,7 +642,6 @@ export default function EditProductForm({ product }: EditProductFormProps) {
                             variant={img.removed ? 'outline' : 'destructive'}
                             onClick={() => toggleRemoveExisting(img.url)}
                             className="absolute -top-2 -right-2 size-6 rounded-full border-2 shadow-none"
-                            title={img.removed ? '삭제 취소' : '이미지 삭제'}
                           >
                             <XIcon className="size-3.5" />
                           </Button>
@@ -663,7 +658,6 @@ export default function EditProductForm({ product }: EditProductFormProps) {
                   </div>
                 )}
 
-                {/* ── 새 이미지 업로드 ─────────────────────────────────────── */}
                 <div>
                   <p className="text-muted-foreground mb-2 text-sm">
                     새 이미지 추가
@@ -758,7 +752,7 @@ export default function EditProductForm({ product }: EditProductFormProps) {
             </Card>
           </div>
 
-          {/* ─── 우측 ──────────────────────────────────────────────────────── */}
+          {/* ─── 우측 ── */}
           <div className="space-y-4 lg:col-span-2">
             {/* 가격 */}
             <Card>
@@ -847,15 +841,13 @@ export default function EditProductForm({ product }: EditProductFormProps) {
                             </div>
                           </div>
                           <div className="flex gap-1">
+                            {/* ✅ 수정 버튼 → InventoryEditDrawer 열기 */}
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon"
                               className="size-7"
-                              onClick={() => {
-                                setEditingInventory(inv);
-                                setInventoryDrawerOpen(true);
-                              }}
+                              onClick={() => setEditingInventory(inv)}
                             >
                               <Pencil className="size-3.5" />
                             </Button>
@@ -879,10 +871,7 @@ export default function EditProductForm({ product }: EditProductFormProps) {
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={() => {
-                    setEditingInventory(undefined);
-                    setInventoryDrawerOpen(true);
-                  }}
+                  onClick={() => setAddInventoryOpen(true)}
                 >
                   <PlusIcon className="mr-1 size-3.5" />
                   매장 재고 추가
@@ -1011,16 +1000,24 @@ export default function EditProductForm({ product }: EditProductFormProps) {
           </div>
         </div>
       </form>
-      {/* 재고 수정/추가 Drawer */}
+
+      {/* ✅ 신규 재고 등록 Drawer */}
       <InventoryMutateDrawer
-        open={inventoryDrawerOpen}
-        onOpenChange={handleInventoryDrawerClose}
-        inventory={
-          editingInventory
-            ? { ...editingInventory, product: undefined }
-            : undefined
-        }
+        open={addInventoryOpen}
+        onOpenChange={handleAddInventoryClose}
         productId={product.id}
+        productName={product.name}
+        basePrice={product.basePrice}
+        existingInventories={inventories as any}
+      />
+
+      {/* ✅ 재고 설정 수정 Drawer */}
+      <InventoryEditDrawer
+        open={!!editingInventory}
+        onOpenChange={handleEditInventoryClose}
+        inventory={editingInventory}
+        storeName={stores.find((s) => s.id === editingInventory?.storeId)?.name}
+        productName={product.name}
       />
 
       {/* 재고 삭제 확인 Dialog */}

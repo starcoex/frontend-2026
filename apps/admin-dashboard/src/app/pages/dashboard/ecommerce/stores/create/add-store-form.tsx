@@ -74,6 +74,7 @@ export default function AddStoreForm() {
   const navigate = useNavigate();
   const {
     createStore,
+    addStoreService,
     brands,
     fetchBrands,
     businessTypes, // ✅ 마스터 데이터
@@ -82,6 +83,7 @@ export default function AddStoreForm() {
   const { saveAddress } = useAddress();
   const [brandDrawerOpen, setBrandDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
 
   const form = useForm<StoreFormData>({
     resolver: zodResolver(FormSchema),
@@ -140,6 +142,14 @@ export default function AddStoreForm() {
     }
   };
 
+  const handleServiceToggle = (serviceId: number) => {
+    setSelectedServiceIds((prev) =>
+      prev.includes(serviceId)
+        ? prev.filter((id) => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
   async function onSubmit(data: StoreFormData) {
     if (!currentUser?.id) {
       toast.error('사용자 정보를 찾을 수 없습니다.');
@@ -190,7 +200,7 @@ export default function AddStoreForm() {
         return;
       }
 
-      const addressId = addressRes.data.saveAddress.id;
+      const addressId = addressRes.data.id;
 
       // 2️⃣ Store 생성
       const response = await createStore({
@@ -212,6 +222,17 @@ export default function AddStoreForm() {
       });
 
       if (response.success && response.data) {
+        const storeId = response.data?.store?.id as number;
+
+        // 3️⃣ 운영 서비스 등록
+        if (selectedServiceIds.length > 0) {
+          await Promise.all(
+            selectedServiceIds.map((serviceTypeId) =>
+              addStoreService({ storeId, serviceTypeId })
+            )
+          );
+        }
+
         toast.success('매장이 성공적으로 등록되었습니다!');
         navigate('/admin/stores');
       } else {
@@ -464,7 +485,10 @@ export default function AddStoreForm() {
                       <FormItem>
                         <FormLabel>비즈니스 타입 *</FormLabel>
                         <Select
-                          onValueChange={field.onChange}
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            setSelectedServiceIds([]); // ✅ 서비스 선택 초기화
+                          }}
                           value={field.value}
                           disabled={
                             !selectedBrandId || activeBusinessTypes.length === 0
@@ -501,16 +525,22 @@ export default function AddStoreForm() {
                         {allowedServices.length > 0 && (
                           <div className="mt-2">
                             <p className="text-muted-foreground mb-1.5 text-xs font-medium">
-                              운영 가능 서비스
+                              운영할 서비스 선택 *
                             </p>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-col gap-1.5">
                               {allowedServices.map((s) => (
-                                <span
+                                <label
                                   key={s.id}
-                                  className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-xs"
+                                  className="flex items-center gap-2 cursor-pointer"
                                 >
-                                  {s.name}
-                                </span>
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300"
+                                    checked={selectedServiceIds.includes(s.id)}
+                                    onChange={() => handleServiceToggle(s.id)}
+                                  />
+                                  <span className="text-sm">{s.name}</span>
+                                </label>
                               ))}
                             </div>
                           </div>

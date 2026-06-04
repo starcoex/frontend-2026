@@ -6,6 +6,8 @@ import { OrdersProvider } from '@starcoex-frontend/orders';
 import { PaymentsProvider } from '@starcoex-frontend/payments';
 import { NotificationsProvider } from '@starcoex-frontend/notifications';
 import { CartProvider } from '@starcoex-frontend/cart';
+import { LoyaltyProvider } from '@starcoex-frontend/loyalty';
+import { FuelDataProvider } from '@starcoex-frontend/vehicles';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -18,7 +20,13 @@ export const Providers = ({ children }: ProvidersProps) => {
         <OrdersProvider>
           <PaymentsProvider>
             <NotificationsProvider>
-              <CartProvider>{children}</CartProvider>
+              <CartProvider>
+                <LoyaltyProvider>
+                  <FuelDataProvider autoLoad={true}>
+                    {children}
+                  </FuelDataProvider>
+                </LoyaltyProvider>
+              </CartProvider>
             </NotificationsProvider>
           </PaymentsProvider>
         </OrdersProvider>

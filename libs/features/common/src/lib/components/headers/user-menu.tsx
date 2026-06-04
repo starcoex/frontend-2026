@@ -290,7 +290,7 @@ const UserMenuItem: React.FC<UserMenuItemProps> = ({
   className,
   children,
 }) => {
-  const { onMenuClick } = useUserMenu();
+  const { onMenuClick, mobile } = useUserMenu();
 
   const handleClick = () => {
     if (onClick) {
@@ -300,6 +300,25 @@ const UserMenuItem: React.FC<UserMenuItemProps> = ({
     }
   };
 
+  // ✅ 모바일: DropdownMenu 컨텍스트 없이 렌더링되므로 일반 button 사용
+  if (mobile) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        className={cn(
+          'flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg',
+          'text-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-left',
+          className
+        )}
+      >
+        {Icon && <Icon className="h-4 w-4 shrink-0" />}
+        <span>{children}</span>
+      </button>
+    );
+  }
+
+  // 데스크톱: DropdownMenu 컨텍스트 내부에서 렌더링
   return (
     <DropdownMenuItem
       onClick={handleClick}

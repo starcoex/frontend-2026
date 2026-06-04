@@ -16,6 +16,10 @@ export function RegisterTypePage() {
     navigate('/auth/register/personal');
   };
 
+  const handleIdentityRegister = () => {
+    navigate('/auth/register/identity');
+  };
+
   return (
     <>
       <Helmet>
@@ -55,8 +59,10 @@ export function RegisterTypePage() {
           <CardDescription>소셜 로그인으로 빠르게 시작하세요</CardDescription>
         </CardHeader>
 
+        {/* ✅ 콜백만 전달 - 버튼 렌더링은 RegisterTypeForm이 담당 */}
         <RegisterTypeForm
           onEmailRegister={handleEmailRegister}
+          onIdentityRegister={handleIdentityRegister}
           loginPath="/auth/login"
           buttonClassName="w-full h-14 font-medium group transition-all relative"
         />

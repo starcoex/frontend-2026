@@ -9,3 +9,4 @@ export * from './register-type-form';
 export * from './social-login-button';
 export * from './login-form';
 export * from './register-form';
+export * from './socail-callback-page';

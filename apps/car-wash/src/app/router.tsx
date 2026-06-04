@@ -1,169 +1,173 @@
-import { createBrowserRouter } from 'react-router-dom';
-import { MainLayout } from './layout/main-layout';
-import { AuthLayout } from './layout/auth-layout';
-//
-// // 메인 페이지들
-import { HomePage } from '';
-import { ServicesPage } from './pages/services-page';
-
-// // 인증 페이지들 (간단한 소셜 로그인만)
-import { LoginPage } from './pages/auth/login';
-import { RegisterPage } from '../pages/auth/register';
-// import { SocialCallbackPage } from './pages/auth/social-callback-page';
-
-// 공통 컴포넌트
+import { createBrowserRouter, Outlet } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
 import {
   ErrorBoundary,
-  LoadingPage,
+  ForgotPasswordPage,
   NotFoundPage,
-} from '@starcoex-platform/shadcn-ui';
+  ResetPasswordPage,
+  VerifyEmailPage,
+  VerifyPhonePage,
+  VerifySocialEmailCodePage,
+  VerifySocialEmailPage,
+} from '@starcoex-frontend/common';
+import { MainLayout } from '@/app/layout/main-layout';
+import { AuthLayout } from '@/app/layout/auth-layout';
+import { DashboardLayout } from '@/app/layout/dashboard-layout';
+import { APP_CONFIG } from '@/app/config/app.config';
+import { BottomNav } from '@/components/button-nav/botton-nav';
 
-// 라우트 가드
-import { AuthGuard } from '../components/guards/auth-guards';
-import BookingPage from '../pages/booking-page';
+// ─── 로딩 컴포넌트 ───────────────────────────────────────────────────────────
+const Loading = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-cyan-500 border-t-transparent" />
+  </div>
+);
+const S = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
+  <Suspense fallback={<Loading />}>
+    <Component />
+  </Suspense>
+);
+
+// ─── 공개 페이지 ─────────────────────────────────────────────────────────────
+const HomePage = lazy(() =>
+  import('@/app/pages/home-page').then((m) => ({ default: m.HomePage }))
+);
+const SpeedPage = lazy(() =>
+  import('@/app/pages/speed-page').then((m) => ({ default: m.SpeedPage }))
+);
+const StoreListPage = lazy(() =>
+  import('@/components/queue/store-list-page').then((m) => ({
+    default: m.StoreListPage,
+  }))
+);
+const StoreDetailPage = lazy(() =>
+  import('@/components/queue/store-detail-page').then((m) => ({
+    default: m.StoreDetailPage,
+  }))
+);
+const QueueStatusPage = lazy(() =>
+  import('@/app/pages/queue-status-page').then((m) => ({
+    default: m.QueueStatusPage,
+  }))
+);
+const PrivacyPage = lazy(() =>
+  import('@/app/pages/legal/privacy-page').then((m) => ({
+    default: m.PrivacyPage,
+  }))
+);
+const AboutPage = lazy(() =>
+  import('@/app/pages/about/about-page').then((m) => ({ default: m.AboutPage }))
+);
+const PricingPage = lazy(() =>
+  import('@/app/pages/pricing/pricing-page').then((m) => ({
+    default: m.PricingPage,
+  }))
+);
+const ChangelogPage = lazy(() =>
+  import('@/app/pages/changelog/changelog-page').then((m) => ({
+    default: m.ChangelogPage,
+  }))
+);
+
+// ─── 인증 페이지 ─────────────────────────────────────────────────────────────
+const LoginPage = lazy(() =>
+  import('@/app/pages/auth/login').then((m) => ({ default: m.LoginPage }))
+);
+const RegisterTypePage = lazy(() =>
+  import('@/app/pages/auth/register-type-page').then((m) => ({
+    default: m.RegisterTypePage,
+  }))
+);
+const PersonalRegisterPage = lazy(() =>
+  import('@/app/pages/auth/personal-register-page').then((m) => ({
+    default: m.PersonalRegisterPage,
+  }))
+);
+
+// ─── 대시보드 (인증 필요) ────────────────────────────────────────────────────
+// const ProfilePage = lazy(() =>
+//   import('@/app/pages/dashboard/profile-page').then((m) => ({ default: m.ProfilePage }))
+// );
+
+// ─── AppShell: BottomNav 전역 제공 (Router 컨텍스트 내부) ────────────────────
+const AppShell = () => (
+  <>
+    <Outlet />
+    <BottomNav />
+  </>
+);
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <MainLayout />,
+    element: <AppShell />,
     errorElement: <ErrorBoundary />,
     children: [
-      // 🏠 홈페이지
+      // 🏠 공개 페이지
       {
-        index: true,
-        element: <HomePage />,
-      },
-      //
-      // // 📋 서비스 안내
-      {
-        path: 'services',
-        element: <ServicesPage />,
+        path: '/',
+        element: <MainLayout />,
+        children: [
+          { index: true, element: S(HomePage) },
+          { path: APP_CONFIG.routes.privacy, element: S(PrivacyPage) },
+          { path: APP_CONFIG.routes.about, element: S(AboutPage) },
+          { path: APP_CONFIG.routes.pricing, element: S(PricingPage) },
+          { path: 'changelog', element: S(ChangelogPage) },
+
+          // ⚡ 스피드 존
+          { path: 'speed', element: S(SpeedPage) },
+          // { path: 'speed/queue', element: S(QueuePage) },
+
+          // 🏪 지점 목록 & 상세
+          { path: 'stores', element: S(StoreListPage) },
+          { path: 'stores/:storeId', element: S(StoreDetailPage) },
+          { path: 'queue-status', element: S(QueueStatusPage) },
+
+          // 💎 프리미엄 존
+          // { path: 'premium', element: S(PremiumPage) },
+          // { path: 'premium/booking', element: S(PremiumBookingPage) },
+
+          // 📋 예약 내역 (로그인 사용자)
+          // { path: 'bookings', element: S(BookingsPage) },
+          // { path: 'bookings/:id', element: S(BookingDetailPage) },
+
+          // 🔔 알림 (로그인 사용자)
+          // { path: 'notifications', element: S(NotificationsPage) },
+        ],
       },
 
+      // 🔐 대시보드 (인증 필요) - BottomNav 숨김
       {
-        path: 'booking',
-        element: <BookingPage />,
+        path: '/dashboard',
+        element: <DashboardLayout />,
+        children: [
+          // { index: true, element: S(ProfilePage) },
+          // { path: 'vehicles', element: S(VehiclesPage) },
+          // { path: 'history', element: S(HistoryPage) },
+        ],
       },
-      // {
-      //   path: 'about',
-      //   element: <AboutPage />,
-      // },
-      //
-      // // 📱 실시간 추적 (인증 필요 없음 - 예약번호로 접근)
-      // {
-      //   path: 'tracking',
-      //   children: [
-      //     {
-      //       index: true,
-      //       element: <TrackingPage />,
-      //     },
-      //     {
-      //       path: ':bookingId',
-      //       element: <TrackingDetailPage />,
-      //     },
-      //   ],
-      // },
+
+      // 🔑 인증 - BottomNav 숨김
+      {
+        path: '/auth',
+        element: <AuthLayout />,
+        children: [
+          { path: 'login', element: S(LoginPage) },
+          { path: 'register', element: S(RegisterTypePage) },
+          { path: 'register/personal', element: S(PersonalRegisterPage) },
+          { path: 'verify-email', element: <VerifyEmailPage /> },
+          { path: 'verify-social', element: <VerifySocialEmailPage /> },
+          {
+            path: 'verify-social-code',
+            element: <VerifySocialEmailCodePage />,
+          },
+          { path: 'forgot-password', element: <ForgotPasswordPage /> },
+          { path: 'reset-password', element: <ResetPasswordPage /> },
+          { path: 'verify-phone', element: <VerifyPhonePage /> },
+        ],
+      },
+
+      // 🚫 404
+      { path: '*', element: <NotFoundPage /> },
     ],
-  },
-
-  // 🎯 예약 플로우 (별도 레이아웃)
-  // {
-  //   path: '/booking',
-  //   element: (
-  //     <AuthGuard>
-  //       <PortalConnectionGuard>
-  //         <BookingLayout />
-  //       </PortalConnectionGuard>
-  //     </AuthGuard>
-  //   ),
-  //   errorElement: <ErrorBoundary />,
-  //   children: [
-  //     // {
-  //     //   index: true,
-  //     //   element: <BookingPage />,
-  //     // },
-  //     // {
-  //     //   path: 'confirm',
-  //     //   element: <BookingConfirmPage />,
-  //     // },
-  //     // {
-  //     //   path: 'success/:bookingId',
-  //     //   element: <BookingSuccessPage />,
-  //     // },
-  //   ],
-  // },
-
-  // 👤 사용자 페이지 (인증 필요)
-  {
-    path: '/profile',
-    element: (
-      <AuthGuard>
-        <MainLayout />
-      </AuthGuard>
-    ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      // {
-      //   index: true,
-      //   element: <ProfilePage />,
-      // },
-      // {
-      //   path: 'history',
-      //   element: <BookingHistoryPage />,
-      // },
-      // {
-      //   path: 'settings',
-      //   element: <SettingsPage />,
-      // },
-    ],
-  },
-
-  // 🔐 인증 관련 라우트 (간단한 소셜 로그인)
-  {
-    path: '/auth',
-    element: <AuthLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        path: 'login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'register',
-        element: <RegisterPage />,
-      },
-      // {
-      //   path: 'callback/:provider',
-      //   element: <SocialCallbackPage />,
-      // },
-    ],
-  },
-
-  // 🔄 포털 연동 관련 (숨겨진 라우트)
-  {
-    path: '/portal-connect',
-    element: <LoadingPage message="포털과 연결 중..." />,
-    loader: async ({ request }) => {
-      // 포털에서 전달된 토큰으로 자동 로그인 처리
-      const url = new URL(request.url);
-      const token = url.searchParams.get('portal_token');
-      const redirect = url.searchParams.get('redirect') || '/';
-
-      if (token) {
-        // 포털 토큰 저장 및 인증 처리
-        localStorage.setItem('portal_token', token);
-        window.location.href = redirect;
-      } else {
-        window.location.href = '/auth/login';
-      }
-
-      return null;
-    },
-  },
-
-  // 🚫 404 페이지
-  {
-    path: '*',
-    element: <NotFoundPage />,
   },
 ]);

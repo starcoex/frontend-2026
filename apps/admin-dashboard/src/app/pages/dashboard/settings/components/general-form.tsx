@@ -71,9 +71,7 @@ export default function GeneralForm() {
     uploadAvatar,
     deleteAvatar,
     uploadProgress,
-  } = useAvatar({
-    port: 4102,
-  });
+  } = useAvatar();
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as GeneralFormLocationState;
@@ -537,7 +535,7 @@ export default function GeneralForm() {
           description:
             '계정이 성공적으로 삭제되었습니다. 이용해 주셔서 감사합니다.',
         });
-        // useAddress 내부 로직에 의해 자동으로 로그아웃 상태로 전환되고 로그인 페이지로 이동됨
+        // useAnalytics 내부 로직에 의해 자동으로 로그아웃 상태로 전환되고 로그인 페이지로 이동됨
       } else {
         toasts.error({
           title: '삭제 실패',

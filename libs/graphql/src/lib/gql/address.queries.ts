@@ -4,9 +4,6 @@ import { gql } from '@apollo/client';
 // Fragments
 // ============================================================================
 
-/**
- * Juso API 공통 응답 정보
- */
 export const JUSO_API_COMMON_FIELDS = gql`
   fragment JusoApiCommonFields on JusoApiCommon {
     totalCount
@@ -17,9 +14,6 @@ export const JUSO_API_COMMON_FIELDS = gql`
   }
 `;
 
-/**
- * Juso API 주소 정보
- */
 export const JUSO_API_ADDRESS_FIELDS = gql`
   fragment JusoApiAddressFields on JusoApiAddress {
     roadAddr
@@ -39,9 +33,6 @@ export const JUSO_API_ADDRESS_FIELDS = gql`
   }
 `;
 
-/**
- * Juso API 응답 결과
- */
 export const JUSO_API_RESULTS_FIELDS = gql`
   ${JUSO_API_COMMON_FIELDS}
   ${JUSO_API_ADDRESS_FIELDS}
@@ -55,9 +46,6 @@ export const JUSO_API_RESULTS_FIELDS = gql`
   }
 `;
 
-/**
- * 검색 전략 정보
- */
 export const SEARCH_STRATEGY_FIELDS = gql`
   fragment SearchStrategyFields on SearchStrategy {
     type
@@ -68,9 +56,6 @@ export const SEARCH_STRATEGY_FIELDS = gql`
   }
 `;
 
-/**
- * 외부 API 주소 결과
- */
 export const EXTERNAL_ADDRESS_RESULT_FIELDS = gql`
   fragment ExternalAddressResultFields on ExternalAddressResult {
     zipNo
@@ -86,9 +71,6 @@ export const EXTERNAL_ADDRESS_RESULT_FIELDS = gql`
   }
 `;
 
-/**
- * 지역별 그루핑 결과
- */
 export const GROUPED_SEARCH_RESULT_FIELDS = gql`
   ${EXTERNAL_ADDRESS_RESULT_FIELDS}
   fragment GroupedSearchResultFields on GroupedSearchResult {
@@ -100,9 +82,6 @@ export const GROUPED_SEARCH_RESULT_FIELDS = gql`
   }
 `;
 
-/**
- * 주소 정보 엔티티 (전체 필드)
- */
 export const ADDRESS_FIELDS = gql`
   fragment AddressFields on Address {
     id
@@ -142,9 +121,6 @@ export const ADDRESS_FIELDS = gql`
   }
 `;
 
-/**
- * 주소 검색 로그
- */
 export const ADDRESS_SEARCH_LOG_FIELDS = gql`
   fragment AddressSearchLogFields on AddressSearchLog {
     id
@@ -171,9 +147,6 @@ export const ADDRESS_SEARCH_LOG_FIELDS = gql`
 // Queries
 // ============================================================================
 
-/**
- * 스마트 주소 검색 (AI 최적화, 추천)
- */
 export const SMART_SEARCH_ADDRESSES = gql`
   ${JUSO_API_RESULTS_FIELDS}
   ${SEARCH_STRATEGY_FIELDS}
@@ -199,9 +172,6 @@ export const SMART_SEARCH_ADDRESSES = gql`
   }
 `;
 
-/**
- * 외부 API 직접 검색 (도로명주소 API)
- */
 export const SEARCH_ADDRESSES_FROM_API = gql`
   ${JUSO_API_RESULTS_FIELDS}
   query SearchAddressesFromAPI($input: ExternalAddressSearchInput!) {
@@ -216,9 +186,6 @@ export const SEARCH_ADDRESSES_FROM_API = gql`
   }
 `;
 
-/**
- * 사용자의 저장된 주소 검색 (내부 DB)
- */
 export const SEARCH_USER_ADDRESSES = gql`
   ${ADDRESS_FIELDS}
   ${ADDRESS_SEARCH_LOG_FIELDS}
@@ -240,9 +207,6 @@ export const SEARCH_USER_ADDRESSES = gql`
   }
 `;
 
-/**
- * ID로 특정 주소 조회
- */
 export const GET_USER_ADDRESS_BY_ID = gql`
   ${ADDRESS_FIELDS}
   query GetUserAddressById($id: Int!) {
@@ -252,9 +216,6 @@ export const GET_USER_ADDRESS_BY_ID = gql`
   }
 `;
 
-/**
- * 사용자의 모든 주소 조회 (필터링 및 페이징)
- */
 export const GET_USER_ADDRESSES = gql`
   ${ADDRESS_FIELDS}
   ${ADDRESS_SEARCH_LOG_FIELDS}
@@ -276,9 +237,6 @@ export const GET_USER_ADDRESSES = gql`
   }
 `;
 
-/**
- * 사용자별 주소 통계
- */
 export const GET_USER_ADDRESS_STATS = gql`
   ${ADDRESS_SEARCH_LOG_FIELDS}
   query GetUserAddressStats {
@@ -296,9 +254,6 @@ export const GET_USER_ADDRESS_STATS = gql`
   }
 `;
 
-/**
- * 사용자의 주소 검색 로그 조회
- */
 export const GET_USER_SEARCH_LOGS = gql`
   ${ADDRESS_SEARCH_LOG_FIELDS}
   query GetUserSearchLogs($filter: SearchAddressLogInput!) {
@@ -315,12 +270,82 @@ export const GET_USER_SEARCH_LOGS = gql`
 `;
 
 // ============================================================================
+// Admin Queries
+// ============================================================================
+
+export const ADMIN_GET_ALL_ADDRESSES = gql`
+  ${ADDRESS_FIELDS}
+  query AdminGetAllAddresses($filter: AdminAddressFilterInput!) {
+    adminGetAllAddresses(filter: $filter) {
+      addresses {
+        ...AddressFields
+      }
+      total
+      page
+      totalPages
+    }
+  }
+`;
+
+export const ADMIN_GET_SEARCH_LOGS = gql`
+  ${ADDRESS_SEARCH_LOG_FIELDS}
+  query AdminGetSearchLogs($filter: AdminSearchLogFilterInput!) {
+    adminGetSearchLogs(filter: $filter) {
+      data {
+        ...AddressSearchLogFields
+      }
+      total
+      page
+      totalPages
+    }
+  }
+`;
+
+export const ADMIN_GET_API_LOGS = gql`
+  query AdminGetApiLogs($filter: AdminApiLogFilterInput!) {
+    adminGetApiLogs(filter: $filter) {
+      data {
+        id
+        apiType
+        endpoint
+        success
+        statusCode
+        executionTime
+        errorCode
+        errorMessage
+        userIp
+        userId
+        createdAt
+      }
+      total
+      page
+      totalPages
+    }
+  }
+`;
+
+export const ADMIN_GET_ADDRESS_STATS = gql`
+  query AdminGetAddressStats {
+    adminGetAddressStats {
+      totalAddresses
+      activeAddresses
+      inactiveAddresses
+      deletedAddresses
+      totalSearchLogs
+      totalApiLogs
+      successApiLogs
+      failedApiLogs
+      topSearchKeywords
+      topRegions
+      generatedAt
+    }
+  }
+`;
+
+// ============================================================================
 // Mutations
 // ============================================================================
 
-/**
- * 주소 저장 (도로명주소 API 데이터)
- */
 export const SAVE_ADDRESS = gql`
   ${ADDRESS_FIELDS}
   mutation SaveAddress($input: SaveAddressInput!) {
@@ -330,9 +355,6 @@ export const SAVE_ADDRESS = gql`
   }
 `;
 
-/**
- * 주소 정보 수정
- */
 export const UPDATE_ADDRESS = gql`
   ${ADDRESS_FIELDS}
   mutation UpdateAddress($input: UpdateAddressInput!) {
@@ -342,18 +364,22 @@ export const UPDATE_ADDRESS = gql`
   }
 `;
 
-/**
- * 주소 삭제 (소프트 삭제)
- */
 export const REMOVE_ADDRESS = gql`
   mutation RemoveAddress($id: Int!) {
     removeAddress(id: $id)
   }
 `;
 
-/**
- * 도로명주소 팝업 URL 생성
- */
+export const BULK_REMOVE_ADDRESSES = gql`
+  mutation BulkRemoveAddresses($input: BulkRemoveAddressInput!) {
+    bulkRemoveAddresses(input: $input) {
+      deletedCount
+      failedIds
+      success
+    }
+  }
+`;
+
 export const CREATE_ADDRESS_POPUP_URL = gql`
   mutation CreateAddressPopupUrl($input: CreateAddressPopupInput!) {
     createAddressPopupUrl(input: $input) {
@@ -361,6 +387,29 @@ export const CREATE_ADDRESS_POPUP_URL = gql`
       success
       message
       resultTypeDescription
+    }
+  }
+`;
+
+// ============================================================================
+// Admin Mutations
+// ============================================================================
+
+export const ADMIN_UPDATE_ADDRESS_STATUS = gql`
+  ${ADDRESS_FIELDS}
+  mutation AdminUpdateAddressStatus($input: AdminUpdateAddressStatusInput!) {
+    adminUpdateAddressStatus(input: $input) {
+      ...AddressFields
+    }
+  }
+`;
+
+export const ADMIN_BULK_REMOVE_ADDRESSES = gql`
+  mutation AdminBulkRemoveAddresses($input: BulkRemoveAddressInput!) {
+    adminBulkRemoveAddresses(input: $input) {
+      deletedCount
+      failedIds
+      success
     }
   }
 `;

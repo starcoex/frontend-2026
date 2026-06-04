@@ -6,6 +6,7 @@ import { initAuthService } from '@starcoex-frontend/auth';
 import { AuthProvider } from '@starcoex-frontend/auth';
 import { ApolloProvider } from '@apollo/client/react';
 import { HelmetProvider } from '@starcoex-frontend/common';
+import { registerSW } from 'virtual:pwa-register';
 
 // 1) Apollo Client 초기화
 const apolloClient = initializeApolloClient({
@@ -23,9 +24,20 @@ const apolloClient = initializeApolloClient({
   },
 });
 
-// 2) AddressService 초기화 (ApolloClient 주입)
-
 initAuthService(apolloClient as any);
+
+// 3) PWA Service Worker 등록
+const updateSW = registerSW({
+  onNeedRefresh() {
+    updateSW(true);
+  },
+  onOfflineReady() {
+    console.info('[PWA] 오프라인 사용 준비 완료');
+  },
+  onRegisterError(error) {
+    console.error('[SW] 등록 실패:', error);
+  },
+});
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

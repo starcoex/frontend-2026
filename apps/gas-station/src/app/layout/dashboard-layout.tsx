@@ -15,6 +15,11 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  OfflineIndicator,
+  PwaInstallBanner,
+  PwaUpdateBanner,
+} from '@starcoex-frontend/pwa';
 
 /**
  * 🔐 인증이 필요한 페이지들을 위한 보호된 레이아웃
@@ -38,10 +43,12 @@ export const DashboardLayout: React.FC = () => {
         console.warn('관리자 레이아웃에서 인증 상태 확인 실패:', error);
       });
     }
-  }, [initialized, checkAuthStatus]);
+  }, []); // ✅ 마운트 시 1회만
 
-  // 1) 인증 초기화/로딩 중에는 무조건 리다이렉트하지 말고 로딩 UI 표시
-  if (!initialized || isLoading) {
+  // ✅ 로그인 직후: initialized=false지만 isAuthenticated=true → 바로 통과
+  if (!initialized && isAuthenticated) {
+    // 아래 렌더링까지 도달하도록 조건 통과
+  } else if (!initialized || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -52,8 +59,7 @@ export const DashboardLayout: React.FC = () => {
     );
   }
 
-  // 2) 초기화가 끝났는데 인증이 안 된 경우 → 로그인 페이지로
-  if (!isAuthenticated) {
+  if (initialized && !isAuthenticated) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
@@ -285,6 +291,12 @@ export const DashboardLayout: React.FC = () => {
 
         {/* 페이지 콘텐츠 */}
         <main className="p-6">
+          {/* PWA 배너 */}
+          <div className="mb-4 space-y-2">
+            <OfflineIndicator />
+            <PwaUpdateBanner />
+            <PwaInstallBanner />
+          </div>
           <Outlet />
         </main>
       </div>

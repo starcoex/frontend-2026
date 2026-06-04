@@ -9,7 +9,20 @@ import {
   CreateGiftLinkInput,
   ClaimGiftInput,
 } from '@starcoex-frontend/graphql';
-import type { ApiResponse, MembershipConfig } from '../types';
+import type {
+  AdjustUserStarsInput,
+  AdjustUserTierInput,
+  AdminBulkIssueCouponInput,
+  AdminCouponListInput,
+  AdminIssueCouponInput,
+  AdminMembershipListInput,
+  AdminRevokeCouponInput,
+  AdminStarHistoryInput,
+  ApiResponse,
+  MembershipConfig,
+  ResetUserMembershipInput,
+  UpdateMembershipConfigInput,
+} from '../types';
 import { useLoyaltyContext } from '../context';
 import { getLoyaltyService } from '../services';
 
@@ -265,6 +278,138 @@ export const useLoyalty = () => {
     [withLoading, setMembership]
   );
 
+  // [관리자] 유저 멤버십 상세 조회
+  const adminGetUserMembership = useCallback(
+    async (userId: number) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminGetUserMembership(userId);
+      }, '유저 멤버십 정보를 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // [관리자] 유저 멤버십 등급 수동 변경
+  const adminAdjustUserTier = useCallback(
+    async (input: AdjustUserTierInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        const res = await service.adminAdjustUserTier(input);
+
+        if (res.success && res.data?.membership) {
+          setMembership(res.data.membership);
+        }
+        return res;
+      }, '등급 변경에 실패했습니다.'),
+    [withLoading, setMembership]
+  );
+
+  // [관리자] 유저 별 수동 적립/차감
+  const adminAdjustUserStars = useCallback(
+    async (input: AdjustUserStarsInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        const res = await service.adminAdjustUserStars(input);
+
+        if (res.success && res.data?.membership) {
+          setMembership(res.data.membership);
+        }
+        return res;
+      }, '별 적립/차감에 실패했습니다.'),
+    [withLoading, setMembership]
+  );
+
+  // [관리자] 유저 멤버십 초기화
+  const adminResetUserMembership = useCallback(
+    async (input: ResetUserMembershipInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminResetUserMembership(input);
+      }, '멤버십 초기화에 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ✅ 신규: [관리자] 멤버십 설정 DB 엔티티 조회
+  const adminGetMembershipConfig = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminGetMembershipConfig();
+      }, '관리자 멤버십 설정을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ✅ 신규: [관리자] 멤버십 설정 수정
+  const adminUpdateMembershipConfig = useCallback(
+    async (input: UpdateMembershipConfigInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminUpdateMembershipConfig(input);
+      }, '멤버십 설정 저장에 실패했습니다.'),
+    [withLoading]
+  );
+
+  // =========================================================================
+  // 신규 Admin Queries
+  // =========================================================================
+
+  const adminGetMembershipList = useCallback(
+    async (input: AdminMembershipListInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminGetMembershipList(input);
+      }, '멤버십 목록을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const adminGetUserStarHistory = useCallback(
+    async (input: AdminStarHistoryInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminGetUserStarHistory(input);
+      }, '별 히스토리를 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const adminGetUserCoupons = useCallback(
+    async (input: AdminCouponListInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminGetUserCoupons(input);
+      }, '쿠폰 목록을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // =========================================================================
+  // 신규 Admin Mutations (쿠폰)
+  // =========================================================================
+
+  const adminIssueCoupon = useCallback(
+    async (input: AdminIssueCouponInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminIssueCoupon(input);
+      }, '쿠폰 발급에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const adminRevokeCoupon = useCallback(
+    async (input: AdminRevokeCouponInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminRevokeCoupon(input);
+      }, '쿠폰 취소에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const adminBulkIssueCoupons = useCallback(
+    async (input: AdminBulkIssueCouponInput) =>
+      withLoading(async () => {
+        const service = getLoyaltyService();
+        return await service.adminBulkIssueCoupons(input);
+      }, '쿠폰 일괄 발급에 실패했습니다.'),
+    [withLoading]
+  );
+
   // =========================================================================
   // 계산된 값 (서버에서 제공하는 값 활용)
   // =========================================================================
@@ -291,6 +436,8 @@ export const useLoyalty = () => {
     currentTierDisplayName: membership?.currentTierDisplayName ?? 'WELCOME',
     // 심사일까지 남은 일수 (서버 계산)
     daysUntilReview: membership?.daysUntilReview ?? 0,
+    availableStars: membership?.availableStars ?? 0, // 사용 가능한 별
+    tierStars: membership?.tierStars ?? 0, // 현재 등급에서 적립한 별
   };
 
   return {
@@ -313,5 +460,21 @@ export const useLoyalty = () => {
     createGiftLink,
     claimGift,
     accumulateStars,
+
+    // Admin Queries
+    adminGetUserMembership,
+    adminGetMembershipList,
+    adminGetUserStarHistory,
+    adminGetUserCoupons,
+    adminGetMembershipConfig, // ✅ 신규
+
+    // Admin Mutations
+    adminAdjustUserTier,
+    adminAdjustUserStars,
+    adminResetUserMembership,
+    adminIssueCoupon,
+    adminRevokeCoupon,
+    adminBulkIssueCoupons,
+    adminUpdateMembershipConfig, // ✅ 신규
   };
 };

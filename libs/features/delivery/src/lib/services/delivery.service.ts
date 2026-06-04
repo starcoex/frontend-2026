@@ -26,6 +26,23 @@ import {
   DELETE_DELIVERIES, // ✅ 신규
   ASSIGN_DRIVER_TO_DELIVERY, // ✅ 신규
   UNASSIGN_DRIVER_FROM_DELIVERY, // ✅ 신규
+  // ✅ 신규: 정산
+  MY_SETTLEMENTS,
+  SETTLEMENTS_BY_PERIOD,
+  SETTLEMENT_SUMMARY,
+  CLOSE_SETTLEMENT,
+  CLOSE_SETTLEMENT_BULK,
+  APPROVE_SETTLEMENT,
+  APPROVE_SETTLEMENT_BULK,
+  PROCESS_SETTLEMENT_PAYMENT,
+  PROCESS_SETTLEMENT_PAYMENT_BULK,
+  // ✅ 신규: 배달비 정책
+  DELIVERY_FEE_POLICIES,
+  DEFAULT_DELIVERY_FEE_POLICY,
+  CALCULATE_DELIVERY_FEE,
+  CREATE_DELIVERY_FEE_POLICY,
+  UPDATE_DELIVERY_FEE_POLICY,
+  DELETE_DELIVERY_FEE_POLICY,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -63,6 +80,24 @@ import type {
   UnassignDriverInput, // ✅ 신규
   UnassignDriverOutput,
   GetMyDeliveriesInput, // ✅ 신규
+  // ✅ 신규: 정산
+  SettlementSummaryOutput,
+  BulkSettlementOutput,
+  GetSettlementsByPeriodInput,
+  CloseSettlementInput,
+  CloseSettlementBulkInput,
+  ApproveSettlementInput,
+  ApproveSettlementBulkInput,
+  ProcessPaymentInput,
+  ProcessPaymentBulkInput,
+  DriverSettlement,
+  // ✅ 신규: 배달비 정책
+  DeliveryFeePolicyOutput,
+  DeliveryFeePoliciesOutput,
+  CalculateFeeOutput,
+  CalculateFeeInput,
+  CreateDeliveryFeePolicyInput,
+  UpdateDeliveryFeePolicyInput,
 } from '../types';
 
 export class DeliveryService implements IDeliveryService {
@@ -183,6 +218,85 @@ export class DeliveryService implements IDeliveryService {
       return { success: true, data: res.data.getDriverSettlements };
     }
     return res as unknown as ApiResponse<GetDriverSettlementsOutput>;
+  }
+
+  // ============================================================================
+  // ✅ 신규: 배달비 정책 Queries
+  // ============================================================================
+
+  async deliveryFeePolicies(
+    onlyActive?: boolean
+  ): Promise<ApiResponse<DeliveryFeePoliciesOutput>> {
+    const res = await this.query<{
+      deliveryFeePolicies: DeliveryFeePoliciesOutput;
+    }>(DELIVERY_FEE_POLICIES, { onlyActive });
+    if (res.success && res.data?.deliveryFeePolicies) {
+      return { success: true, data: res.data.deliveryFeePolicies };
+    }
+    return res as unknown as ApiResponse<DeliveryFeePoliciesOutput>;
+  }
+
+  async defaultDeliveryFeePolicy(): Promise<
+    ApiResponse<DeliveryFeePolicyOutput>
+  > {
+    const res = await this.query<{
+      defaultDeliveryFeePolicy: DeliveryFeePolicyOutput;
+    }>(DEFAULT_DELIVERY_FEE_POLICY);
+    if (res.success && res.data?.defaultDeliveryFeePolicy) {
+      return { success: true, data: res.data.defaultDeliveryFeePolicy };
+    }
+    return res as unknown as ApiResponse<DeliveryFeePolicyOutput>;
+  }
+
+  async calculateDeliveryFee(
+    input: CalculateFeeInput
+  ): Promise<ApiResponse<CalculateFeeOutput>> {
+    const res = await this.query<{
+      calculateDeliveryFee: CalculateFeeOutput;
+    }>(CALCULATE_DELIVERY_FEE, { input });
+    if (res.success && res.data?.calculateDeliveryFee) {
+      return { success: true, data: res.data.calculateDeliveryFee };
+    }
+    return res as unknown as ApiResponse<CalculateFeeOutput>;
+  }
+
+  // ============================================================================
+  // ✅ 신규: 배달비 정책 Mutations
+  // ============================================================================
+
+  async createDeliveryFeePolicy(
+    input: CreateDeliveryFeePolicyInput
+  ): Promise<ApiResponse<DeliveryFeePolicyOutput>> {
+    const res = await this.mutate<{
+      createDeliveryFeePolicy: DeliveryFeePolicyOutput;
+    }>(CREATE_DELIVERY_FEE_POLICY, { input });
+    if (res.success && res.data?.createDeliveryFeePolicy) {
+      return { success: true, data: res.data.createDeliveryFeePolicy };
+    }
+    return res as unknown as ApiResponse<DeliveryFeePolicyOutput>;
+  }
+
+  async updateDeliveryFeePolicy(
+    input: UpdateDeliveryFeePolicyInput
+  ): Promise<ApiResponse<DeliveryFeePolicyOutput>> {
+    const res = await this.mutate<{
+      updateDeliveryFeePolicy: DeliveryFeePolicyOutput;
+    }>(UPDATE_DELIVERY_FEE_POLICY, { input });
+    if (res.success && res.data?.updateDeliveryFeePolicy) {
+      return { success: true, data: res.data.updateDeliveryFeePolicy };
+    }
+    return res as unknown as ApiResponse<DeliveryFeePolicyOutput>;
+  }
+
+  async deleteDeliveryFeePolicy(id: number): Promise<ApiResponse<boolean>> {
+    const res = await this.mutate<{ deleteDeliveryFeePolicy: boolean }>(
+      DELETE_DELIVERY_FEE_POLICY,
+      { id }
+    );
+    if (res.success && res.data !== undefined) {
+      return { success: true, data: res.data.deleteDeliveryFeePolicy };
+    }
+    return res as unknown as ApiResponse<boolean>;
   }
 
   // ============================================================================
@@ -466,5 +580,127 @@ export class DeliveryService implements IDeliveryService {
       return { success: true, data: res.data.unassignDriverFromDelivery };
     }
     return res as unknown as ApiResponse<UnassignDriverOutput>;
+  }
+
+  // ============================================================================
+  // ✅ 신규: 정산 Queries
+  // ============================================================================
+
+  async mySettlements(
+    driverId: number,
+    limit?: number
+  ): Promise<ApiResponse<DriverSettlement[]>> {
+    const res = await this.query<{ mySettlements: DriverSettlement[] }>(
+      MY_SETTLEMENTS,
+      { driverId, limit }
+    );
+    if (res.success && res.data?.mySettlements) {
+      return { success: true, data: res.data.mySettlements };
+    }
+    return res as unknown as ApiResponse<DriverSettlement[]>;
+  }
+
+  async settlementsByPeriod(
+    input: GetSettlementsByPeriodInput
+  ): Promise<ApiResponse<DriverSettlement[]>> {
+    const res = await this.query<{ settlementsByPeriod: DriverSettlement[] }>(
+      SETTLEMENTS_BY_PERIOD,
+      { input }
+    );
+    if (res.success && res.data?.settlementsByPeriod) {
+      return { success: true, data: res.data.settlementsByPeriod };
+    }
+    return res as unknown as ApiResponse<DriverSettlement[]>;
+  }
+
+  async settlementSummary(
+    dateFrom: string,
+    dateTo: string
+  ): Promise<ApiResponse<SettlementSummaryOutput>> {
+    const res = await this.query<{
+      settlementSummary: SettlementSummaryOutput;
+    }>(SETTLEMENT_SUMMARY, { dateFrom, dateTo });
+    if (res.success && res.data?.settlementSummary) {
+      return { success: true, data: res.data.settlementSummary };
+    }
+    return res as unknown as ApiResponse<SettlementSummaryOutput>;
+  }
+
+  // ============================================================================
+  // ✅ 신규: 정산 Mutations
+  // ============================================================================
+
+  async closeSettlement(
+    input: CloseSettlementInput
+  ): Promise<ApiResponse<DriverSettlement>> {
+    const res = await this.mutate<{ closeSettlement: DriverSettlement }>(
+      CLOSE_SETTLEMENT,
+      { input }
+    );
+    if (res.success && res.data?.closeSettlement) {
+      return { success: true, data: res.data.closeSettlement };
+    }
+    return res as unknown as ApiResponse<DriverSettlement>;
+  }
+
+  async closeSettlementBulk(
+    input: CloseSettlementBulkInput
+  ): Promise<ApiResponse<BulkSettlementOutput>> {
+    const res = await this.mutate<{
+      closeSettlementBulk: BulkSettlementOutput;
+    }>(CLOSE_SETTLEMENT_BULK, { input });
+    if (res.success && res.data?.closeSettlementBulk) {
+      return { success: true, data: res.data.closeSettlementBulk };
+    }
+    return res as unknown as ApiResponse<BulkSettlementOutput>;
+  }
+
+  async approveSettlement(
+    input: ApproveSettlementInput
+  ): Promise<ApiResponse<DriverSettlement>> {
+    const res = await this.mutate<{ approveSettlement: DriverSettlement }>(
+      APPROVE_SETTLEMENT,
+      { input }
+    );
+    if (res.success && res.data?.approveSettlement) {
+      return { success: true, data: res.data.approveSettlement };
+    }
+    return res as unknown as ApiResponse<DriverSettlement>;
+  }
+
+  async approveSettlementBulk(
+    input: ApproveSettlementBulkInput
+  ): Promise<ApiResponse<BulkSettlementOutput>> {
+    const res = await this.mutate<{
+      approveSettlementBulk: BulkSettlementOutput;
+    }>(APPROVE_SETTLEMENT_BULK, { input });
+    if (res.success && res.data?.approveSettlementBulk) {
+      return { success: true, data: res.data.approveSettlementBulk };
+    }
+    return res as unknown as ApiResponse<BulkSettlementOutput>;
+  }
+
+  async processSettlementPayment(
+    input: ProcessPaymentInput
+  ): Promise<ApiResponse<DriverSettlement>> {
+    const res = await this.mutate<{
+      processSettlementPayment: DriverSettlement;
+    }>(PROCESS_SETTLEMENT_PAYMENT, { input });
+    if (res.success && res.data?.processSettlementPayment) {
+      return { success: true, data: res.data.processSettlementPayment };
+    }
+    return res as unknown as ApiResponse<DriverSettlement>;
+  }
+
+  async processSettlementPaymentBulk(
+    input: ProcessPaymentBulkInput
+  ): Promise<ApiResponse<BulkSettlementOutput>> {
+    const res = await this.mutate<{
+      processSettlementPaymentBulk: BulkSettlementOutput;
+    }>(PROCESS_SETTLEMENT_PAYMENT_BULK, { input });
+    if (res.success && res.data?.processSettlementPaymentBulk) {
+      return { success: true, data: res.data.processSettlementPaymentBulk };
+    }
+    return res as unknown as ApiResponse<BulkSettlementOutput>;
   }
 }

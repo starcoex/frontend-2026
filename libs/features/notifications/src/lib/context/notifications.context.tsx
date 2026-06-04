@@ -2,10 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import {
@@ -47,18 +47,14 @@ export const NotificationsProvider = ({
 }) => {
   const [state, setState] = useState<NotificationsState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('notifications')) {
       try {
         initNotificationsService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ NotificationsService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -249,14 +245,6 @@ export const NotificationsProvider = ({
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return (
-      <div aria-busy="true" aria-label="Notifications 서비스 초기화 중">
-        Initializing Notifications Service...
-      </div>
-    );
-  }
 
   return (
     <NotificationsContext.Provider value={value}>

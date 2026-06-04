@@ -2,7 +2,7 @@ import type { ApolloClient } from '@apollo/client';
 import { AddressService } from './address.service';
 import { serviceRegistry } from './service-registry';
 
-// AddressService 인스턴스를 직접 생성하고 싶을 때 사용
+// AnalyticsService 인스턴스를 직접 생성하고 싶을 때 사용
 export const createAddressService = (client: ApolloClient): AddressService =>
   new AddressService(client);
 
@@ -15,7 +15,7 @@ serviceRegistry.registerService<AddressService>(
 );
 
 /**
- * AddressService 초기화
+ * AnalyticsService 초기화
  * - ApolloClient를 주입해서 전역 레지스트리에 인스턴스를 생성
  */
 export const initAddressService = (client: ApolloClient): AddressService => {
@@ -23,7 +23,7 @@ export const initAddressService = (client: ApolloClient): AddressService => {
 };
 
 /**
- * 이미 초기화된 AddressService 가져오기
+ * 이미 초기화된 AnalyticsService 가져오기
  * - 초기화되지 않았으면 에러
  */
 export const getAddressService = (): AddressService => {

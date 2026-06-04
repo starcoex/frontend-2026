@@ -55,17 +55,25 @@ export const HeroSection: React.FC = () => {
         });
         break;
       case 'event':
-        console.log('이벤트 페이지로 이동');
+        document.getElementById('services')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
         break;
       case 'kakao-login':
         navigate('/auth/register/personal');
         break;
       case 'car-wash-app':
-        window.open('https://car-wash.starcoex.com', '_blank');
+        window.open('https://zeragae.starcoex.co.kr', '_blank');
         break;
       case 'car-wash':
+        window.open('https://zeragae.starcoex.co.kr', '_blank');
+        break;
       case 'service-info':
-        navigate('/car-wash');
+        document.getElementById('services')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
         break;
       default:
         break;
@@ -102,7 +110,7 @@ export const HeroSection: React.FC = () => {
                         {slide.id === 'event1' && (
                           <Badge>
                             <Star className="w-3 h-3 mr-1 fill-current" />
-                            신년 특가 이벤트
+                            세차전용카드 적립 혜택
                           </Badge>
                         )}
 
@@ -125,11 +133,11 @@ export const HeroSection: React.FC = () => {
                           ))}
                         </CardDescription>
 
-                        {isAuthenticated && slide.id === 'hybrid-platform' && (
+                        {isAuthenticated && slide.id === 'event1' && (
                           <div className="mb-6 animate-fade-up animation-delay-300">
                             <Badge variant="outline" className="px-4 py-1.5">
                               <Users className="w-3 h-3 mr-2" />
-                              회원님을 위한 맞춤 서비스가 준비되어 있습니다
+                              회원님을 위한 적립 혜택이 준비되어 있습니다
                             </Badge>
                           </div>
                         )}
@@ -145,7 +153,7 @@ export const HeroSection: React.FC = () => {
                             }
                           >
                             {slide.primaryButton.text}
-                            {slide.primaryButton.action === 'car-wash-app' ? (
+                            {slide.primaryButton.action === 'car-wash' ? (
                               <ExternalLink className="ml-2 w-5 h-5" />
                             ) : (
                               <ArrowRight className="ml-2 w-5 h-5" />
@@ -166,7 +174,8 @@ export const HeroSection: React.FC = () => {
                             {slide.secondaryButton.action === 'kakao-login' && (
                               <Star className="mr-2 w-5 h-5" />
                             )}
-                            {slide.secondaryButton.action === 'portal' && (
+                            {slide.secondaryButton.action ===
+                              'service-info' && (
                               <Sparkles className="mr-2 w-5 h-5" />
                             )}
                             <span>{slide.secondaryButton.text}</span>

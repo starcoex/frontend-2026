@@ -4,9 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
   AlertCircleIcon,
-  ChevronLeft,
   ImageIcon,
-  Loader2,
   RefreshCwIcon,
   UploadIcon,
   XIcon,
@@ -40,7 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AddMediaFromUrl } from '@/app/pages/dashboard/ecommerce/products/create/add-media-from-url';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useMedia } from '@starcoex-frontend/media';
@@ -62,6 +60,7 @@ import {
   PRODUCT_TYPE_SKU_PREFIX,
   type ProductTypeCode,
 } from '@/app/constants/product-type-codes';
+import { FormPageHeader } from '@starcoex-frontend/common';
 
 // ─── 유틸: 슬러그 자동 생성 ────────────────────────────────────────────────────
 const generateSlug = (name: string): string =>
@@ -381,36 +380,25 @@ export default function AddProductForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* ─── 헤더 ──────────────────────────────────────────────────────── */}
-        <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-              <Link to="/admin/products">
-                <ChevronLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold tracking-tight">제품 추가</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate(-1)}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
-                </>
-              ) : (
-                '등록하기'
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* 헤더 */}
+        <FormPageHeader
+          backTo="/admin/products"
+          title="제품 추가"
+          actions={[
+            {
+              label: '취소',
+              variant: 'secondary',
+              onClick: () => navigate(-1),
+            },
+            {
+              label: '등록하기',
+              loadingLabel: '처리 중...',
+              type: 'submit',
+              isLoading: isSubmitting,
+              disabled: isSubmitting,
+            },
+          ]}
+        />
 
         <div className="grid gap-4 lg:grid-cols-6">
           {/* ─── 좌측: 메인 정보 ─────────────────────────────────────────── */}

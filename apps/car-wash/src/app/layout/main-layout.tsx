@@ -1,87 +1,49 @@
-import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Header } from '../components/header/header';
-import { Footer } from '../components/footer/footer';
-import { QuickActionFab } from '../components/quick-action-fab';
-import { NavigationProvider } from '../components/providers/navigation-provider';
-import {
-  PageHead,
-  CartProvider,
-  NotificationProvider,
-  TooltipProvider,
-} from '@starcoex-platform/shadcn-ui';
-import { APP_CONFIG } from '../config/app.config';
-import { CarWashCTA } from '../components/sections/cta';
-import { ApiClient, CartService } from '@starcoex-platform/api-client';
+import React, { useEffect } from 'react';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { PageHead } from '@starcoex-frontend/common';
+import { APP_CONFIG } from '@/app/config/app.config';
+import { Footer } from '@/components/footer/footer';
+import { useAuth } from '@starcoex-frontend/auth';
+import Navbar from '@/components/header/navbar';
+import { PwaInstallBanner, OfflineIndicator } from '@starcoex-frontend/pwa';
 
 export const MainLayout: React.FC = () => {
-  // API 클라이언트와 서비스 생성
-  const apiClient = new ApiClient();
-  const cartService = new CartService(apiClient);
-  // NotificationService는 static 클래스이므로 인스턴스 생성 불필요
-  // const notificationService = new NotificationService(apiClient); // ❌ 제거
+  const { initialized, checkAuthStatus } = useAuth();
+
+  useEffect(() => {
+    if (!initialized) {
+      checkAuthStatus().catch((error) => {
+        console.debug('카케어 메인 레이아웃 인증 상태 확인:', error);
+      });
+    }
+  }, []); // ✅ 마운트 시 1회만
 
   return (
     <TooltipProvider>
-      <NavigationProvider>
-        {/* Provider 래핑 */}
-        <CartProvider
-          cartService={cartService}
-          onCheckout={() => (window.location.href = '/checkout')}
-          onItemClick={(item) =>
-            (window.location.href = `/services/${item.id}`)
-          }
-        >
-          <NotificationProvider
-            // notificationService prop 제거 - NotificationService는 static이므로 불필요
-            onNotificationClick={(notification) => {
-              if (notification.href) {
-                window.location.href = notification.href;
-              }
-            }}
-          >
-            {/* 기본 앱 메타데이터 */}
-            <PageHead
-              title="프리미엄 세차 서비스 - 제주도 최고의 세차장"
-              description="제주도에서 가장 믿을 수 있는 프리미엄 세차 서비스. 친환경 세제와 전문 기술로 당신의 소중한 차량을 새것처럼 관리해드립니다."
-              siteName="제주 프리미엄 카워시"
-              url={`https://${APP_CONFIG.app.currentDomain}`}
-              keywords={[
-                '제주도 세차',
-                '프리미엄 세차',
-                '자동차 세차',
-                '광택 서비스',
-                '친환경 세차',
-                '차량 관리',
-                '자동차 미용',
-                '왁싱 서비스',
-                '세차 예약',
-                '제주 세차장',
-              ]}
-              robots="index, follow"
-            />
-
-            <div className="min-h-screen transition-all duration-300">
-              {/* 헤더 */}
-              <Header />
-
-              {/* 메인 콘텐츠 */}
-              <main className="flex-1">
-                <Outlet />
-              </main>
-
-              {/* 세차 CTA 섹션 */}
-              <CarWashCTA />
-
-              {/* 푸터 */}
-              <Footer />
-
-              {/* 플로팅 액션 버튼 */}
-              <QuickActionFab />
-            </div>
-          </NotificationProvider>
-        </CartProvider>
-      </NavigationProvider>
+      <PageHead
+        title={APP_CONFIG.app.name}
+        description={APP_CONFIG.app.description}
+        siteName={APP_CONFIG.seo.siteName}
+        url={`https://${APP_CONFIG.app.currentDomain}`}
+        keywords={['세차', '손세차', '카케어', '디테일링', '코팅', 'PPF']}
+        robots="index, follow"
+      />
+      <div className="min-h-screen flex flex-col transition-all duration-300">
+        <Navbar />
+        {/*<Navbar />*/}
+        {/* ✅ Navbar가 fixed라서 main이 뒤로 밀리지 않음
+               pt-[65px]로 Navbar 높이만큼 확보 → 모든 페이지에 자동 적용 */}
+        {/* PWA 배너 */}
+        <div className="mx-4 mt-2 space-y-2">
+          <OfflineIndicator />
+          <PwaInstallBanner />
+        </div>
+        <main className="flex-1 pt-[65px]">
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
     </TooltipProvider>
   );
 };

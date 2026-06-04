@@ -124,7 +124,7 @@ export const QuickActionFab: React.FC = () => {
       id: 'chat',
       icon: <MessageCircle className="w-4 h-4" />,
       label: '채팅',
-      onClick: () => console.log('채팅 상담'),
+      onClick: () => navigate('/chat'), // ← console.log 대신 navigate
     },
   ];
 

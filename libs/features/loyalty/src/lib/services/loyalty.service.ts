@@ -51,6 +51,27 @@ import {
   CLAIM_GIFT,
   MembershipConfigQuery,
   GET_MEMBERSHIP_CONFIG,
+  AdminMembershipDetailOutput,
+  AdminGetUserMembershipQuery,
+  AdminGetUserMembershipQueryVariables,
+  ADMIN_GET_USER_MEMBERSHIP,
+  ADMIN_ADJUST_USER_TIER,
+  ADMIN_ADJUST_USER_STARS,
+  ADMIN_RESET_USER_MEMBERSHIP,
+  AdminAdjustUserTierMutationVariables,
+  AdminAdjustUserTierMutation,
+  AdminAdjustUserStarsMutation,
+  AdminAdjustUserStarsMutationVariables,
+  AdminResetUserMembershipMutation,
+  AdminResetUserMembershipMutationVariables,
+  ADMIN_GET_MEMBERSHIP_LIST,
+  ADMIN_GET_USER_STAR_HISTORY,
+  ADMIN_GET_USER_COUPONS,
+  ADMIN_ISSUE_COUPON,
+  ADMIN_REVOKE_COUPON,
+  ADMIN_BULK_ISSUE_COUPONS,
+  ADMIN_GET_MEMBERSHIP_CONFIG,
+  ADMIN_UPDATE_MEMBERSHIP_CONFIG,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -58,7 +79,32 @@ import {
   apiErrorFromUnknown,
   createErrorResponse,
 } from '../errors';
-import { ApiResponse, ILoyaltyService, MembershipConfigOutput } from '../types';
+import {
+  AdjustUserStarsInput,
+  AdjustUserStarsOutput,
+  AdjustUserTierInput,
+  AdjustUserTierOutput,
+  AdminBulkIssueCouponInput,
+  AdminBulkIssueCouponOutput,
+  AdminCouponListInput,
+  AdminCouponListOutput,
+  AdminIssueCouponInput,
+  AdminIssueCouponOutput,
+  AdminMembershipListInput,
+  AdminMembershipListOutput,
+  AdminRevokeCouponInput,
+  AdminRevokeCouponOutput,
+  AdminStarHistoryInput,
+  AdminStarHistoryOutput,
+  ApiResponse,
+  ILoyaltyService,
+  MembershipConfigEntity,
+  MembershipConfigOutput,
+  ResetUserMembershipInput,
+  ResetUserMembershipOutput,
+  UpdateMembershipConfigInput,
+  UpdateMembershipConfigOutput,
+} from '../types';
 
 export class LoyaltyService implements ILoyaltyService {
   constructor(private client: ApolloClient) {}
@@ -202,6 +248,32 @@ export class LoyaltyService implements ILoyaltyService {
     return res as unknown as ApiResponse<GiftLinkInfoOutput>;
   }
 
+  async adminGetUserMembership(
+    userId: number
+  ): Promise<ApiResponse<AdminMembershipDetailOutput>> {
+    const res = await this.query<
+      AdminGetUserMembershipQuery,
+      AdminGetUserMembershipQueryVariables
+    >(ADMIN_GET_USER_MEMBERSHIP, { userId });
+    if (res.success && res.data?.adminGetUserMembership) {
+      return { success: true, data: res.data.adminGetUserMembership };
+    }
+    return res as unknown as ApiResponse<AdminMembershipDetailOutput>;
+  }
+
+  // ✅ 신규: [관리자] 멤버십 설정 DB 엔티티 조회
+  async adminGetMembershipConfig(): Promise<
+    ApiResponse<MembershipConfigEntity>
+  > {
+    const res = await this.query<{
+      adminGetMembershipConfig: MembershipConfigEntity;
+    }>(ADMIN_GET_MEMBERSHIP_CONFIG);
+    if (res.success && res.data?.adminGetMembershipConfig) {
+      return { success: true, data: res.data.adminGetMembershipConfig };
+    }
+    return res as unknown as ApiResponse<MembershipConfigEntity>;
+  }
+
   // ===== Mutations =====
 
   async useCoupon(
@@ -280,5 +352,140 @@ export class LoyaltyService implements ILoyaltyService {
       return { success: true, data: res.data.accumulateStars };
     }
     return res as ApiResponse<AccumulateStarsOutput>;
+  }
+
+  async adminAdjustUserTier(
+    input: AdjustUserTierInput
+  ): Promise<ApiResponse<AdjustUserTierOutput>> {
+    const res = await this.mutate<
+      AdminAdjustUserTierMutation,
+      AdminAdjustUserTierMutationVariables
+    >(ADMIN_ADJUST_USER_TIER, { input });
+    if (res.success && res.data?.adminAdjustUserTier) {
+      return { success: true, data: res.data.adminAdjustUserTier };
+    }
+    return res as unknown as ApiResponse<AdjustUserTierOutput>;
+  }
+
+  async adminAdjustUserStars(
+    input: AdjustUserStarsInput
+  ): Promise<ApiResponse<AdjustUserStarsOutput>> {
+    const res = await this.mutate<
+      AdminAdjustUserStarsMutation,
+      AdminAdjustUserStarsMutationVariables
+    >(ADMIN_ADJUST_USER_STARS, { input });
+    if (res.success && res.data?.adminAdjustUserStars) {
+      return { success: true, data: res.data.adminAdjustUserStars };
+    }
+    return res as unknown as ApiResponse<AdjustUserStarsOutput>;
+  }
+
+  async adminResetUserMembership(
+    input: ResetUserMembershipInput
+  ): Promise<ApiResponse<ResetUserMembershipOutput>> {
+    const res = await this.mutate<
+      AdminResetUserMembershipMutation,
+      AdminResetUserMembershipMutationVariables
+    >(ADMIN_RESET_USER_MEMBERSHIP, { input });
+    if (res.success && res.data?.adminResetUserMembership) {
+      return { success: true, data: res.data.adminResetUserMembership };
+    }
+    return res as unknown as ApiResponse<ResetUserMembershipOutput>;
+  }
+
+  // ✅ 신규: [관리자] 멤버십 설정 수정
+  async adminUpdateMembershipConfig(
+    input: UpdateMembershipConfigInput
+  ): Promise<ApiResponse<UpdateMembershipConfigOutput>> {
+    const res = await this.mutate<
+      { adminUpdateMembershipConfig: UpdateMembershipConfigOutput },
+      { input: UpdateMembershipConfigInput }
+    >(ADMIN_UPDATE_MEMBERSHIP_CONFIG, { input });
+    if (res.success && res.data?.adminUpdateMembershipConfig) {
+      return { success: true, data: res.data.adminUpdateMembershipConfig };
+    }
+    return res as unknown as ApiResponse<UpdateMembershipConfigOutput>;
+  }
+
+  // ===== 신규 Admin Queries =====
+
+  async adminGetMembershipList(
+    input: AdminMembershipListInput
+  ): Promise<ApiResponse<AdminMembershipListOutput>> {
+    const res = await this.query<
+      { adminGetMembershipList: AdminMembershipListOutput },
+      { input: AdminMembershipListInput }
+    >(ADMIN_GET_MEMBERSHIP_LIST, { input });
+    if (res.success && res.data?.adminGetMembershipList) {
+      return { success: true, data: res.data.adminGetMembershipList };
+    }
+    return res as unknown as ApiResponse<AdminMembershipListOutput>;
+  }
+
+  async adminGetUserStarHistory(
+    input: AdminStarHistoryInput
+  ): Promise<ApiResponse<AdminStarHistoryOutput>> {
+    const res = await this.query<
+      { adminGetUserStarHistory: AdminStarHistoryOutput },
+      { input: AdminStarHistoryInput }
+    >(ADMIN_GET_USER_STAR_HISTORY, { input });
+    if (res.success && res.data?.adminGetUserStarHistory) {
+      return { success: true, data: res.data.adminGetUserStarHistory };
+    }
+    return res as unknown as ApiResponse<AdminStarHistoryOutput>;
+  }
+
+  async adminGetUserCoupons(
+    input: AdminCouponListInput
+  ): Promise<ApiResponse<AdminCouponListOutput>> {
+    const res = await this.query<
+      { adminGetUserCoupons: AdminCouponListOutput },
+      { input: AdminCouponListInput }
+    >(ADMIN_GET_USER_COUPONS, { input });
+    if (res.success && res.data?.adminGetUserCoupons) {
+      return { success: true, data: res.data.adminGetUserCoupons };
+    }
+    return res as unknown as ApiResponse<AdminCouponListOutput>;
+  }
+
+  // ===== 신규 Admin Mutations =====
+
+  async adminIssueCoupon(
+    input: AdminIssueCouponInput
+  ): Promise<ApiResponse<AdminIssueCouponOutput>> {
+    const res = await this.mutate<
+      { adminIssueCoupon: AdminIssueCouponOutput },
+      { input: AdminIssueCouponInput }
+    >(ADMIN_ISSUE_COUPON, { input });
+    if (res.success && res.data?.adminIssueCoupon) {
+      return { success: true, data: res.data.adminIssueCoupon };
+    }
+    return res as unknown as ApiResponse<AdminIssueCouponOutput>;
+  }
+
+  async adminRevokeCoupon(
+    input: AdminRevokeCouponInput
+  ): Promise<ApiResponse<AdminRevokeCouponOutput>> {
+    const res = await this.mutate<
+      { adminRevokeCoupon: AdminRevokeCouponOutput },
+      { input: AdminRevokeCouponInput }
+    >(ADMIN_REVOKE_COUPON, { input });
+    if (res.success && res.data?.adminRevokeCoupon) {
+      return { success: true, data: res.data.adminRevokeCoupon };
+    }
+    return res as unknown as ApiResponse<AdminRevokeCouponOutput>;
+  }
+
+  async adminBulkIssueCoupons(
+    input: AdminBulkIssueCouponInput
+  ): Promise<ApiResponse<AdminBulkIssueCouponOutput>> {
+    const res = await this.mutate<
+      { adminBulkIssueCoupons: AdminBulkIssueCouponOutput },
+      { input: AdminBulkIssueCouponInput }
+    >(ADMIN_BULK_ISSUE_COUPONS, { input });
+    if (res.success && res.data?.adminBulkIssueCoupons) {
+      return { success: true, data: res.data.adminBulkIssueCoupons };
+    }
+    return res as unknown as ApiResponse<AdminBulkIssueCouponOutput>;
   }
 }

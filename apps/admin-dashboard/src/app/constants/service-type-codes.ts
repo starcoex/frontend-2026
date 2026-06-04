@@ -11,6 +11,7 @@ export const SERVICE_TYPE_CODES = {
 export type ServiceTypeCode = keyof typeof SERVICE_TYPE_CODES;
 
 export const BUSINESS_TYPE_CODES = {
+  STARCOEX: 'STARCOEX', // ✅ 추가 — 스타코엑스 총괄본부
   STAR_GAS_STATION: 'STAR_GAS_STATION',
   ZERAGAE_CARCARE: 'ZERAGAE_CARCARE',
   SINHAN_NETWORKS: 'SINHAN_NETWORKS',
@@ -33,6 +34,7 @@ export const SERVICE_TYPE_LABELS: Record<ServiceTypeCode, string> = {
 };
 
 export const BUSINESS_TYPE_LABELS: Record<BusinessTypeCode, string> = {
+  STARCOEX: '스타코엑스', // ✅ 추가
   STAR_GAS_STATION: '별표주유소',
   ZERAGAE_CARCARE: '제라게 카케어',
   SINHAN_NETWORKS: '신한 네트웍스',

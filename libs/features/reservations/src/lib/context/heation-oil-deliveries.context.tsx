@@ -5,7 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
-  useEffect,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -35,18 +35,14 @@ export const HeatingOilDeliveriesProvider = ({
 }) => {
   const [state, setState] = useState<HeatingOilDeliveriesState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('reservations')) {
       try {
         initReservationsService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ CartService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -143,10 +139,6 @@ export const HeatingOilDeliveriesProvider = ({
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing HeatingOilDeliveries Service...</div>;
-  }
 
   return (
     <HeatingOilDeliveriesContext.Provider value={value}>

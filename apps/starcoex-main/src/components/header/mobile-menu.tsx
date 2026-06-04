@@ -1,276 +1,199 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
-  Phone,
-  User,
-  BarChart3,
-  Building2,
-  Mail,
-  Shield,
-  Bell,
-  CreditCard,
-  Settings,
-  Truck,
-} from 'lucide-react';
-import type { User as UserType } from '@starcoex-frontend/graphql';
-import {
-  UserMenuItem,
+  ContactButton,
+  UserMenuLogout,
   UserMenuProvider,
   UserMenuRoot,
   UserMenuSeparator,
 } from '@starcoex-frontend/common';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronRight, User } from 'lucide-react';
+import type { User as UserType } from '@starcoex-frontend/graphql';
 import { SERVICES_CONFIG } from '@/app/config/service.config';
-import { cn } from '@/lib/utils';
-
-interface AuthStatus {
-  isEmailVerified: boolean;
-  isPhoneVerified: boolean;
-  isBusinessVerified: boolean;
-  is2FAEnabled: boolean;
-  isAdmin: boolean;
-  isBusiness: boolean;
-}
+import { MobileCompanyNav } from '@/components/header/mobile-company-nav';
+import { CustomUserMenuItems } from '@/components/header/custom-user-menu-items';
 
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: UserType | null;
+  currentUser?: UserType | null;
   isAuthenticated?: boolean | null;
   isLoading?: boolean;
-  onLogout?: () => void;
-  authStatus?: AuthStatus;
+  onLogout: () => Promise<void>;
+  isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+  isBusiness: () => boolean;
+  isPhoneVerified: () => boolean;
+  is2FAEnabled: () => boolean;
 }
+
+const GuestSection: React.FC<{ onClose: () => void }> = ({ onClose }) => (
+  <div className="px-4 pb-3">
+    <div className="p-4 bg-muted rounded-xl text-center">
+      <User className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+      <p className="text-sm text-muted-foreground mb-4">
+        로그인하여 더 많은 기능을 이용해보세요
+      </p>
+      <div className="space-y-2">
+        <Button asChild className="w-full" onClick={onClose}>
+          <Link to="/auth/login">로그인</Link>
+        </Button>
+        <Button asChild variant="outline" className="w-full" onClick={onClose}>
+          <Link to="/auth/register">회원가입</Link>
+        </Button>
+      </div>
+    </div>
+  </div>
+);
+
+/** 서비스 목록 — 아코디언 방식 */
+const ServicesAccordion: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(
+    SERVICES_CONFIG.some((s) => location.pathname.startsWith(s.href))
+  );
+
+  return (
+    <div className="border-b border-border/50">
+      {/* 아코디언 헤더 */}
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium hover:bg-accent transition-colors"
+      >
+        <span>서비스</span>
+        {isOpen ? (
+          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        )}
+      </button>
+
+      {/* 아코디언 콘텐츠 */}
+      {isOpen && (
+        <div className="pb-2 space-y-0.5">
+          {SERVICES_CONFIG.map((service) => {
+            const Icon = service.icon;
+            const isActive = location.pathname === service.href;
+
+            return (
+              <Link
+                key={service.id}
+                to={service.href}
+                onClick={onClose}
+                className={cn(
+                  'flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg transition-colors',
+                  isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  !service.available && 'opacity-50 pointer-events-none'
+                )}
+              >
+                <Icon
+                  className={cn('w-4 h-4 shrink-0', service.color.primary)}
+                />
+                <div className="flex flex-col flex-1">
+                  <span className="text-sm font-medium leading-none mb-0.5">
+                    {service.name}
+                  </span>
+                  <span className="text-xs opacity-70 leading-none">
+                    {service.description}
+                  </span>
+                </div>
+                {!service.available && (
+                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full shrink-0">
+                    준비중
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   isOpen,
   onClose,
-  user = null,
-  isAuthenticated = false,
-  isLoading = false,
+  currentUser,
+  isAuthenticated,
+  isLoading,
   onLogout,
-  authStatus,
+  isAdmin,
+  isSuperAdmin,
+  isBusiness,
+  isPhoneVerified,
+  is2FAEnabled,
 }) => {
-  if (!isOpen) return null;
-
-  // 모바일용 커스텀 메뉴 아이템들 (header.tsx와 동일한 패턴)
-  const MobileCustomMenuItems: React.FC = () => {
-    if (!authStatus) return null;
-
-    const items = [];
-
-    // 대시보드
-    items.push(
-      <UserMenuItem key="dashboard" icon={BarChart3} href="/dashboard">
-        대시보드
-      </UserMenuItem>
-    );
-
-    // 프로필
-    items.push(
-      <UserMenuItem key="profile" icon={User} href="/profile">
-        프로필 관리
-      </UserMenuItem>
-    );
-
-    // 관리자 전용 메뉴
-    if (authStatus.isAdmin) {
-      items.push(
-        <UserMenuItem key="admin" icon={Shield} href="/admin">
-          관리자 패널
-        </UserMenuItem>
-      );
-    }
-
-    // 사업자 전용 메뉴
-    if (authStatus.isBusiness) {
-      items.push(
-        <UserMenuItem key="business" icon={Building2} href="/business">
-          사업자 관리
-        </UserMenuItem>
-      );
-    }
-
-    // 배송 관련 메뉴
-    if (user?.role === 'DELIVERY') {
-      items.push(
-        <UserMenuItem key="delivery" icon={Truck} href="/delivery">
-          배송 관리
-        </UserMenuItem>
-      );
-    }
-
-    // 인증 관련 알림 메뉴
-    const verificationItems = [];
-
-    if (!authStatus.isEmailVerified) {
-      verificationItems.push(
-        <UserMenuItem
-          key="verify-email"
-          icon={Mail}
-          href="/verify-email"
-          className="text-orange-600"
-        >
-          이메일 인증 필요
-        </UserMenuItem>
-      );
-    }
-
-    if (!authStatus.isPhoneVerified) {
-      verificationItems.push(
-        <UserMenuItem
-          key="verify-phone"
-          icon={Phone}
-          href="/verify-phone"
-          className="text-orange-600"
-        >
-          휴대폰 인증 필요
-        </UserMenuItem>
-      );
-    }
-
-    if (!authStatus.is2FAEnabled) {
-      verificationItems.push(
-        <UserMenuItem
-          key="setup-2fa"
-          icon={Shield}
-          href="/security"
-          className="text-blue-600"
-        >
-          2단계 인증 설정
-        </UserMenuItem>
-      );
-    }
-
-    if (verificationItems.length > 0) {
-      items.push(<UserMenuSeparator key="verification-separator" />);
-      items.push(...verificationItems);
-    }
-
-    // 일반 설정 메뉴
-    items.push(
-      <UserMenuSeparator key="settings-separator" />,
-      <UserMenuItem key="notifications" icon={Bell} href="/notifications">
-        알림 설정
-      </UserMenuItem>,
-      <UserMenuItem key="billing" icon={CreditCard} href="/billing">
-        결제 정보
-      </UserMenuItem>,
-      <UserMenuItem key="settings" icon={Settings} href="/settings">
-        계정 설정
-      </UserMenuItem>
-    );
-
-    return <>{items}</>;
-  };
-
-  // 비인증 사용자용 섹션
-  const GuestSection: React.FC = () => (
-    <div className="px-4 pb-3">
-      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
-        <User className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          로그인하여 더 많은 기능을 이용해보세요
-        </p>
-        <div className="space-y-2">
-          <Button asChild className="w-full" onClick={onClose}>
-            <Link to="/auth/login">로그인</Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full"
-            onClick={onClose}
-          >
-            <Link to="/auth/register">회원가입</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="lg:hidden py-4 border-t bg-white dark:bg-gray-900">
-      <div className="space-y-3">
+    <div
+      className={`bg-background fixed inset-0 top-16 container flex h-[calc(100vh-64px)] flex-col transition-all duration-300 ease-in-out lg:hidden ${
+        isOpen
+          ? 'visible translate-x-0 opacity-100'
+          : 'invisible translate-x-full opacity-0'
+      }`}
+    >
+      <nav className="mt-3 flex flex-1 flex-col gap-4 overflow-y-auto pb-6">
         {/* 로딩 상태 */}
         {isLoading && (
-          <div className="px-4 flex items-center justify-center py-8">
-            <div className="flex items-center space-x-3 text-gray-500">
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-              <span>사용자 정보를 불러오는 중...</span>
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center space-x-3 text-muted-foreground">
+              <div className="w-5 h-5 border-2 border-muted border-t-blue-600 rounded-full animate-spin" />
+              <span className="text-sm">사용자 정보를 불러오는 중...</span>
             </div>
           </div>
         )}
 
-        {/* 인증된 사용자 - header.tsx와 동일한 패턴 */}
-        {!isLoading && isAuthenticated && (
-          <div className="px-4">
-            <UserMenuProvider
-              user={user}
-              isAuthenticated={isAuthenticated}
-              mobile={true} // 모바일 모드
-              onLogout={onLogout}
-              onMenuClick={(path) => {
-                onClose(); // 메뉴 클릭 시 모바일 메뉴 닫기
-              }}
-            >
-              {/* ✅ header.tsx와 동일한 패턴으로 커스텀 메뉴 전달 */}
-              <UserMenuRoot>
-                <MobileCustomMenuItems />
-              </UserMenuRoot>
-            </UserMenuProvider>
-          </div>
+        {/* ✅ 인증된 사용자 메뉴 — UserMenuProvider를 최상위로 올려서 컨텍스트 보장 */}
+        {!isLoading && isAuthenticated && currentUser && (
+          <UserMenuProvider
+            user={currentUser}
+            isAuthenticated={isAuthenticated}
+            mobile={true}
+            onLogout={onLogout}
+            onMenuClick={onClose}
+          >
+            <UserMenuRoot>
+              <CustomUserMenuItems
+                currentUser={currentUser}
+                isAdmin={isAdmin}
+                isSuperAdmin={isSuperAdmin}
+                isBusiness={isBusiness}
+                isPhoneVerified={isPhoneVerified}
+                is2FAEnabled={is2FAEnabled}
+              />
+              <UserMenuSeparator />
+              <UserMenuLogout />
+            </UserMenuRoot>
+          </UserMenuProvider>
         )}
 
         {/* 비인증 사용자 */}
-        {!isLoading && !isAuthenticated && <GuestSection />}
+        {!isLoading && !isAuthenticated && <GuestSection onClose={onClose} />}
 
-        <Separator className="mx-4" />
+        <Separator />
 
-        {/* 서비스 메뉴 */}
-        {SERVICES_CONFIG.map((service) => {
-          const Icon = service.icon;
-          return (
-            <Link
-              key={service.id}
-              to={service.href}
-              className={cn(
-                'flex items-center space-x-3 px-4 py-3 mx-4 rounded-lg text-sm font-medium transition-all hover:bg-gray-100 dark:hover:bg-gray-800',
-                !service.available && 'opacity-50 cursor-not-allowed'
-              )}
-              onClick={onClose}
-            >
-              <Icon className={`w-5 h-5 ${service.color.primary}`} />
-              <div className="flex-1">
-                <div className="font-medium">{service.name}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {service.description}
-                </div>
-              </div>
-              {!service.available && (
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                  준비중
-                </span>
-              )}
-            </Link>
-          );
-        })}
+        {/* 회사소개 — 아코디언 */}
+        <MobileCompanyNav onClose={onClose} />
 
-        <Separator className="mx-4" />
+        {/* ✅ 서비스 목록 — 아코디언 방식으로 개선 */}
+        <ServicesAccordion onClose={onClose} />
 
-        {/* 연락처 버튼 */}
-        <div className="px-4 pt-3">
-          <Button
-            variant="outline"
-            className="w-full justify-center space-x-2"
-            onClick={() => (window.location.href = 'tel:064-713-2002')}
-          >
-            <Phone className="w-4 h-4" />
-            <span>064-713-2002</span>
-          </Button>
-        </div>
-      </div>
+        <Separator />
+
+        {/* 연락처 */}
+        <ContactButton
+          variant="outline"
+          className="mx-4"
+          phoneNumber="064-713-2002"
+          showText={true}
+          textBreakpoint="always"
+        />
+      </nav>
     </div>
   );
 };

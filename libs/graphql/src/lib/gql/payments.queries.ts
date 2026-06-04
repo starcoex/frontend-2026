@@ -43,6 +43,9 @@ export const PAYMENT_FRAGMENT = gql`
     orderId
     reservationId
     guestEmail
+    walkInId
+    fuelWalkInId
+    packageId
     portoneData
     customData
     paidAt

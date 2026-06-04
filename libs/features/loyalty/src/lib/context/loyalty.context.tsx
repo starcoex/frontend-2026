@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import type {
   UserMembership,
@@ -12,6 +13,8 @@ import type {
   CouponHistoryItem,
 } from '@starcoex-frontend/graphql';
 import { LoyaltyState, LoyaltyContextValue, MembershipConfig } from '../types';
+import { useApolloClient } from '@apollo/client/react';
+import { initLoyaltyService, serviceRegistry } from '../services';
 
 const LoyaltyContext = createContext<LoyaltyContextValue | undefined>(
   undefined
@@ -37,6 +40,18 @@ const initialState: LoyaltyState = {
 
 export const LoyaltyProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<LoyaltyState>(initialState);
+  const apolloClient = useApolloClient();
+
+  // ✅ delivery 패턴 그대로 적용
+  useLayoutEffect(() => {
+    if (!serviceRegistry.isServiceInitialized('loyalty')) {
+      try {
+        initLoyaltyService(apolloClient);
+      } catch (error) {
+        console.error('❌ ReviewsService initialization failed:', error);
+      }
+    }
+  }, [apolloClient]);
 
   // =========================================================================
   // 설정 관련 액션

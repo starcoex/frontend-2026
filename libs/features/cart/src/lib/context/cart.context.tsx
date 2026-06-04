@@ -5,7 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
-  useEffect,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type { CartState, CartContextValue, Cart } from '../types';
@@ -15,6 +15,8 @@ const CartContext = createContext<CartContextValue | undefined>(undefined);
 
 const initialState: CartState = {
   cart: null,
+  carts: [],
+  cartsTotal: 0,
   isLoading: false,
   error: null,
 };
@@ -22,23 +24,27 @@ const initialState: CartState = {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<CartState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('cart')) {
       try {
         initCartService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ CartService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
   const setCart = useCallback((cart: Cart | null) => {
     setState((prev) => ({ ...prev, cart }));
+  }, []);
+
+  const setCarts = useCallback((carts: Cart[]) => {
+    setState((prev) => ({ ...prev, carts }));
+  }, []);
+
+  const setCartsTotal = useCallback((cartsTotal: number) => {
+    setState((prev) => ({ ...prev, cartsTotal }));
   }, []);
 
   const updateCartInContext = useCallback((updates: Partial<Cart>) => {
@@ -66,6 +72,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     () => ({
       ...state,
       setCart,
+      setCarts,
+      setCartsTotal,
       updateCartInContext,
       setLoading,
       setError,
@@ -75,6 +83,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     [
       state,
       setCart,
+      setCarts,
+      setCartsTotal,
       updateCartInContext,
       setLoading,
       setError,
@@ -82,10 +92,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing Cart Service...</div>;
-  }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

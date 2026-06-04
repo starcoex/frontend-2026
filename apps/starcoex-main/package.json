@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build:sw": "tsc -p tsconfig.sw.json --noEmit false --outDir public",
+    "build": "npm run build:sw && vite build"
+  },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "tailwindcss": "^4.1.17",

@@ -2,29 +2,34 @@ import { ApolloClient, OperationVariables } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql/error';
 import {
   GET_NOTICES,
+  GET_ADMIN_NOTICES,
   GET_NOTICE_BY_ID,
   GET_PUBLISHED_NOTICES,
+  GET_NOTICE_STATS,
   CREATE_NOTICE,
   UPDATE_NOTICE,
   PUBLISH_NOTICE,
   ARCHIVE_NOTICE,
   DELETE_NOTICE,
-  DELETE_NOTICES,
+  BULK_DELETE_NOTICES,
   CREATE_NOTICE_FROM_SUGGESTION,
   GET_MANUAL_CATEGORIES,
+  GET_ADMIN_MANUAL_CATEGORIES,
   CREATE_MANUAL_CATEGORY,
   UPDATE_MANUAL_CATEGORY,
   DELETE_MANUAL_CATEGORY,
   GET_MANUALS,
+  GET_ADMIN_MANUALS,
   GET_MANUAL_BY_ID,
   GET_PUBLISHED_MANUALS,
   GET_MANUAL_HISTORIES,
+  GET_MANUAL_STATS,
   CREATE_MANUAL,
   UPDATE_MANUAL,
   PUBLISH_MANUAL,
   ARCHIVE_MANUAL,
   DELETE_MANUAL,
-  DELETE_MANUALS,
+  BULK_DELETE_MANUALS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -39,6 +44,10 @@ import type {
   Manual,
   ManualCategory,
   ManualHistory,
+  NoticeStats,
+  ManualSummaryStats,
+  BulkDeleteNoticesOutput,
+  BulkDeleteManualsOutput,
   GetNoticesOutput,
   CreateNoticeOutput,
   UpdateNoticeOutput,
@@ -51,6 +60,8 @@ import type {
   UpdateNoticeInput,
   PublishNoticeInput,
   ArchiveNoticeInput,
+  DeleteNoticeInput,
+  BulkDeleteNoticesInput,
   GetManualsInput,
   CreateManualCategoryInput,
   UpdateManualCategoryInput,
@@ -58,6 +69,8 @@ import type {
   UpdateManualInput,
   PublishManualInput,
   ArchiveManualInput,
+  DeleteManualInput,
+  BulkDeleteManualsInput,
   NoticeBusinessType,
 } from '../types';
 
@@ -151,17 +164,27 @@ export class NoticesService implements INoticesService {
     const res = await this.query<{ notices: GetNoticesOutput }>(GET_NOTICES, {
       input,
     });
-    if (res.success && res.data?.notices) {
+    if (res.success && res.data?.notices)
       return { success: true, data: res.data.notices };
-    }
+    return res as unknown as ApiResponse<GetNoticesOutput>;
+  }
+
+  async getAdminNotices(
+    input: GetNoticesInput
+  ): Promise<ApiResponse<GetNoticesOutput>> {
+    const res = await this.query<{ adminNotices: GetNoticesOutput }>(
+      GET_ADMIN_NOTICES,
+      { input }
+    );
+    if (res.success && res.data?.adminNotices)
+      return { success: true, data: res.data.adminNotices };
     return res as unknown as ApiResponse<GetNoticesOutput>;
   }
 
   async getNoticeById(id: number): Promise<ApiResponse<Notice>> {
     const res = await this.query<{ notice: Notice }>(GET_NOTICE_BY_ID, { id });
-    if (res.success && res.data?.notice) {
+    if (res.success && res.data?.notice)
       return { success: true, data: res.data.notice };
-    }
     return res as unknown as ApiResponse<Notice>;
   }
 
@@ -172,10 +195,18 @@ export class NoticesService implements INoticesService {
       GET_PUBLISHED_NOTICES,
       { targetApp }
     );
-    if (res.success && res.data?.publishedNotices) {
+    if (res.success && res.data?.publishedNotices)
       return { success: true, data: res.data.publishedNotices };
-    }
     return res as unknown as ApiResponse<Notice[]>;
+  }
+
+  async getNoticeStats(): Promise<ApiResponse<NoticeStats>> {
+    const res = await this.query<{ noticeStats: NoticeStats }>(
+      GET_NOTICE_STATS
+    );
+    if (res.success && res.data?.noticeStats)
+      return { success: true, data: res.data.noticeStats };
+    return res as unknown as ApiResponse<NoticeStats>;
   }
 
   // ============================================================================
@@ -189,9 +220,8 @@ export class NoticesService implements INoticesService {
       CREATE_NOTICE,
       { input }
     );
-    if (res.success && res.data?.createNotice) {
+    if (res.success && res.data?.createNotice)
       return { success: true, data: res.data.createNotice };
-    }
     return res as unknown as ApiResponse<CreateNoticeOutput>;
   }
 
@@ -202,9 +232,8 @@ export class NoticesService implements INoticesService {
       UPDATE_NOTICE,
       { input }
     );
-    if (res.success && res.data?.updateNotice) {
+    if (res.success && res.data?.updateNotice)
       return { success: true, data: res.data.updateNotice };
-    }
     return res as unknown as ApiResponse<UpdateNoticeOutput>;
   }
 
@@ -215,9 +244,8 @@ export class NoticesService implements INoticesService {
       PUBLISH_NOTICE,
       { input }
     );
-    if (res.success && res.data?.publishNotice) {
+    if (res.success && res.data?.publishNotice)
       return { success: true, data: res.data.publishNotice };
-    }
     return res as unknown as ApiResponse<UpdateNoticeOutput>;
   }
 
@@ -228,30 +256,34 @@ export class NoticesService implements INoticesService {
       ARCHIVE_NOTICE,
       { input }
     );
-    if (res.success && res.data?.archiveNotice) {
+    if (res.success && res.data?.archiveNotice)
       return { success: true, data: res.data.archiveNotice };
-    }
     return res as unknown as ApiResponse<UpdateNoticeOutput>;
   }
 
-  async deleteNotice(id: number): Promise<ApiResponse<boolean>> {
+  async deleteNotice({
+    id,
+    hardDelete = false,
+  }: DeleteNoticeInput): Promise<ApiResponse<boolean>> {
     const res = await this.mutate<{ deleteNotice: boolean }>(DELETE_NOTICE, {
       id,
+      hardDelete,
     });
-    if (res.success && res.data !== undefined) {
+    if (res.success && res.data !== undefined)
       return { success: true, data: res.data.deleteNotice };
-    }
     return res as unknown as ApiResponse<boolean>;
   }
 
-  async deleteNotices(ids: number[]): Promise<ApiResponse<boolean>> {
-    const res = await this.mutate<{ deleteNotices: boolean }>(DELETE_NOTICES, {
-      ids,
-    });
-    if (res.success && res.data !== undefined) {
-      return { success: true, data: res.data.deleteNotices };
-    }
-    return res as unknown as ApiResponse<boolean>;
+  async bulkDeleteNotices({
+    ids,
+    hardDelete = false,
+  }: BulkDeleteNoticesInput): Promise<ApiResponse<BulkDeleteNoticesOutput>> {
+    const res = await this.mutate<{
+      bulkDeleteNotices: BulkDeleteNoticesOutput;
+    }>(BULK_DELETE_NOTICES, { ids, hardDelete });
+    if (res.success && res.data?.bulkDeleteNotices)
+      return { success: true, data: res.data.bulkDeleteNotices };
+    return res as unknown as ApiResponse<BulkDeleteNoticesOutput>;
   }
 
   async createNoticeFromSuggestion(
@@ -266,9 +298,8 @@ export class NoticesService implements INoticesService {
       suggestionTitle,
       suggestionContent,
     });
-    if (res.success && res.data?.createNoticeFromSuggestion) {
+    if (res.success && res.data?.createNoticeFromSuggestion)
       return { success: true, data: res.data.createNoticeFromSuggestion };
-    }
     return res as unknown as ApiResponse<CreateNoticeOutput>;
   }
 
@@ -284,9 +315,21 @@ export class NoticesService implements INoticesService {
       GET_MANUAL_CATEGORIES,
       { targetBusiness, targetApp }
     );
-    if (res.success && res.data?.manualCategories) {
+    if (res.success && res.data?.manualCategories)
       return { success: true, data: res.data.manualCategories };
-    }
+    return res as unknown as ApiResponse<ManualCategory[]>;
+  }
+
+  async getAdminManualCategories(
+    targetBusiness?: NoticeBusinessType,
+    targetApp?: string
+  ): Promise<ApiResponse<ManualCategory[]>> {
+    const res = await this.query<{ adminManualCategories: ManualCategory[] }>(
+      GET_ADMIN_MANUAL_CATEGORIES,
+      { targetBusiness, targetApp }
+    );
+    if (res.success && res.data?.adminManualCategories)
+      return { success: true, data: res.data.adminManualCategories };
     return res as unknown as ApiResponse<ManualCategory[]>;
   }
 
@@ -296,9 +339,8 @@ export class NoticesService implements INoticesService {
     const res = await this.mutate<{
       createManualCategory: ManualCategoryCommandResult;
     }>(CREATE_MANUAL_CATEGORY, { input });
-    if (res.success && res.data?.createManualCategory) {
+    if (res.success && res.data?.createManualCategory)
       return { success: true, data: res.data.createManualCategory };
-    }
     return res as unknown as ApiResponse<ManualCategoryCommandResult>;
   }
 
@@ -308,9 +350,8 @@ export class NoticesService implements INoticesService {
     const res = await this.mutate<{
       updateManualCategory: ManualCategoryCommandResult;
     }>(UPDATE_MANUAL_CATEGORY, { input });
-    if (res.success && res.data?.updateManualCategory) {
+    if (res.success && res.data?.updateManualCategory)
       return { success: true, data: res.data.updateManualCategory };
-    }
     return res as unknown as ApiResponse<ManualCategoryCommandResult>;
   }
 
@@ -319,9 +360,8 @@ export class NoticesService implements INoticesService {
       DELETE_MANUAL_CATEGORY,
       { id }
     );
-    if (res.success && res.data !== undefined) {
+    if (res.success && res.data !== undefined)
       return { success: true, data: res.data.deleteManualCategory };
-    }
     return res as unknown as ApiResponse<boolean>;
   }
 
@@ -335,17 +375,27 @@ export class NoticesService implements INoticesService {
     const res = await this.query<{ manuals: GetManualsOutput }>(GET_MANUALS, {
       input,
     });
-    if (res.success && res.data?.manuals) {
+    if (res.success && res.data?.manuals)
       return { success: true, data: res.data.manuals };
-    }
+    return res as unknown as ApiResponse<GetManualsOutput>;
+  }
+
+  async getAdminManuals(
+    input: GetManualsInput
+  ): Promise<ApiResponse<GetManualsOutput>> {
+    const res = await this.query<{ adminManuals: GetManualsOutput }>(
+      GET_ADMIN_MANUALS,
+      { input }
+    );
+    if (res.success && res.data?.adminManuals)
+      return { success: true, data: res.data.adminManuals };
     return res as unknown as ApiResponse<GetManualsOutput>;
   }
 
   async getManualById(id: number): Promise<ApiResponse<Manual>> {
     const res = await this.query<{ manual: Manual }>(GET_MANUAL_BY_ID, { id });
-    if (res.success && res.data?.manual) {
+    if (res.success && res.data?.manual)
       return { success: true, data: res.data.manual };
-    }
     return res as unknown as ApiResponse<Manual>;
   }
 
@@ -358,9 +408,8 @@ export class NoticesService implements INoticesService {
       GET_PUBLISHED_MANUALS,
       { targetBusiness, targetApp, categoryId }
     );
-    if (res.success && res.data?.publishedManuals) {
+    if (res.success && res.data?.publishedManuals)
       return { success: true, data: res.data.publishedManuals };
-    }
     return res as unknown as ApiResponse<Manual[]>;
   }
 
@@ -371,10 +420,18 @@ export class NoticesService implements INoticesService {
       GET_MANUAL_HISTORIES,
       { manualId }
     );
-    if (res.success && res.data?.manualHistories) {
+    if (res.success && res.data?.manualHistories)
       return { success: true, data: res.data.manualHistories };
-    }
     return res as unknown as ApiResponse<ManualHistory[]>;
+  }
+
+  async getManualStats(): Promise<ApiResponse<ManualSummaryStats>> {
+    const res = await this.query<{ manualStats: ManualSummaryStats }>(
+      GET_MANUAL_STATS
+    );
+    if (res.success && res.data?.manualStats)
+      return { success: true, data: res.data.manualStats };
+    return res as unknown as ApiResponse<ManualSummaryStats>;
   }
 
   async createManual(
@@ -384,9 +441,8 @@ export class NoticesService implements INoticesService {
       CREATE_MANUAL,
       { input }
     );
-    if (res.success && res.data?.createManual) {
+    if (res.success && res.data?.createManual)
       return { success: true, data: res.data.createManual };
-    }
     return res as unknown as ApiResponse<CreateManualOutput>;
   }
 
@@ -397,9 +453,8 @@ export class NoticesService implements INoticesService {
       UPDATE_MANUAL,
       { input }
     );
-    if (res.success && res.data?.updateManual) {
+    if (res.success && res.data?.updateManual)
       return { success: true, data: res.data.updateManual };
-    }
     return res as unknown as ApiResponse<UpdateManualOutput>;
   }
 
@@ -410,9 +465,8 @@ export class NoticesService implements INoticesService {
       PUBLISH_MANUAL,
       { input }
     );
-    if (res.success && res.data?.publishManual) {
+    if (res.success && res.data?.publishManual)
       return { success: true, data: res.data.publishManual };
-    }
     return res as unknown as ApiResponse<UpdateManualOutput>;
   }
 
@@ -423,29 +477,33 @@ export class NoticesService implements INoticesService {
       ARCHIVE_MANUAL,
       { input }
     );
-    if (res.success && res.data?.archiveManual) {
+    if (res.success && res.data?.archiveManual)
       return { success: true, data: res.data.archiveManual };
-    }
     return res as unknown as ApiResponse<UpdateManualOutput>;
   }
 
-  async deleteManual(id: number): Promise<ApiResponse<boolean>> {
+  async deleteManual({
+    id,
+    hardDelete = false,
+  }: DeleteManualInput): Promise<ApiResponse<boolean>> {
     const res = await this.mutate<{ deleteManual: boolean }>(DELETE_MANUAL, {
       id,
+      hardDelete,
     });
-    if (res.success && res.data !== undefined) {
+    if (res.success && res.data !== undefined)
       return { success: true, data: res.data.deleteManual };
-    }
     return res as unknown as ApiResponse<boolean>;
   }
 
-  async deleteManuals(ids: number[]): Promise<ApiResponse<boolean>> {
-    const res = await this.mutate<{ deleteManuals: boolean }>(DELETE_MANUALS, {
-      ids,
-    });
-    if (res.success && res.data !== undefined) {
-      return { success: true, data: res.data.deleteManuals };
-    }
-    return res as unknown as ApiResponse<boolean>;
+  async bulkDeleteManuals({
+    ids,
+    hardDelete = false,
+  }: BulkDeleteManualsInput): Promise<ApiResponse<BulkDeleteManualsOutput>> {
+    const res = await this.mutate<{
+      bulkDeleteManuals: BulkDeleteManualsOutput;
+    }>(BULK_DELETE_MANUALS, { ids, hardDelete });
+    if (res.success && res.data?.bulkDeleteManuals)
+      return { success: true, data: res.data.bulkDeleteManuals };
+    return res as unknown as ApiResponse<BulkDeleteManualsOutput>;
   }
 }

@@ -43,7 +43,12 @@ const Home = () => {
                 <Link to="/auth/register">
                   <Avatar className="ring-input size-8 rounded-full ring-1">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center">
-                      <StarLogo format="svg" width={20} height={20} />
+                      <StarLogo
+                        format="svg"
+                        width={20}
+                        height={20}
+                        alt="계정 신청 아이콘"
+                      />
                     </div>
                   </Avatar>
                   계정 신청하기
@@ -55,19 +60,19 @@ const Home = () => {
         <div className="relative grid border-x border-dashed md:grid-cols-3">
           <Sparkle className="fill-primary absolute right-0 top-0 h-auto w-5 -translate-y-2.5 translate-x-2.5" />
           <Sparkle className="fill-primary absolute left-0 top-0 h-auto w-5 -translate-x-2.5 -translate-y-2.5" />
-          <div className="flex items-center gap-6 border-t border-dashed p-4 font-medium md:justify-center lg:p-10 lg:text-lg">
+          <div className="flex items-center gap-6 border border-dashed p-4 font-medium md:justify-center lg:p-10 lg:text-lg">
             <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md text-sm lg:size-12 lg:text-base">
               <Zap className="w-5 lg:w-6" />
             </span>
             실시간 분석 대시보드
           </div>
-          <div className="flex items-center gap-6 border-x border-t border-dashed p-4 font-medium md:justify-center lg:p-10 lg:text-lg">
+          <div className="flex items-center gap-6 border-x border border-dashed p-4 font-medium md:justify-center lg:p-10 lg:text-lg">
             <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md text-sm lg:size-12 lg:text-base">
               <Users className="w-5 lg:w-6" />
             </span>
             통합 사용자 관리
           </div>
-          <div className="flex items-center gap-6 border-t border-dashed p-4 font-medium md:justify-center lg:p-10 lg:text-lg">
+          <div className="flex items-center gap-6 border border-dashed p-4 font-medium md:justify-center lg:p-10 lg:text-lg">
             <span className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md text-sm lg:size-12 lg:text-base">
               <Server className="w-5 lg:w-6" />
             </span>

@@ -25,11 +25,10 @@ export const DELIVERY_BREADCRUMB_CONFIGS = {
     label: '배달기사 관리',
     title: '배달기사 관리',
     showInBreadcrumb: true,
-    showActions: true, // ✅ true로 변경
+    showActions: true,
     showStats: false,
   },
   DRIVERS_CREATE: {
-    // ✅ 추가
     label: '기사 등록',
     title: '배달기사 등록',
     showInBreadcrumb: true,
@@ -39,6 +38,22 @@ export const DELIVERY_BREADCRUMB_CONFIGS = {
   TRACKING: {
     label: '배송 추적',
     title: '배송 추적',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
+  SETTLEMENTS: {
+    // ✅ 신규
+    label: '정산 관리',
+    title: '정산 관리',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
+  PRICING: {
+    // ✅ 신규
+    label: '배달비 정책',
+    title: '배달비 정책 관리',
     showInBreadcrumb: true,
     showActions: false,
     showStats: false,

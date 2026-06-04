@@ -26,7 +26,7 @@ export function DriverWithProvider() {
     return null;
   }
 
-  // delivery-with-provider.tsx 패턴 동일 — Provider로 감싸고 Layout 렌더
+  // chats-with-provider.tsx 패턴 동일 — Provider로 감싸고 Layout 렌더
   return (
     <DeliveryProvider>
       <DriverLayout />

@@ -22,6 +22,22 @@ export const PAGINATION_INFO_FIELDS = gql`
   }
 `;
 
+// ─── 본인인증 회원가입/로그인 Output Fragments ─────────────────────────────────
+
+export const REGISTER_WITH_IDENTITY_VERIFICATION_OUTPUT_FIELDS = gql`
+  ${AUTH_ERROR_INFO_FIELDS}
+  fragment RegisterWithIdentityVerificationOutputFields on RegisterUserOutput {
+    success
+    message
+    verificationMessage
+    marketingConsentMessage
+    isGuestMerge
+    error {
+      ...AuthErrorInfoFields
+    }
+  }
+`;
+
 // ─── User Fragments ───────────────────────────────────────────────────────────
 
 export const ACTIVATION_FIELDS = gql`
@@ -208,7 +224,7 @@ export const USER_INVITATION_FIELDS = gql`
   }
 `;
 
-// ─── Stats Fragments ──────────────────────────────────────────────────────────
+// ─── OverviewOrderStatus Fragments ──────────────────────────────────────────────────────────
 
 export const OVERVIEW_STATS_FIELDS = gql`
   fragment OverviewStatsFields on OverviewStats {
@@ -857,6 +873,24 @@ export const GET_USER_BY_ID = gql`
   }
 `;
 
+// ✅ Activation 필드 제외 — 서버 Activation.id null 버그 우회용
+// 장바구니 상세, 주문 상세 등 간단한 유저 정보만 필요한 경우 사용
+export const GET_USER_SIMPLE_BY_ID = gql`
+  query GetUserSimpleById($id: Int!) {
+    getUserById(id: $id) {
+      id
+      name
+      email
+      phoneNumber
+      role
+      userType
+      avatarUrl
+      isActive
+      createdAt
+    }
+  }
+`;
+
 export const GET_USERS_STATS = gql`
   ${USERS_STATS_RESPONSE_FIELDS}
   query GetUsersStats {
@@ -1244,6 +1278,85 @@ export const CREATE_GUEST_USER_BY_ADMIN = gql`
   mutation CreateGuestUserByAdmin($input: CreateGuestUserInput!) {
     createGuestUserByAdmin(input: $input) {
       ...CreateGuestUserOutputFields
+    }
+  }
+`;
+
+// ─── 본인인증 신규 Mutations ──────────────────────────────────────────────────
+
+export const REGISTER_WITH_IDENTITY_VERIFICATION = gql`
+  ${REGISTER_WITH_IDENTITY_VERIFICATION_OUTPUT_FIELDS}
+  mutation RegisterWithIdentityVerification(
+    $input: RegisterWithIdentityVerificationInput!
+  ) {
+    registerWithIdentityVerification(input: $input) {
+      ...RegisterWithIdentityVerificationOutputFields
+    }
+  }
+`;
+
+export const LOGIN_WITH_IDENTITY_VERIFICATION = gql`
+  ${LOGIN_STEP1_OUTPUT_FIELDS}
+  mutation LoginWithIdentityVerification($identityVerificationId: String!) {
+    loginWithIdentityVerification(
+      identityVerificationId: $identityVerificationId
+    ) {
+      ...LoginStep1OutputFields
+    }
+  }
+`;
+
+// ─── 온보딩 Fragments ─────────────────────────────────────────────────────────
+
+export const USER_META_OUTPUT_FIELDS = gql`
+  fragment UserMetaOutputFields on UserMetaOutput {
+    onboardingCompleted
+    onboardingCompletedAt
+    onboardingStep
+    preferredTheme
+    preferredLanguage
+    preferredTimezone
+    message
+    success
+  }
+`;
+
+// ─── 온보딩 Queries ───────────────────────────────────────────────────────────
+
+export const GET_ONBOARDING_STATUS = gql`
+  ${USER_META_OUTPUT_FIELDS}
+  query GetOnboardingStatus {
+    getOnboardingStatus {
+      ...UserMetaOutputFields
+    }
+  }
+`;
+
+// ─── 온보딩 Mutations ─────────────────────────────────────────────────────────
+
+export const COMPLETE_ONBOARDING = gql`
+  ${USER_META_OUTPUT_FIELDS}
+  mutation CompleteOnboarding {
+    completeOnboarding {
+      ...UserMetaOutputFields
+    }
+  }
+`;
+
+export const UPDATE_ONBOARDING_STEP = gql`
+  ${USER_META_OUTPUT_FIELDS}
+  mutation UpdateOnboardingStep($input: UpdateOnboardingStepInput!) {
+    updateOnboardingStep(input: $input) {
+      ...UserMetaOutputFields
+    }
+  }
+`;
+
+export const UPDATE_USER_META = gql`
+  ${USER_META_OUTPUT_FIELDS}
+  mutation UpdateUserMeta($input: UpdateUserMetaInput!) {
+    updateUserMeta(input: $input) {
+      ...UserMetaOutputFields
     }
   }
 `;

@@ -1,4 +1,4 @@
-// libs/features/common/src/pages/verify-phone.sales-products-cart-detail-product-create-order-detail-orders-page.tsx
+// libs/features/common/src/pages/verify-phone.sales-products-cart-detail-product-create-queue-detail-queue-page.tsx
 import React, { useState } from 'react';
 import { useAuth } from '@starcoex-frontend/auth';
 import { Phone, Shield, CheckCircle } from 'lucide-react';

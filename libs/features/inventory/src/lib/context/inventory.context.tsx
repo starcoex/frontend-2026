@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -31,18 +32,14 @@ const initialState: InventoryState = {
 export const InventoryProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<InventoryState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('inventory')) {
       try {
         initInventoryService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ NoticesService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -150,10 +147,6 @@ export const InventoryProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing Inventory Service...</div>;
-  }
 
   return (
     <InventoryContext.Provider value={value}>

@@ -3,9 +3,9 @@ import {
   useContext,
   useState,
   ReactNode,
-  useEffect,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { serviceRegistry, initReservationsService } from '../services';
@@ -31,18 +31,14 @@ const initialState: FuelWalkInsState = {
 export const FuelWalkInsProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<FuelWalkInsState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('reservations')) {
       try {
         initReservationsService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ CartService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -133,10 +129,6 @@ export const FuelWalkInsProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing FuelWalkIns Service...</div>;
-  }
 
   return (
     <FuelWalkInsContext.Provider value={value}>

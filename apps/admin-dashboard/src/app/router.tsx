@@ -1,391 +1,1165 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
 import { AdminLayout } from './layout/admin-layout';
 import { AuthLayout } from './layout/auth-layout';
 import {
   ErrorBoundary,
   NotFoundError,
-  ResetPasswordPage,
   ForgotPasswordPage,
+  ResetPasswordPage,
 } from '@starcoex-frontend/common';
 import { MainLayout } from '@/app/layout/main-layout';
-import { HomePage } from '@/app/pages/home-page';
-import { LoginPage } from '@/app/pages/auth/login-page';
-import { BusinessRegisterPage } from '@/app/pages/auth/business-register-page';
-import VerifyEmailPage from '@/app/pages/auth/verify-email.page';
-import { DashboardPage } from '@/app/pages/dasbhboard-page';
-import SuggestionsPage from '@/app/pages/dashboard/suggestions/suggestions-page';
-import UsersPage from '@/app/pages/dashboard/users/users-page';
-import { UserDetailPage } from '@/app/pages/dashboard/users/details/detail.page';
-import SuggestionDetailPage from '@/app/pages/dashboard/suggestions/details/suggestion-detail-page';
-import SettingsLayout from '@/app/pages/dashboard/settings/settings-layout';
-import SettingsGeneralPage from '@/app/pages/dashboard/settings/settings-page';
-import SettingsBillingPage from '@/app/pages/dashboard/settings/billing/billing-page';
-import SettingsProfilePage from '@/app/pages/dashboard/settings/profile/profile-page';
-import SettingsNotificationsPage from '@/app/pages/dashboard/settings/notifications/notifications-page';
-import { FileManagerLayout } from '@/app/pages/dashboard/board/file-manager/file-layout';
-import { FileManagerPage } from '@/app/pages/dashboard/board/file-manager/file-manager-page';
-import RecentFilesPage from '@/app/pages/dashboard/board/file-manager/pages/recent-files-page';
-import StorageAnalysisPage from '@/app/pages/dashboard/board/file-manager/pages/storage-analysis-page';
-import { UsersWithProvider } from '@/app/pages/dashboard/users/users-with-provider';
-import { InvitationsPage } from '@/app/pages/dashboard/users/Invitations.page';
-import { AcceptInvitationPage } from '@/app/pages/auth/accept-invitations.page';
-import MasterKeyPromotePage from '@/app/pages/dashboard/settings/master-key-page';
-import SalesPage from '@/app/pages/sales/sales-page';
-import { ProductsWithProvider } from '@/app/pages/dashboard/ecommerce/products/products-with-provider';
-import ProductsPage from '@/app/pages/dashboard/ecommerce/products/products-page';
-import ProductCreatePage from '@/app/pages/dashboard/ecommerce/products/create/product-create-page';
-import ProductDetailPage from '@/app/pages/dashboard/ecommerce/products/product-detail/product-detail-page';
-import ProductEditPage from '@/app/pages/dashboard/ecommerce/products/edit/product-edit-page';
-import ProductInventoryPage from '@/app/pages/dashboard/ecommerce/products/inventory/inventory-page'; // ← 제품 재고 탭용
-import { ProductScanWithProvider } from '@/app/pages/dashboard/ecommerce/products/products-scan-with-provider';
-import { OrdersWithProvider } from '@/app/pages/dashboard/ecommerce/orders/orders-with-provider';
-import OrdersPage from '@/app/pages/dashboard/ecommerce/orders/orders-page';
-import OrderDetailPage from '@/app/pages/dashboard/ecommerce/orders/order-detail/order-detail-page';
-import OrderEditPage from '@/app/pages/dashboard/ecommerce/orders/edit/order-edit-page';
-import OrderCreatePage from '@/app/pages/dashboard/ecommerce/orders/create/order-create-page';
-import { StoresWithProvider } from '@/app/pages/dashboard/ecommerce/stores/stores-with-provider';
-import StoresPage from '@/app/pages/dashboard/ecommerce/stores/stores-page';
-import StoreCreatePage from '@/app/pages/dashboard/ecommerce/stores/create/store-create-page';
-import StoreDetailPage from '@/app/pages/dashboard/ecommerce/stores/stores-detail/store-detail-page';
-import StoreEditPage from '@/app/pages/dashboard/ecommerce/stores/edit/store-edit-page';
-import BrandsPage from '@/app/pages/dashboard/ecommerce/stores/brands/brands-page';
-import { CategoriesWithProvider } from '@/app/pages/dashboard/ecommerce/categories/categories-with-provider';
-import CategoriesPage from '@/app/pages/dashboard/ecommerce/categories/categories-page';
-import CategoryHierarchyPage from '@/app/pages/dashboard/ecommerce/categories/category-hierachy-page';
-import { SuggestionsWithProvider } from '@/app/pages/dashboard/suggestions/suggestions-with-provider';
-import { InventoryWithProvider } from '@/app/pages/dashboard/ecommerce/inventory/inventory-with-provider';
-import InventoryPage from '@/app/pages/dashboard/ecommerce/inventory/inventory-page';
-import LowStockPage from '@/app/pages/dashboard/ecommerce/inventory/low-stock-page';
-import InventoryDetailPage from '@/app/pages/dashboard/ecommerce/inventory/inventory-detail/inventory-detail-page';
-import { ReservationsWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/reservation-with-provider';
-import ReservationsPage from '@/app/pages/dashboard/ecommerce/reservations/reservation-page';
-import ReservationDetailPage from '@/app/pages/dashboard/ecommerce/reservations/reservation-detail/reservation-detail-page';
-import { WalkInsWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/walk-ins/walk-ins-with-provider';
-import { FuelWalkInsWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-with-provider';
-import ReservationCreatePage from '@/app/pages/dashboard/ecommerce/reservations/create/reservation-create-step5';
-import ReservationEditPage from '@/app/pages/dashboard/ecommerce/reservations/edit/reservation-edit-page';
-import HeatingOilDeliveriesPage from '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/heating-oil-deliveries-page';
-import HeatingOilDeliveryCreatePage from '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/create/heating-oil-delivery-create-page';
-import ReservationServicesPage from '@/app/pages/dashboard/ecommerce/reservations/services/reservation-service-page';
-import { HeatingOilDeliveriesWithProvider } from '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/heating-oil-deliveries-with-provider';
-import WalkInsPage from '@/app/pages/dashboard/ecommerce/reservations/walk-ins/walk-ins-page';
-import FuelWalkInsPage from '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-page';
-import InventoryEditPage from '@/app/pages/dashboard/ecommerce/inventory/edit/inventory-edit-page';
-import InventoryCreatePage from '@/app/pages/dashboard/ecommerce/inventory/create/inventory-create-page';
-import StoresSettingsPage from '@/app/pages/dashboard/ecommerce/stores/settings/stores-settings-page';
-import ProductSettingsPage from '@/app/pages/dashboard/ecommerce/products/settings/product-settings-page';
-import { PaymentsWithProvider } from '@/app/pages/dashboard/ecommerce/payments/payments-with-provider';
-import PaymentsPage from '@/app/pages/dashboard/ecommerce/payments/payments-page';
-import PaymentDetailPage from '@/app/pages/dashboard/ecommerce/payments/payment-detail/payment-detail-page';
-import PaymentStatsPage from '@/app/pages/dashboard/ecommerce/payments/payment-stats/payment-stats-page';
-import PaymentCreatePage from '@/app/pages/dashboard/ecommerce/payments/create/payment-create-page';
-import { NotificationsWithProvider } from '@/app/pages/dashboard/ecommerce/notifications/notifications-with-provider';
-import NotificationsPage from '@/app/pages/dashboard/ecommerce/notifications/notifications-page';
-import SendNotificationPage from '@/app/pages/dashboard/ecommerce/notifications/send/send-notification-page';
-import EmailsPage from '@/app/pages/dashboard/ecommerce/notifications/emails/emails-page';
-import ReservationCalendarPage from '@/app/pages/dashboard/ecommerce/reservations/calendar/reservation-calendar-page';
-import { CartWithProvider } from '@/app/pages/dashboard/ecommerce/cart/cart-with-provider';
-import CartPage from '@/app/pages/dashboard/ecommerce/cart/cart-page';
-import CartDetailPage from '@/app/pages/dashboard/ecommerce/cart/cart-detail/cart-detail-page';
-import { DeliveryWithProvider } from '@/app/pages/dashboard/ecommerce/delivery/delivery-with-provider';
-import DeliveryPage from '@/app/pages/dashboard/ecommerce/delivery/delivery-page';
-import DeliveryCreatePage from '@/app/pages/dashboard/ecommerce/delivery/create/delivery-create-page';
-import DeliveryDriversPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/delivery-drivers-page';
-import DeliveryTrackingPage from '@/app/pages/dashboard/ecommerce/delivery/tracking/delivery-tracking-page';
-import DeliveryDetailPage from '@/app/pages/dashboard/ecommerce/delivery/delivery-detail/delivery-detail-page';
-import DeliveryDriverCreatePage from '@/app/pages/dashboard/ecommerce/delivery/drivers/create/delivery-driver-create-page';
-import DeliveryDriverDetailPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/delivery-driver-detail-page';
-import DeliveryDriverEditPage from '@/app/pages/dashboard/ecommerce/delivery/drivers/edit/delivery-driver-edit-page';
-import DeliveryEditPage from '@/app/pages/dashboard/ecommerce/delivery/edit/delivery-edit-page';
-import { DriverWithProvider } from '@/app/pages/teams/delivery/driver/driver-with-provider';
-import DriverDashboardPage from '@/app/pages/teams/delivery/driver/driver-dashboard-page';
-import DriverDeliveriesPage from '@/app/pages/teams/delivery/driver/deliveries/driver-deliveries-page';
-import DriverActivePage from '@/app/pages/teams/delivery/driver/active/driver-active-page';
-import DriverProfilePage from '@/app/pages/teams/delivery/driver/profile/driver-profile-page';
+
+// ─── 로딩 컴포넌트 ─────────────────────────────────────────────────────────────
+const Loading = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+  </div>
+);
+const S = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
+  <Suspense fallback={<Loading />}>
+    <Component />
+  </Suspense>
+);
+
+// ─── 인증 ──────────────────────────────────────────────────────────────────────
+const LoginPage = lazy(() =>
+  import('@/app/pages/auth/login-page').then((m) => ({
+    default: m.LoginPage,
+  }))
+);
+const BusinessRegisterPage = lazy(() =>
+  import('@/app/pages/auth/business-register-page').then((m) => ({
+    default: m.BusinessRegisterPage,
+  }))
+);
+const VerifyEmailPage = lazy(
+  () => import('@/app/pages/auth/verify-email.page')
+);
+const AcceptInvitationPage = lazy(() =>
+  import('@/app/pages/auth/accept-invitations.page').then((m) => ({
+    default: m.AcceptInvitationPage,
+  }))
+);
+
+// ─── 공통 ──────────────────────────────────────────────────────────────────────
+const HomePage = lazy(() =>
+  import('@/app/pages/home-page').then((m) => ({ default: m.HomePage }))
+);
+const DashboardPage = lazy(() =>
+  import('@/app/pages/dashboard/dasbhboard-page').then((m) => ({
+    default: m.DashboardPage,
+  }))
+);
+const DashboardLayout = lazy(() =>
+  import('@/app/pages/dashboard/dashboard-layout').then((m) => ({
+    default: m.DashboardLayout,
+  }))
+);
+
+// ─── 건의사항 ──────────────────────────────────────────────────────────────────
+const SuggestionsWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/suggestions/suggestions-with-provider').then(
+    (m) => ({ default: m.SuggestionsWithProvider })
+  )
+);
+const SuggestionsPage = lazy(
+  () => import('@/app/pages/dashboard/suggestions/suggestions-page')
+);
+const SuggestionDetailPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/suggestions/details/suggestion-detail-page')
+);
+
+// ─── 사용자 ────────────────────────────────────────────────────────────────────
+const UsersWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/users/users-with-provider').then((m) => ({
+    default: m.UsersWithProvider,
+  }))
+);
+const UsersPage = lazy(() => import('@/app/pages/dashboard/users/users-page'));
+const UserDetailPage = lazy(() =>
+  import('@/app/pages/dashboard/users/details/detail.page').then((m) => ({
+    default: m.UserDetailPage,
+  }))
+);
+const InvitationsPage = lazy(() =>
+  import('@/app/pages/dashboard/users/Invitations.page').then((m) => ({
+    default: m.InvitationsPage,
+  }))
+);
+
+// ─── 설정 ──────────────────────────────────────────────────────────────────────
+const SettingsWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/settings/settings-with-provider').then((m) => ({
+    default: m.SettingsWithProvider,
+  }))
+);
+const SettingsGeneralPage = lazy(
+  () => import('@/app/pages/dashboard/settings/settings-page')
+);
+const SettingsBillingPage = lazy(
+  () => import('@/app/pages/dashboard/settings/billing/billing-page')
+);
+const SettingsProfilePage = lazy(
+  () => import('@/app/pages/dashboard/settings/profile/profile-page')
+);
+const SettingsNotificationsPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/settings/notifications/notifications-page')
+);
+const MasterKeyPromotePage = lazy(
+  () => import('@/app/pages/dashboard/settings/master-key-page')
+);
+
+// ─── 매장 ──────────────────────────────────────────────────────────────────────
+const StoresWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/stores/stores-with-provider').then(
+    (m) => ({ default: m.StoresWithProvider })
+  )
+);
+const StoresPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/stores/stores-page')
+);
+const StoreCreatePage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/stores/create/store-create-page')
+);
+const StoreDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/stores/stores-detail/store-detail-page'
+    )
+);
+const StoreEditPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/stores/edit/store-edit-page')
+);
+const BrandsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/stores/brands/brands-page')
+);
+const StoresSettingsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/stores/settings/stores-settings-page'
+    )
+);
+
+// ─── 제품 ──────────────────────────────────────────────────────────────────────
+const ProductsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/products/products-with-provider'
+  ).then((m) => ({ default: m.ProductsWithProvider }))
+);
+const ProductsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/products/products-page')
+);
+const ProductCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/products/create/product-create-page'
+    )
+);
+const ProductDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/products/product-detail/product-detail-page'
+    )
+);
+const ProductEditPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/products/edit/product-edit-page')
+);
+const ProductInventoryPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/products/inventory/inventory-page')
+);
+const ProductSettingsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/products/settings/product-settings-page'
+    )
+);
+const ProductScanWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/products/products-scan-with-provider'
+  ).then((m) => ({ default: m.ProductScanWithProvider }))
+);
+
+// ─── 재고 ──────────────────────────────────────────────────────────────────────
+const InventoryWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/inventory/inventory-with-provider'
+  ).then((m) => ({ default: m.InventoryWithProvider }))
+);
+const InventoryPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/inventory/inventory-page')
+);
+const InventoryCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/inventory/create/inventory-create-page'
+    )
+);
+const InventoryDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/inventory/inventory-detail/inventory-detail-page'
+    )
+);
+const InventoryEditPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/inventory/edit/inventory-edit-page')
+);
+const LowStockPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/inventory/low-stock-page')
+);
+
+// ─── 주문 ──────────────────────────────────────────────────────────────────────
+const OrdersWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/orders/orders-with-provider').then(
+    (m) => ({ default: m.OrdersWithProvider })
+  )
+);
+const OrdersPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/orders/orders-page')
+);
+const OrderCreatePage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/orders/create/order-create-page')
+);
+const OrderDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/orders/order-detail/order-detail-page'
+    )
+);
+const OrderEditPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/orders/edit/order-edit-page')
+);
+const OrderStatsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/orders/order-stats/order-stats-page'
+    )
+);
+
+// ─── 대기열 ────────────────────────────────────────────────────────────────────
+const QueueWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/queue/queue-with-provider').then(
+    (m) => ({ default: m.QueueWithProvider })
+  )
+);
+const QueuePage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/queue/queue-page')
+);
+const QueueDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/queue/queue-detail/queue-detail-page'
+    )
+);
+const QueueStatsPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/queue/queue-stats/queue-stats-page')
+);
+// ✅ 수기 등록 페이지 추가
+const QueueCreatePage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/queue/create/queue-create-page')
+);
+// ✅ 추가
+const QueueEditPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/queue/edit/queue-edit-page')
+);
+// ─── 장바구니 ──────────────────────────────────────────────────────────────────
+const CartWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/cart/cart-with-provider').then(
+    (m) => ({ default: m.CartWithProvider })
+  )
+);
+const CartPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/cart/cart-page')
+);
+const CartCreatePage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/cart/create/cart-create-page')
+);
+const CartDetailPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/cart/cart-detail/cart-detail-page')
+);
+
+// ─── 결제 ──────────────────────────────────────────────────────────────────────
+const PaymentsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/payments/payments-with-provider'
+  ).then((m) => ({ default: m.PaymentsWithProvider }))
+);
+const PaymentsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/payments/payments-page')
+);
+const PaymentCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/payments/create/payment-create-page'
+    )
+);
+const PaymentDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/payments/payment-detail/payment-detail-page'
+    )
+);
+const PaymentStatsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/payments/payment-stats/payment-stats-page'
+    )
+);
+
+// ─── 주소 ──────────────────────────────────────────────────────────────────────
+const AddressWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/address/address-with-provider').then(
+    (m) => ({ default: m.AddressWithProvider })
+  )
+);
+const AddressPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/address/address-page')
+);
+const AddressCreatePage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/address/create/address-create-page')
+);
+const AddressDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/address/address-detail/address-detail-page'
+    )
+);
+const AddressLogsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/address/address-logs/address-logs-page'
+    )
+);
+const AddressStatsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/address/address-stats/address-stats-page'
+    )
+);
+
+// ─── 카테고리 ──────────────────────────────────────────────────────────────────
+const CategoriesWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/categories/categories-with-provider'
+  ).then((m) => ({ default: m.CategoriesWithProvider }))
+);
+const CategoriesPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/categories/categories-page')
+);
+const CategoryHierarchyPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/categories/category-hierachy-page')
+);
+
+// ─── 채팅 ──────────────────────────────────────────────────────────────────────
+const ChatsWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/chat/chats-with-provider').then(
+    (m) => ({ default: m.ChatsWithProvider })
+  )
+);
+const ChatsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/chat/chats-page')
+);
+
+// ─── 배송 ──────────────────────────────────────────────────────────────────────
+const DeliveryWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/delivery/delivery-with-provider'
+  ).then((m) => ({ default: m.DeliveryWithProvider }))
+);
+const DeliveryPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/delivery/delivery-page')
+);
+const DeliveryCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/create/delivery-create-page'
+    )
+);
+const DeliveryDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/delivery-detail/delivery-detail-page'
+    )
+);
+const DeliveryEditPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/delivery/edit/delivery-edit-page')
+);
+const DeliveryDriversPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/drivers/delivery-drivers-page'
+    )
+);
+const DeliveryDriverCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/drivers/create/delivery-driver-create-page'
+    )
+);
+const DeliveryDriverDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/delivery-driver-detail-page'
+    )
+);
+const DeliveryDriverEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/drivers/edit/delivery-driver-edit-page'
+    )
+);
+const DeliveryTrackingPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/tracking/delivery-tracking-page'
+    )
+);
+const DeliverySettlementsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/settlements/delivery-settlements-page'
+    )
+);
+const DeliveryPricingPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/delivery/pricing/delivery-pricing-page'
+    )
+);
+
+// ─── 예약 ──────────────────────────────────────────────────────────────────────
+const ReservationsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/reservations/reservation-with-provider'
+  ).then((m) => ({ default: m.ReservationsWithProvider }))
+);
+const ReservationsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/reservations/reservation-page')
+);
+const ReservationDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/reservation-detail/reservation-detail-page'
+    )
+);
+const ReservationCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/create/reservation-create-step5'
+    )
+);
+const ReservationEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/edit/reservation-edit-page'
+    )
+);
+const ReservationCalendarPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/calendar/reservation-calendar-page'
+    )
+);
+const ReservationServicesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/services/reservation-service-page'
+    )
+);
+const WalkInsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/reservations/walk-ins/walk-ins-with-provider'
+  ).then((m) => ({ default: m.WalkInsWithProvider }))
+);
+const WalkInsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/walk-ins/walk-ins-page'
+    )
+);
+const FuelWalkInsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-with-provider'
+  ).then((m) => ({ default: m.FuelWalkInsWithProvider }))
+);
+const FuelWalkInsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/fuel-walk-ins/fuel-walk-ins-page'
+    )
+);
+const HeatingOilDeliveriesWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/heating-oil-deliveries-with-provider'
+  ).then((m) => ({ default: m.HeatingOilDeliveriesWithProvider }))
+);
+const HeatingOilDeliveriesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/heating-oil-deliveries-page'
+    )
+);
+const HeatingOilDeliveryCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reservations/heating-oil-delivery-walk-ins/create/heating-oil-delivery-create-page'
+    )
+);
+
+// ─── 알림 ──────────────────────────────────────────────────────────────────────
+const NotificationsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/notifications/notifications-with-provider'
+  ).then((m) => ({ default: m.NotificationsWithProvider }))
+);
+const NotificationsPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/notifications/notifications-page')
+);
+const SendNotificationPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/notifications/send/send-notification-page'
+    )
+);
+const EmailsPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/notifications/emails/emails-page')
+);
+
+// ─── 공지 & 매뉴얼 ─────────────────────────────────────────────────────────────
+const NoticesWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/notices/notices-with-provider').then(
+    (m) => ({ default: m.NoticesWithProvider })
+  )
+);
+const NoticesPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/notices/notices-page')
+);
+const NoticeCreatePage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/notices/create/notice-create-page')
+);
+const NoticeDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/notices/notice-detail/notice-detail-page'
+    )
+);
+const NoticeEditPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/notices/edit/notice-edit-page')
+);
+const ManualsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/notices/manuals/manuals-page')
+);
+const ManualCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/notices/manuals/create/manual-create-page'
+    )
+);
+const ManualEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/notices/manuals/edit/manual-edit-page'
+    )
+);
+const ManualDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/notices/manuals/manual-detail/manual-detail-page'
+    )
+);
+const ManualCategoriesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/notices/manuals/categories/manual-categories-page'
+    )
+);
+
+// ─── 로열티 ────────────────────────────────────────────────────────────────────
+const LoyaltyWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/loyalty/loyalty-with-provider').then(
+    (m) => ({ default: m.LoyaltyWithProvider })
+  )
+);
+const LoyaltyPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/loyalty/loyalty-page')
+);
+const LoyaltyMemberDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/loyalty/loyalty-detail/loyalty-detail-page'
+    )
+);
+const LoyaltySettingsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/loyalty/settings/loyalty-settings-page'
+    )
+);
+const LoyaltyStarEventsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/loyalty/events/loyalty-star-events-page'
+    )
+);
+const LoyaltyStarHistoryPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/loyalty/star/loyalty-star-history-page'
+    )
+);
+
+// ─── 프로모션 ──────────────────────────────────────────────────────────────────
+const PromotionsWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/promotions/promotions-with-provider'
+  ).then((m) => ({ default: m.PromotionsWithProvider }))
+);
+const PromotionsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/promotions/promotions-page')
+);
+const PromotionCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/promotions/create/promotion-create-page'
+    )
+);
+const PromotionEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/promotions/edit/promotion-edit-page'
+    )
+);
+const PromotionDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/promotions/loyalty-detail/promotion-detail-page'
+    )
+);
+
+// ─── 리뷰 ──────────────────────────────────────────────────────────────────────
+const ReviewsWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/reviews/reviews-with-provider').then(
+    (m) => ({ default: m.ReviewsWithProvider })
+  )
+);
+const ReviewsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/reviews/reviews-page')
+);
+const ReviewCreatePage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/reviews/create/review-create-page')
+);
+const ReviewScopesPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/reviews/scopes/review-scopes-page')
+);
+const ReviewDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/reviews/review-detail/review-detail-page'
+    )
+);
+const ReviewEditPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/reviews/edit/review-edit-page')
+);
+
+// ─── 채용 공고 ─────────────────────────────────────────────────────────────────
+const JobsWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/ecommerce/jobs/jobs-with-provider').then(
+    (m) => ({
+      default: m.JobsWithProvider,
+    })
+  )
+);
+const JobsPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/jobs/jobs-page')
+);
+const JobCreatePage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/jobs/create/job-create-page')
+);
+const JobDetailPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/ecommerce/jobs/job-detail/job-detail-page')
+);
+const JobEditPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/jobs/edit/job-edit-page')
+);
+const JobApplicationsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/jobs/applications/job-applications-page'
+    )
+);
+const JobApplicationDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/jobs/applications/detail/job-application-detail-page'
+    )
+);
+const JobApplicationAdminEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/jobs/applications/edit/job-application-edit-page'
+    )
+);
+
+// ─── 분석 ──────────────────────────────────────────────────────────────────────
+const AnalyticsWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/board/analytics/analytics-with-provider').then(
+    (m) => ({ default: m.AnalyticsWithProvider })
+  )
+);
+const OverviewPage = lazy(
+  () => import('@/app/pages/dashboard/board/analytics/pages/overview-page')
+);
+const RealtimePage = lazy(
+  () => import('@/app/pages/dashboard/board/analytics/pages/realtime-page')
+);
+const RankingPage = lazy(
+  () => import('@/app/pages/dashboard/board/analytics/pages/ranking-page')
+);
+const ServiceAnalyticsPage = lazy(
+  () => import('@/app/pages/dashboard/board/analytics/pages/service-page')
+);
+const AdminAnalyticsPage = lazy(
+  () => import('@/app/pages/dashboard/board/analytics/pages/admin-page')
+);
+
+// ─── 매출 ──────────────────────────────────────────────────────────────────────
+const SalesWithProvider = lazy(() =>
+  import('@/app/pages/dashboard/board/sales/sales-with-provider').then((m) => ({
+    default: m.SalesWithProvider,
+  }))
+);
+const SalesPage = lazy(
+  () => import('@/app/pages/dashboard/board/sales/sales-page')
+);
+
+// ─── 미디어 ────────────────────────────────────────────────────────────────────
+const FileManagerWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/board/file-manager/file-manager-with-provider'
+  ).then((m) => ({ default: m.FileManagerWithProvider }))
+);
+
+const FileManagerPage = lazy(() =>
+  import('@/app/pages/dashboard/board/file-manager/file-manager-page').then(
+    (m) => ({ default: m.FileManagerPage })
+  )
+);
+const RecentFilesPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/board/file-manager/pages/recent-files-page')
+);
+const StorageAnalysisPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/board/file-manager/pages/storage-analysis-page'
+    )
+);
+
+// ─── 배달기사 ──────────────────────────────────────────────────────────────────
+const DriverWithProvider = lazy(() =>
+  import('@/app/pages/teams/delivery/driver/driver-with-provider').then(
+    (m) => ({ default: m.DriverWithProvider })
+  )
+);
+const DriverDashboardPage = lazy(
+  () => import('@/app/pages/teams/delivery/driver/driver-dashboard-page')
+);
+const DriverDeliveriesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/teams/delivery/driver/deliveries/driver-deliveries-page'
+    )
+);
+const DriverActivePage = lazy(
+  () => import('@/app/pages/teams/delivery/driver/active/driver-active-page')
+);
+const DriverProfilePage = lazy(
+  () => import('@/app/pages/teams/delivery/driver/profile/driver-profile-page')
+);
+const DriverSettlementsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/teams/delivery/driver/settlements/driver-settlements-page'
+    )
+);
 
 const router = createBrowserRouter([
-  // 🏠 메인 페이지
+  // ───  메인 ──────────────────────────────────────────────────────────────
   {
     path: '/',
     element: <MainLayout />,
     errorElement: <ErrorBoundary />,
-    children: [{ index: true, element: <HomePage /> }],
+    children: [{ index: true, element: S(HomePage) }],
   },
 
-  // 🔐 인증 페이지
+  // ───  인증 ──────────────────────────────────────────────────────────────
   {
     path: '/auth',
     element: <AuthLayout />,
     errorElement: <ErrorBoundary />,
     children: [
-      { path: 'login', element: <LoginPage /> },
-      { path: 'register', element: <BusinessRegisterPage /> },
+      { path: 'login', element: S(LoginPage) },
+      { path: 'register', element: S(BusinessRegisterPage) },
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
-      { path: 'verify-email', element: <VerifyEmailPage /> },
-      { path: 'accept-invitation', element: <AcceptInvitationPage /> },
+      { path: 'verify-email', element: S(VerifyEmailPage) },
+      { path: 'accept-invitation', element: S(AcceptInvitationPage) },
     ],
   },
 
-  // 📊 관리자 대시보드
+  // ───  관리자 대시보드 ────────────────────────────────────────────────────
   {
     path: '/admin',
     element: <AdminLayout />,
     errorElement: <ErrorBoundary />,
     children: [
-      { index: true, element: <DashboardPage /> },
-      // 🚗 배달기사 전용
+      {
+        path: '',
+        element: S(DashboardLayout),
+        children: [{ index: true, element: S(DashboardPage) }],
+      },
+      // ─── 배달기사 전용 ───────────────────────────────────────────────────
       {
         path: 'driver',
-        element: <DriverWithProvider />,
+        element: S(DriverWithProvider),
         children: [
-          { path: 'dashboard', element: <DriverDashboardPage /> },
-          { path: 'deliveries', element: <DriverDeliveriesPage /> },
-          { path: 'active', element: <DriverActivePage /> },
-          { path: 'profile', element: <DriverProfilePage /> },
+          { path: 'dashboard', element: S(DriverDashboardPage) },
+          { path: 'deliveries', element: S(DriverDeliveriesPage) },
+          { path: 'active', element: S(DriverActivePage) },
+          { path: 'profile', element: S(DriverProfilePage) },
+          { path: 'settlements', element: S(DriverSettlementsPage) },
         ],
       },
-
-      // 매출 현황
-      { path: 'sales', element: <SalesPage /> },
-
-      // 건의사항
+      // ─── 매출 현황 ───────────────────────────────────────────────────────
+      {
+        path: 'sales',
+        element: S(SalesWithProvider),
+        children: [{ index: true, element: S(SalesPage) }],
+      },
+      // ─── 건의사항 ────────────────────────────────────────────────────────
       {
         path: 'suggestions',
-        element: <SuggestionsWithProvider />,
+        element: S(SuggestionsWithProvider),
         children: [
-          { index: true, element: <SuggestionsPage /> },
-          { path: 'pending', element: <SuggestionsPage /> },
-          { path: 'reviewing', element: <SuggestionsPage /> },
-          { path: 'in-progress', element: <SuggestionsPage /> },
-          { path: 'completed', element: <SuggestionsPage /> },
-          { path: 'rejected', element: <SuggestionsPage /> },
-          { path: 'analytics', element: <SuggestionsPage /> },
-          { path: 'create', element: <div>건의사항 등록 (구현 예정)</div> },
-          { path: ':id', element: <SuggestionDetailPage /> },
+          { index: true, element: S(SuggestionsPage) },
+          { path: 'pending', element: S(SuggestionsPage) },
+          { path: 'reviewing', element: S(SuggestionsPage) },
+          { path: 'in-progress', element: S(SuggestionsPage) },
+          { path: 'completed', element: S(SuggestionsPage) },
+          { path: 'rejected', element: S(SuggestionsPage) },
+          { path: 'my', element: S(SuggestionsPage) },
+          { path: ':id', element: S(SuggestionDetailPage) },
           { path: ':id/edit', element: <div>건의사항 수정</div> },
         ],
       },
-
-      // 사용자 관리
+      // ─── 사용자 관리 ─────────────────────────────────────────────────────
       {
         path: 'users',
-        element: <UsersWithProvider />,
+        element: S(UsersWithProvider),
         children: [
-          { index: true, element: <UsersPage /> },
-          { path: 'admins', element: <UsersPage /> },
-          { path: 'members', element: <UsersPage /> },
-          { path: 'drivers', element: <UsersPage /> },
-          { path: 'invitations', element: <InvitationsPage /> },
-          { path: ':id', element: <UserDetailPage /> },
+          { index: true, element: S(UsersPage) },
+          { path: 'admins', element: S(UsersPage) },
+          { path: 'members', element: S(UsersPage) },
+          { path: 'drivers', element: S(UsersPage) },
+          { path: 'invitations', element: S(InvitationsPage) },
+          { path: ':id', element: S(UserDetailPage) },
         ],
       },
-
-      // 시스템 분석
+      // ─── 로열티 관리 ─────────────────────────────────────────────────────
+      {
+        path: 'loyalty',
+        element: S(LoyaltyWithProvider),
+        children: [
+          { index: true, element: S(LoyaltyPage) },
+          { path: 'settings', element: S(LoyaltySettingsPage) },
+          { path: 'star-events', element: S(LoyaltyStarEventsPage) },
+          { path: 'star-history', element: S(LoyaltyStarHistoryPage) },
+          { path: ':userId', element: S(LoyaltyMemberDetailPage) },
+        ],
+      },
+      // ─── 프로모션 관리 ───────────────────────────────────────────────────
+      {
+        path: 'promotions',
+        element: S(PromotionsWithProvider),
+        children: [
+          { index: true, element: S(PromotionsPage) },
+          { path: 'create', element: S(PromotionCreatePage) },
+          { path: ':id', element: S(PromotionDetailPage) },
+          { path: ':id/edit', element: S(PromotionEditPage) },
+        ],
+      },
+      // ─── 리뷰 관리 ───────────────────────────────────────────────────────
+      {
+        path: 'reviews',
+        element: S(ReviewsWithProvider),
+        children: [
+          { index: true, element: S(ReviewsPage) },
+          { path: 'create', element: S(ReviewCreatePage) },
+          { path: 'scopes', element: S(ReviewScopesPage) },
+          { path: ':id', element: S(ReviewDetailPage) },
+          { path: ':id/edit', element: S(ReviewEditPage) },
+        ],
+      },
+      // ─── 채용 공고 ───────────────────────────────────────────────────────
+      {
+        path: 'jobs',
+        element: S(JobsWithProvider),
+        children: [
+          { index: true, element: S(JobsPage) },
+          { path: 'create', element: S(JobCreatePage) },
+          { path: 'applications', element: S(JobApplicationsPage) }, // ✅ 정적 경로 먼저
+          { path: 'applications/:id', element: S(JobApplicationDetailPage) },
+          {
+            path: 'applications/:id/edit',
+            element: S(JobApplicationAdminEditPage),
+          },
+          { path: ':id', element: S(JobDetailPage) },
+          { path: ':id/edit', element: S(JobEditPage) },
+          { path: ':id/applications', element: S(JobApplicationsPage) },
+        ],
+      },
+      // ─── 시스템 분석 ─────────────────────────────────────────────────────
       {
         path: 'analytics',
+        element: S(AnalyticsWithProvider),
         children: [
-          { index: true, element: <div>통합 대시보드 (구현 예정)</div> },
-          { path: 'revenue', element: <div>매출 분석 (구현 예정)</div> },
-          { path: 'users', element: <div>사용자 분석 (구현 예정)</div> },
-          { path: 'performance', element: <div>서비스 성능 (구현 예정)</div> },
+          { index: true, element: S(OverviewPage) },
+          { path: 'realtime', element: S(RealtimePage) },
+          { path: 'ranking', element: S(RankingPage) },
+          { path: 'service', element: S(ServiceAnalyticsPage) },
+          { path: 'admin', element: S(AdminAnalyticsPage) },
         ],
       },
-
-      // 알림
+      // ─── 알림 관리 ───────────────────────────────────────────────────────
       {
         path: 'notifications',
-        element: <NotificationsWithProvider />,
+        element: S(NotificationsWithProvider),
         children: [
-          { index: true, element: <NotificationsPage /> },
-          { path: 'send', element: <SendNotificationPage /> },
-          { path: 'emails', element: <EmailsPage /> },
+          { index: true, element: S(NotificationsPage) },
+          { path: 'send', element: S(SendNotificationPage) },
+          { path: 'emails', element: S(EmailsPage) },
         ],
       },
-      // 매장
+      // ─── 공지 & 매뉴얼 ───────────────────────────────────────────────────
+      {
+        path: 'notices',
+        element: S(NoticesWithProvider),
+        children: [
+          { index: true, element: S(NoticesPage) },
+          { path: 'create', element: S(NoticeCreatePage) },
+          { path: ':id', element: S(NoticeDetailPage) },
+          { path: ':id/edit', element: S(NoticeEditPage) },
+          { path: 'manuals', element: S(ManualsPage) },
+          { path: 'manuals/create', element: S(ManualCreatePage) },
+          { path: 'manuals/categories', element: S(ManualCategoriesPage) },
+          { path: 'manuals/:id', element: S(ManualDetailPage) },
+          { path: 'manuals/:id/edit', element: S(ManualEditPage) },
+        ],
+      },
+      // ─── 매장 ────────────────────────────────────────────────────────────
       {
         path: 'stores',
-        element: <StoresWithProvider />,
+        element: S(StoresWithProvider),
         children: [
-          { index: true, element: <StoresPage /> },
-          { path: 'create', element: <StoreCreatePage /> },
-          { path: 'brands', element: <BrandsPage /> },
-          { path: 'settings', element: <StoresSettingsPage /> },
-          { path: ':id', element: <StoreDetailPage /> },
-          { path: ':id/edit', element: <StoreEditPage /> },
+          { index: true, element: S(StoresPage) },
+          { path: 'create', element: S(StoreCreatePage) },
+          { path: 'brands', element: S(BrandsPage) },
+          { path: 'settings', element: S(StoresSettingsPage) },
+          { path: ':id', element: S(StoreDetailPage) },
+          { path: ':id/edit', element: S(StoreEditPage) },
         ],
       },
-
-      // ✅ 제품 (Products Service 기반 — 제품 재고 탭 포함)
+      // ─── 제품 ────────────────────────────────────────────────────────────
       {
         path: 'products',
-        element: <ProductsWithProvider />,
+        element: S(ProductsWithProvider),
         children: [
-          { index: true, element: <ProductsPage /> },
-          { path: 'create', element: <ProductCreatePage /> },
-          { path: 'inventory', element: <ProductInventoryPage /> }, // ProductInventory 기반
-          {
-            path: '/admin/products/settings',
-            element: <ProductSettingsPage />,
-          },
-          { path: ':id', element: <ProductDetailPage /> },
-          { path: ':id/edit', element: <ProductEditPage /> },
+          { index: true, element: S(ProductsPage) },
+          { path: 'create', element: S(ProductCreatePage) },
+          { path: 'inventory', element: S(ProductInventoryPage) },
+          { path: 'settings', element: S(ProductSettingsPage) },
+          { path: ':id', element: S(ProductDetailPage) },
+          { path: ':id/edit', element: S(ProductEditPage) },
         ],
       },
-      // 스캔 (독립 Provider)
-      { path: 'products/send', element: <ProductScanWithProvider /> },
-
-      // ✅ 재고 관리 (Inventory Service 기반 — 신규)
+      { path: 'products/send', element: S(ProductScanWithProvider) },
+      // ─── 재고 ────────────────────────────────────────────────────────────
       {
         path: 'inventory',
-        element: <InventoryWithProvider />,
+        element: S(InventoryWithProvider),
         children: [
-          { index: true, element: <InventoryPage /> },
-          { path: 'create', element: <InventoryCreatePage /> }, // ← 추가
-          { path: 'low-stock', element: <LowStockPage /> },
-          { path: ':id', element: <InventoryDetailPage /> },
-          { path: ':id/edit', element: <InventoryEditPage /> }, // 신규
+          { index: true, element: S(InventoryPage) },
+          { path: 'create', element: S(InventoryCreatePage) },
+          { path: 'low-stock', element: S(LowStockPage) },
+          { path: ':id', element: S(InventoryDetailPage) },
+          { path: ':id/edit', element: S(InventoryEditPage) },
         ],
       },
-
-      // ✅ 예약 관리
-      {
-        path: 'reservations',
-        element: <ReservationsWithProvider />,
-        children: [
-          { index: true, element: <ReservationsPage /> },
-          { path: 'create', element: <ReservationCreatePage /> },
-          { path: 'services', element: <ReservationServicesPage /> }, // ← 추가
-          {
-            path: 'calendar',
-            element: <ReservationCalendarPage />,
-          },
-          { path: ':id', element: <ReservationDetailPage /> },
-          { path: ':id/edit', element: <ReservationEditPage /> },
-        ],
-      },
-      // ✅ 결제 관리
-      {
-        path: 'payments',
-        element: <PaymentsWithProvider />,
-        children: [
-          { index: true, element: <PaymentsPage /> },
-          { path: 'create', element: <PaymentCreatePage /> },
-          { path: 'stats', element: <PaymentStatsPage /> },
-          { path: ':portOneId', element: <PaymentDetailPage /> },
-        ],
-      },
-      // ✅ 워크인 관리
-      {
-        path: 'walk-ins',
-        element: <WalkInsWithProvider />,
-        children: [{ index: true, element: <WalkInsPage /> }],
-      },
-      // ✅ 주유 워크인
-      {
-        path: 'fuel-walk-ins',
-        element: <FuelWalkInsWithProvider />,
-        children: [{ index: true, element: <FuelWalkInsPage /> }],
-      },
-      // ✅ 난방유 배달
-      {
-        path: 'heating-oil-deliveries',
-        element: <HeatingOilDeliveriesWithProvider />,
-        children: [
-          { index: true, element: <HeatingOilDeliveriesPage /> },
-          { path: 'create', element: <HeatingOilDeliveryCreatePage /> },
-        ],
-      },
-
-      // 주문
+      // ─── 주문 ────────────────────────────────────────────────────────────
       {
         path: 'orders',
-        element: <OrdersWithProvider />,
+        element: S(OrdersWithProvider),
         children: [
-          { index: true, element: <OrdersPage /> },
-          { path: 'create', element: <OrderCreatePage /> },
-          { path: 'stats', element: <div>주문 통계 (구현 예정)</div> },
-          { path: 'live', element: <div>실시간 주문 (구현 예정)</div> },
-          { path: 'history', element: <div>주문 히스토리 (구현 예정)</div> },
-          { path: ':id', element: <OrderDetailPage /> },
-          { path: ':id/edit', element: <OrderEditPage /> },
+          { index: true, element: S(OrdersPage) },
+          { path: 'create', element: S(OrderCreatePage) },
+          { path: 'stats', element: S(OrderStatsPage) },
+          { path: ':id', element: S(OrderDetailPage) },
+          { path: ':id/edit', element: S(OrderEditPage) },
         ],
       },
-
-      // ✅ 장바구니 관리
+      // ─── 대기열 ──────────────────────────────────────────────────────────
+      {
+        path: 'queue',
+        element: S(QueueWithProvider),
+        children: [
+          { index: true, element: S(QueuePage) },
+          { path: 'create', element: S(QueueCreatePage) }, // ✅ 추가
+          { path: 'stats', element: S(QueueStatsPage) },
+          { path: ':id', element: S(QueueDetailPage) },
+          { path: ':id/edit', element: S(QueueEditPage) }, // ✅ 추가
+        ],
+      },
+      // ─── 장바구니 ─────────────────────────────────────────────────────────
       {
         path: 'cart',
-        element: <CartWithProvider />,
+        element: S(CartWithProvider),
         children: [
-          { index: true, element: <CartPage /> },
-          { path: ':userId', element: <CartDetailPage /> },
+          { index: true, element: S(CartPage) },
+          { path: 'create', element: S(CartCreatePage) },
+          { path: ':userId', element: S(CartDetailPage) },
         ],
       },
-
-      // ✅ 배송 관리
+      // ─── 결제 ────────────────────────────────────────────────────────────
       {
-        path: 'delivery',
-        element: <DeliveryWithProvider />,
+        path: 'payments',
+        element: S(PaymentsWithProvider),
         children: [
-          { index: true, element: <DeliveryPage /> },
-          { path: 'create', element: <DeliveryCreatePage /> },
-          { path: 'drivers', element: <DeliveryDriversPage /> },
-          { path: 'drivers/create', element: <DeliveryDriverCreatePage /> },
-          { path: 'drivers/:id', element: <DeliveryDriverDetailPage /> }, // ✅ 추가
-          { path: 'drivers/:id/edit', element: <DeliveryDriverEditPage /> }, // ✅ 추가
-          { path: 'tracking', element: <DeliveryTrackingPage /> },
-          { path: ':id', element: <DeliveryDetailPage /> },
-          { path: ':id/edit', element: <DeliveryEditPage /> }, // ✅ 구현 완료
+          { index: true, element: S(PaymentsPage) },
+          { path: 'create', element: S(PaymentCreatePage) },
+          { path: 'stats', element: S(PaymentStatsPage) },
+          { path: ':portOneId', element: S(PaymentDetailPage) },
         ],
       },
-
-      // 카테고리
+      // ─── 주소 ────────────────────────────────────────────────────────────
+      {
+        path: 'addresses',
+        element: S(AddressWithProvider),
+        children: [
+          { index: true, element: S(AddressPage) },
+          { path: 'create', element: S(AddressCreatePage) },
+          { path: 'stats', element: S(AddressStatsPage) },
+          { path: 'logs', element: S(AddressLogsPage) },
+          { path: ':id', element: S(AddressDetailPage) },
+        ],
+      },
+      // ─── 카테고리 ─────────────────────────────────────────────────────────
       {
         path: 'categories',
-        element: <CategoriesWithProvider />,
+        element: S(CategoriesWithProvider),
         children: [
-          { index: true, element: <CategoriesPage /> },
-          { path: 'hierarchy', element: <CategoryHierarchyPage /> },
+          { index: true, element: S(CategoriesPage) },
+          { path: 'hierarchy', element: S(CategoryHierarchyPage) },
         ],
       },
-
-      // 미디어
+      // ─── 채팅 ────────────────────────────────────────────────────────────
+      {
+        path: 'chats',
+        element: S(ChatsWithProvider),
+        children: [{ index: true, element: S(ChatsPage) }],
+      },
+      // ─── 배송 ────────────────────────────────────────────────────────────
+      {
+        path: 'delivery',
+        element: S(DeliveryWithProvider),
+        children: [
+          { index: true, element: S(DeliveryPage) },
+          { path: 'create', element: S(DeliveryCreatePage) },
+          { path: 'drivers', element: S(DeliveryDriversPage) },
+          { path: 'drivers/create', element: S(DeliveryDriverCreatePage) },
+          { path: 'drivers/:id', element: S(DeliveryDriverDetailPage) },
+          { path: 'drivers/:id/edit', element: S(DeliveryDriverEditPage) },
+          { path: 'tracking', element: S(DeliveryTrackingPage) },
+          { path: 'settlements', element: S(DeliverySettlementsPage) },
+          { path: 'pricing', element: S(DeliveryPricingPage) },
+          { path: ':id', element: S(DeliveryDetailPage) },
+          { path: ':id/edit', element: S(DeliveryEditPage) },
+        ],
+      },
+      // ─── 예약 관리 ───────────────────────────────────────────────────────
+      {
+        path: 'reservations',
+        element: S(ReservationsWithProvider),
+        children: [
+          { index: true, element: S(ReservationsPage) },
+          { path: 'create', element: S(ReservationCreatePage) },
+          { path: 'services', element: S(ReservationServicesPage) },
+          { path: 'calendar', element: S(ReservationCalendarPage) },
+          { path: ':id', element: S(ReservationDetailPage) },
+          { path: ':id/edit', element: S(ReservationEditPage) },
+        ],
+      },
+      {
+        path: 'walk-ins',
+        element: S(WalkInsWithProvider),
+        children: [{ index: true, element: S(WalkInsPage) }],
+      },
+      {
+        path: 'fuel-walk-ins',
+        element: S(FuelWalkInsWithProvider),
+        children: [{ index: true, element: S(FuelWalkInsPage) }],
+      },
+      {
+        path: 'heating-oil-deliveries',
+        element: S(HeatingOilDeliveriesWithProvider),
+        children: [
+          { index: true, element: S(HeatingOilDeliveriesPage) },
+          { path: 'create', element: S(HeatingOilDeliveryCreatePage) },
+        ],
+      },
+      // ─── 미디어 & 자산 ───────────────────────────────────────────────────
       {
         path: 'media',
-        element: <FileManagerLayout />,
+        element: S(FileManagerWithProvider),
         children: [
-          { index: true, element: <FileManagerPage /> },
-          { path: 'recent', element: <RecentFilesPage /> },
-          { path: 'analysis', element: <StorageAnalysisPage /> },
+          { index: true, element: S(FileManagerPage) },
+          { path: 'recent', element: S(RecentFilesPage) },
+          { path: 'analysis', element: S(StorageAnalysisPage) },
         ],
       },
-
-      // 서비스별 현황
-      {
-        path: 'services',
-        children: [
-          { path: 'gas-stations', element: <div>주유소 현황 (구현 예정)</div> },
-          { path: 'car-care', element: <div>카케어 현황 (구현 예정)</div> },
-          { path: 'delivery', element: <div>배달 현황 (구현 예정)</div> },
-        ],
-      },
-
-      // 설정
+      // ─── 설정 ────────────────────────────────────────────────────────────
       {
         path: 'settings',
-        element: <SettingsLayout />,
+        element: S(SettingsWithProvider),
         children: [
-          { index: true, element: <SettingsGeneralPage /> },
-          { path: 'billing', element: <SettingsBillingPage /> },
-          { path: 'profile', element: <SettingsProfilePage /> },
-          { path: 'notifications', element: <SettingsNotificationsPage /> },
-          { path: 'master-key', element: <MasterKeyPromotePage /> },
+          { index: true, element: S(SettingsGeneralPage) },
+          { path: 'billing', element: S(SettingsBillingPage) },
+          { path: 'profile', element: S(SettingsProfilePage) },
+          { path: 'notifications', element: S(SettingsNotificationsPage) },
+          { path: 'master-key', element: S(MasterKeyPromotePage) },
         ],
       },
     ],
   },
 
-  // 팀별 외부 경로들 (기존 유지)
+  // ─── 팀별 외부 경로 ────────────────────────────────────────────────────────
   {
     path: '/stores',
     element: <AdminLayout />,
@@ -409,19 +1183,6 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <div>등록 차량 (구현 예정)</div> },
       { path: 'history', element: <div>차량 히스토리 (구현 예정)</div> },
-    ],
-  },
-  {
-    path: '/emails',
-    element: <AdminLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      { index: true, element: <div>재고 (구현 예정)</div> },
-      { path: 'fuel', element: <div>유류 재고 (구현 예정)</div> },
-      { path: 'products', element: <div>용품 재고 (구현 예정)</div> },
-      { path: 'alerts', element: <div>재고 알림 (구현 예정)</div> },
-      { path: 'oil', element: <div>난방유 재고 (구현 예정)</div> },
-      { path: 'supplies', element: <div>배달 용품 (구현 예정)</div> },
     ],
   },
   {
@@ -516,25 +1277,20 @@ const router = createBrowserRouter([
   },
   {
     path: '/suggestions',
-    element: <SuggestionsWithProvider />,
+    element: S(SuggestionsWithProvider),
     errorElement: <ErrorBoundary />,
     children: [
-      { index: true, element: <SuggestionsPage /> },
-      { path: 'create', element: <div>새 건의사항 (구현 예정)</div> },
-      { path: 'my', element: <div>내 건의사항 (구현 예정)</div> },
-      { path: 'safety', element: <div>안전 관련 (구현 예정)</div> },
-      { path: 'service', element: <div>서비스 개선 (구현 예정)</div> },
-      { path: 'facility', element: <div>시설 개선 (구현 예정)</div> },
-      { path: 'wash-service', element: <div>세차 서비스 (구현 예정)</div> },
-      { path: 'equipment', element: <div>장비 개선 (구현 예정)</div> },
-      { path: 'customer-service', element: <div>고객 서비스 (구현 예정)</div> },
-      { path: 'routes', element: <div>배달 경로 (구현 예정)</div> },
-      { path: 'vehicle', element: <div>차량 관련 (구현 예정)</div> },
-      { path: 'customer', element: <div>고객 응대 (구현 예정)</div> },
-      { path: ':id', element: <SuggestionDetailPage /> },
+      { index: true, element: S(SuggestionsPage) },
+      { path: 'my', element: S(SuggestionsPage) },
+      { path: 'safety', element: S(SuggestionsPage) },
+      { path: 'service', element: S(SuggestionsPage) },
+      { path: 'facility', element: S(SuggestionsPage) },
+      { path: 'wash-service', element: S(SuggestionsPage) },
+      { path: 'equipment', element: S(SuggestionsPage) },
+      { path: 'customer-service', element: S(SuggestionsPage) },
+      { path: ':id', element: S(SuggestionDetailPage) },
     ],
   },
-
   {
     path: '/terms',
     element: <AuthLayout />,
@@ -549,7 +1305,6 @@ const router = createBrowserRouter([
       { index: true, element: <div>개인정보처리방침 (구현 예정)</div> },
     ],
   },
-  //  배달기사 전용 (기존 /driver 라우트 — /admin/driver로 리다이렉트)
   {
     path: '/driver/*',
     element: <Navigate to="/admin/driver/dashboard" replace />,

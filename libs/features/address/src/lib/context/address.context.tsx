@@ -5,76 +5,61 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
-import type { Address, JusoApiAddress } from '@starcoex-frontend/graphql';
-
-interface AddressState {
-  selectedAddress: JusoApiAddress | null;
-  savedAddresses: Partial<Address>[]; // ✅ Partial<Address> 사용
-  isLoading: boolean;
-  error: string | null;
-  searchResults: JusoApiAddress[];
-}
-
-interface AddressContextValue extends AddressState {
-  setSelectedAddress: (address: JusoApiAddress | null) => void;
-  setSavedAddresses: (addresses: Partial<Address>[]) => void; // ✅ Partial<Address>
-  setSearchResults: (results: JusoApiAddress[]) => void;
-  setLoading: () => void;
-  setError: (message: string | null) => void;
-  clearError: () => void;
-  clearSearchResults: () => void;
-  clearSelectedAddress: () => void;
-}
+import { useApolloClient } from '@apollo/client/react';
+import type {
+  AddressState,
+  AddressContextValue,
+  JusoApiAddress,
+  Address,
+} from '../types';
+import { serviceRegistry, initAddressService } from '../services';
 
 const AddressContext = createContext<AddressContextValue | undefined>(
   undefined
 );
 
+const initialState: AddressState = {
+  selectedAddress: null,
+  savedAddresses: [],
+  searchResults: [],
+  isLoading: false,
+  error: null,
+};
+
 export const AddressProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<AddressState>({
-    selectedAddress: null,
-    savedAddresses: [],
-    isLoading: false,
-    error: null,
-    searchResults: [],
-  });
+  const [state, setState] = useState<AddressState>(initialState);
+  const apolloClient = useApolloClient();
+
+  useLayoutEffect(() => {
+    if (!serviceRegistry.isServiceInitialized('address')) {
+      try {
+        initAddressService(apolloClient);
+      } catch (error) {
+        console.error('❌ AnalyticsService initialization failed:', error);
+      }
+    }
+  }, [apolloClient]);
 
   const setSelectedAddress = useCallback((address: JusoApiAddress | null) => {
-    setState((prev) => ({
-      ...prev,
-      selectedAddress: address,
-      error: null,
-    }));
+    setState((prev) => ({ ...prev, selectedAddress: address }));
   }, []);
 
-  const setSavedAddresses = useCallback((addresses: Partial<Address>[]) => {
-    setState((prev) => ({
-      ...prev,
-      savedAddresses: addresses,
-      isLoading: false,
-    }));
+  const setSavedAddresses = useCallback((addresses: Address[]) => {
+    setState((prev) => ({ ...prev, savedAddresses: addresses }));
   }, []);
 
   const setSearchResults = useCallback((results: JusoApiAddress[]) => {
-    setState((prev) => ({
-      ...prev,
-      searchResults: results,
-      isLoading: false,
-      error: null,
-    }));
+    setState((prev) => ({ ...prev, searchResults: results }));
   }, []);
 
-  const setLoading = useCallback(() => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const setLoading = useCallback((isLoading: boolean) => {
+    setState((prev) => ({ ...prev, isLoading }));
   }, []);
 
-  const setError = useCallback((message: string | null) => {
-    setState((prev) => ({
-      ...prev,
-      isLoading: false,
-      error: message,
-    }));
+  const setError = useCallback((error: string | null) => {
+    setState((prev) => ({ ...prev, error, isLoading: false }));
   }, []);
 
   const clearError = useCallback(() => {
@@ -82,21 +67,16 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const clearSearchResults = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      searchResults: [],
-      error: null,
-    }));
+    setState((prev) => ({ ...prev, searchResults: [] }));
   }, []);
 
   const clearSelectedAddress = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      selectedAddress: null,
-    }));
+    setState((prev) => ({ ...prev, selectedAddress: null }));
   }, []);
 
-  const value = useMemo(
+  const reset = useCallback(() => setState(initialState), []);
+
+  const value = useMemo<AddressContextValue>(
     () => ({
       ...state,
       setSelectedAddress,
@@ -107,6 +87,7 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
       clearError,
       clearSearchResults,
       clearSelectedAddress,
+      reset,
     }),
     [
       state,
@@ -118,6 +99,7 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
       clearError,
       clearSearchResults,
       clearSelectedAddress,
+      reset,
     ]
   );
 
@@ -129,9 +111,7 @@ export const AddressProvider = ({ children }: { children: ReactNode }) => {
 export const useAddressContext = (): AddressContextValue => {
   const ctx = useContext(AddressContext);
   if (!ctx) {
-    throw new Error(
-      'useAddressContext는 AddressProvider 내부에서만 사용해야 합니다.'
-    );
+    throw new Error('useAddressContext must be used within an AddressProvider');
   }
   return ctx;
 };

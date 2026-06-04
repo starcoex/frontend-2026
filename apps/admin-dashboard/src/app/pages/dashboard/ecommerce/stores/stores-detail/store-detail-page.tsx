@@ -62,7 +62,7 @@ export default function StoreDetailPage() {
   const { getUserAddressById } = useAddress(); // ✅ 추가
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  // ✅ useAddress.isLoading 대신 로컬 상태 — address 조회만을 위한 독립 상태
+  // ✅ useAnalytics.isLoading 대신 로컬 상태 — address 조회만을 위한 독립 상태
   const [storeAddress, setStoreAddress] = useState<Partial<Address> | null>(
     null
   );
@@ -85,8 +85,8 @@ export default function StoreDetailPage() {
 
     getUserAddressById(currentStore.addressId)
       .then((res) => {
-        if (res.success && res.data?.getUserAddressById) {
-          setStoreAddress(res.data.getUserAddressById as Partial<Address>);
+        if (res.success && res.data) {
+          setStoreAddress(res.data as Partial<Address>);
         }
       })
       .catch(() => {
@@ -299,9 +299,9 @@ export default function StoreDetailPage() {
                     <button
                       type="button"
                       className="underline underline-offset-2 hover:text-foreground"
-                      onClick={() => navigate('/admin/stores/settings')}
+                      onClick={() => navigate(`/admin/stores/${id}/edit`)}
                     >
-                      매장 설정에서 비즈니스 타입 허용 서비스를 먼저 등록하세요
+                      매장 수정에서 운영 서비스를 등록하세요
                     </button>
                   </div>
                 )}

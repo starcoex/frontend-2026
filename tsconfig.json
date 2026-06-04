@@ -7,9 +7,6 @@
       "path": "./apps/starcoex-main"
     },
     {
-      "path": "./libs/ui"
-    },
-    {
       "path": "./apps/admin-dashboard"
     },
     {
@@ -17,9 +14,6 @@
     },
     {
       "path": "./libs/graphql"
-    },
-    {
-      "path": "./libs/utils"
     },
     {
       "path": "./libs/features/auth"
@@ -95,6 +89,15 @@
     },
     {
       "path": "./libs/features/notices"
+    },
+    {
+      "path": "./libs/pwa"
+    },
+    {
+      "path": "./libs/features/queue"
+    },
+    {
+      "path": "./libs/features/jobs"
     }
   ]
 }

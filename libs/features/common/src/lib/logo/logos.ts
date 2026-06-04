@@ -1,9 +1,9 @@
 // Starcoex
 import Star_Logo_SVG from './company/SVG/Starcoex.svg';
-import Star_Logo_PNG from './company/PNG/starcoex.png';
+import Star_Logo_PNG from './company/PNG/Starcoex.png';
 
 // StarOil
-import StarOil_Logo_SVG from './company/SVG//StarOil.svg';
+import StarOil_Logo_SVG from './company/SVG/StarOil.svg';
 import StarOil_Logo_PNG from './company/PNG/StarOil.png';
 
 // Delivery

@@ -5,8 +5,11 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import type { FileWithUrl } from '@starcoex-frontend/graphql';
+import { initMediaService, serviceRegistry } from '../services';
+import { useApolloClient } from '@apollo/client/react';
 
 export interface PaginationState {
   totalCount: number;
@@ -38,6 +41,7 @@ interface MediaContextValue extends MediaState {
 const MediaContext = createContext<MediaContextValue | undefined>(undefined);
 
 export const MediaProvider = ({ children }: { children: ReactNode }) => {
+  const apolloClient = useApolloClient();
   const [state, setState] = useState<MediaState>({
     files: [],
     pagination: {
@@ -50,6 +54,17 @@ export const MediaProvider = ({ children }: { children: ReactNode }) => {
     error: null,
     initialized: false,
   });
+
+  // ✅ 서비스 초기화 - useLayoutEffect로 자식 useEffect보다 먼저 실행
+  useLayoutEffect(() => {
+    if (!serviceRegistry.isServiceInitialized('media')) {
+      try {
+        initMediaService(apolloClient);
+      } catch (error) {
+        console.error('❌ MediaService initialization failed:', error);
+      }
+    }
+  }, [apolloClient]);
 
   const setFiles = useCallback((files: FileWithUrl[]) => {
     setState((prev) => ({ ...prev, files, initialized: true }));

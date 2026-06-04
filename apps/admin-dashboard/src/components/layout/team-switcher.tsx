@@ -16,7 +16,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 import { useTeamContext } from '@/components/team-provider';
 
 interface TeamSwitcherProps {
@@ -71,8 +70,8 @@ export const TeamSwitcher = ({ teams }: TeamSwitcherProps) => {
               disabled={userRole === 'DELIVERY'}
               className="ring-sidebar-primary/50 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground focus-visible:ring-1 disabled:cursor-default disabled:opacity-100"
             >
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                <activeTeam.logo className="size-8" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg border bg-background">
+                <activeTeam.logo className="size-6 object-contain" />
               </div>
               <div className="grid flex-1 text-left text-xs leading-tight">
                 <span className="truncate font-semibold">
@@ -102,13 +101,8 @@ export const TeamSwitcher = ({ teams }: TeamSwitcherProps) => {
                   onClick={() => handleTeamChange(team.name)}
                   className="gap-2 p-2 text-balance"
                 >
-                  <div className="flex size-6 items-center justify-center rounded-sm border">
-                    <team.logo
-                      className={cn(
-                        'size-4 shrink-0',
-                        index === 0 && 'invert-0 dark:invert'
-                      )}
-                    />
+                  <div className="flex size-6 items-center justify-center rounded-sm border bg-background">
+                    <team.logo className="size-4 shrink-0 object-contain" />
                   </div>
                   {team.name}
                   <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>

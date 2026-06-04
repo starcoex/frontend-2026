@@ -4,30 +4,33 @@ import { useAuth } from '@starcoex-frontend/auth';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Header } from '@/components/header/header';
 import { Footer } from '@/components/footer/footer';
+import {
+  PwaInstallBanner,
+  PwaUpdateBanner,
+  OfflineIndicator,
+} from '@starcoex-frontend/pwa';
 
-/**
- * 🔐 인증이 필요한 페이지들을 위한 보호된 레이아웃
- */
 export const ProtectedLayout: React.FC = () => {
-  const {
-    isAuthenticated,
-    currentUser,
-    initialized,
-    isLoading,
-    checkAuthStatus,
-  } = useAuth();
+  const { isAuthenticated, currentUser, initialized, checkAuthStatus } =
+    useAuth();
   const location = useLocation();
 
   useEffect(() => {
+    // ✅ 초기화가 안 된 경우에만 확인 (이미 로그인 상태면 호출 안 함)
     if (!initialized) {
       checkAuthStatus().catch((error) => {
-        console.warn('관리자 레이아웃에서 인증 상태 확인 실패:', error);
+        // ✅ 실패해도 로그아웃 처리하지 않음 - 오류 로그만
+        console.warn('인증 상태 확인 실패:', error);
       });
     }
-  }, [initialized, checkAuthStatus]);
+  }, []); // ✅ 마운트 시 1회만
 
-  // 1) 인증 초기화/로딩 중에는 무조건 리다이렉트하지 말고 로딩 UI 표시
-  if (!initialized || isLoading) {
+  // ─── 아직 초기화 안 됐지만 이미 로그인 상태라면 바로 통과 ───────────────────
+  // 로그인 직후 리다이렉트 시 initialized=false일 수 있음
+  if (!initialized && isAuthenticated) {
+    // 서버 확인이 끝나지 않았어도 클라이언트 상태가 인증됨 → 통과
+  } else if (!initialized) {
+    // 완전히 미확인 상태 → 로딩
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -38,12 +41,12 @@ export const ProtectedLayout: React.FC = () => {
     );
   }
 
-  // 2) 초기화가 끝났는데 인증이 안 된 경우 → 로그인 페이지로
-  if (!isAuthenticated) {
+  // ─── 초기화 완료 후 미인증 → 로그인 페이지 ────────────────────────────────────
+  if (initialized && !isAuthenticated) {
     return <Navigate to="/auth/login" state={{ from: location }} replace />;
   }
 
-  // 3) 토큰은 있지만 사용자 정보가 아직 준비되지 않은 경우 → 사용자 정보 로딩 UI
+  // ─── 유저 정보 없음 (비정상 상태) ─────────────────────────────────────────────
   if (!currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -55,11 +58,15 @@ export const ProtectedLayout: React.FC = () => {
     );
   }
 
-  // 인증된 사용자에게는 기본 레이아웃 제공
   return (
     <TooltipProvider>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
+        <div className="mx-4 mt-2 space-y-2">
+          <OfflineIndicator />
+          <PwaUpdateBanner />
+          <PwaInstallBanner />
+        </div>
         <main className="flex-1">
           <Outlet />
         </main>

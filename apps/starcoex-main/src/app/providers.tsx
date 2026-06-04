@@ -1,6 +1,10 @@
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@starcoex-frontend/common';
 import * as React from 'react';
+import { AddressProvider } from '@starcoex-frontend/address';
+import { MediaProvider } from '@starcoex-frontend/media';
+import { LoyaltyProvider } from '@starcoex-frontend/loyalty';
+import { JobsProvider } from '@starcoex-frontend/jobs';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -9,7 +13,13 @@ interface ProvidersProps {
 export const Providers = ({ children }: ProvidersProps) => {
   return (
     <ThemeProvider defaultTheme="system" storageKey="starcoex-main-theme">
-      {children}
+      <AddressProvider>
+        <MediaProvider>
+          <LoyaltyProvider>
+            <JobsProvider>{children}</JobsProvider>
+          </LoyaltyProvider>
+        </MediaProvider>
+      </AddressProvider>
       <Toaster
         position="top-right"
         richColors

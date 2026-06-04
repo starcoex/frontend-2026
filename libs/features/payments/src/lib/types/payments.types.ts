@@ -75,6 +75,7 @@ export interface PaymentCancellation {
   portoneData?: JsonValue;
   requestedAt: string;
   completedAt?: string | null;
+  /** Schema상 non-nullable이나 순환 참조 방지를 위해 optional 유지 */
   payment?: Payment;
 }
 
@@ -92,6 +93,9 @@ export interface Payment {
   orderId: number;
   reservationId: number;
   guestEmail?: string | null;
+  walkInId?: number | null;
+  fuelWalkInId?: number | null;
+  packageId?: number | null;
   portoneData?: JsonValue;
   customData?: JsonValue;
   paidAt?: string | null;
@@ -168,6 +172,9 @@ export interface GetPaymentsInput {
   orderId?: number;
   reservationId?: number;
   guestEmail?: string;
+  walkInId?: number;
+  fuelWalkInId?: number;
+  packageId?: number;
   status?: PaymentStatus;
   startDate?: string;
   endDate?: string;

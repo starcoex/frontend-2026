@@ -1,4 +1,12 @@
-import { BadgeCheck, Bell, LogOut, Settings, Shield, User } from 'lucide-react';
+import {
+  BadgeCheck,
+  Bell,
+  CreditCard,
+  LogOut,
+  Settings,
+  Shield,
+  User,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
@@ -126,6 +134,12 @@ export function HeaderUser() {
             <Link to={APP_ROUTES.SETTINGS}>
               <Settings className="mr-2 h-4 w-4" />
               설정
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to={APP_ROUTES.BILLING}>
+              <CreditCard className="mr-2 h-4 w-4" />
+              결제
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

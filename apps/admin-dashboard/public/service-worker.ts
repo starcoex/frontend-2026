@@ -2,15 +2,112 @@
 
 export {};
 
-// ✅ tsconfig.sw.json lib: ["WebWorker"] 환경에서는
-//    self 가 ServiceWorkerGlobalScope 로 자동 인식됩니다.
-//    단, IDE 타입 힌트를 위해 아래 선언을 유지합니다.
 declare const self: ServiceWorkerGlobalScope;
 
-// ✅ renotify 포함 확장 타입
 interface ExtendedNotificationOptions extends NotificationOptions {
   renotify?: boolean;
 }
+
+const CACHE_NAME = 'starcoex-admin-v1';
+
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/pwa-192x192.png',
+  '/pwa-512x512.png',
+  '/pwa-64x64.png',
+  '/apple-touch-icon-180x180.png',
+];
+
+// ============================================================================
+// 설치 & 활성화
+// ============================================================================
+
+self.addEventListener('install', (event: ExtendableEvent) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event: ExtendableEvent) => {
+  event.waitUntil(
+    Promise.all([
+      // 이전 버전 캐시 제거
+      caches
+        .keys()
+        .then((keys) =>
+          Promise.all(
+            keys
+              .filter((key) => key !== CACHE_NAME)
+              .map((key) => caches.delete(key))
+          )
+        ),
+      self.clients.claim(),
+    ])
+  );
+});
+
+// ============================================================================
+// 캐싱 전략
+// ============================================================================
+
+self.addEventListener('fetch', (event: FetchEvent) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // ✅ API / GraphQL / WebSocket → 캐시 안함 (항상 최신)
+  if (
+    url.pathname.startsWith('/graphql') ||
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/chat') ||
+    url.pathname.startsWith('/queue') ||
+    url.pathname.startsWith('/delivery') ||
+    request.method !== 'GET'
+  ) {
+    return;
+  }
+
+  // ✅ 정적 assets (아이콘, 폰트 등) → 캐시 우선
+  if (
+    url.pathname.startsWith('/pwa-') ||
+    url.pathname.startsWith('/apple-touch-icon') ||
+    url.pathname.startsWith('/favicon') ||
+    url.pathname.match(/\.(png|jpg|jpeg|svg|ico|woff2|woff|ttf)$/)
+  ) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ??
+          fetch(request).then((response) => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  // ✅ HTML (index.html) → 네트워크 우선, 실패 시 캐시 (오프라인 대응)
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        return response;
+      })
+      .catch(() =>
+        caches
+          .match(request)
+          .then(
+            (cached) =>
+              cached ??
+              caches.match('/index.html').then((r) => r ?? Response.error())
+          )
+      )
+  );
+});
 
 // ============================================================================
 // FCM 백그라운드 푸시 알림 처리
@@ -39,8 +136,8 @@ self.addEventListener('push', (event: PushEvent) => {
   const title = data.title ?? '배송 알림';
   const options: ExtendedNotificationOptions = {
     body: data.body ?? '',
-    icon: data.icon ?? '/icon-192.png',
-    badge: data.badge ?? '/badge.png',
+    icon: data.icon ?? '/pwa-192x192.png',
+    badge: data.badge ?? '/pwa-64x64.png',
     tag: data.deliveryId
       ? `delivery-${data.deliveryId}`
       : 'delivery-notification',
@@ -89,13 +186,14 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
 });
 
 // ============================================================================
-// 설치 & 활성화
+// SW 업데이트 메시지 처리
 // ============================================================================
 
-self.addEventListener('install', () => {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event: ExtendableEvent) => {
-  event.waitUntil(self.clients.claim());
-});
+self.addEventListener(
+  'message',
+  (event: ExtendableEvent & { data?: { type?: string } }) => {
+    if (event.data?.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+    }
+  }
+);

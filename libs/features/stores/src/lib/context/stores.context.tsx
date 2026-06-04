@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import {
   StoresState,
@@ -41,20 +42,15 @@ const initialState: StoresState = {
 export const StoresProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<StoresState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false); // ✅ 초기화 플래그
 
   // ✅ 동기적으로 서비스 초기화 (useEffect 전에)
-  useMemo(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('stores')) {
       try {
         initStoresService(apolloClient);
-        console.log('✅ CategoriesService initialized');
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ CategoriesService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
   // =========================================================================
@@ -469,11 +465,6 @@ export const StoresProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  // ✅ 서비스 초기화 전까지는 로딩 표시
-  if (!serviceInitialized) {
-    return <div>Initializing Stores Service...</div>;
-  }
 
   return (
     <StoresContext.Provider value={value}>{children}</StoresContext.Provider>

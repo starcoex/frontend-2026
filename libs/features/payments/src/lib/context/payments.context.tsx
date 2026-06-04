@@ -2,10 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useMemo,
   useCallback,
   ReactNode,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import { serviceRegistry, initPaymentsService } from '../services';
@@ -53,18 +53,14 @@ const PaymentsContext = createContext<PaymentsContextValue | undefined>(
 export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<PaymentsState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('payments')) {
       try {
         initPaymentsService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ PaymentsService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -153,14 +149,6 @@ export const PaymentsProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return (
-      <div aria-busy="true" aria-label="Payments 서비스 초기화 중">
-        Initializing Payments Service...
-      </div>
-    );
-  }
 
   return (
     <PaymentsContext.Provider value={value}>

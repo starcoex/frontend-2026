@@ -79,7 +79,7 @@ export default function DeliveryEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // ✅ 배송 관련 — useDelivery
+  // ✅ 배송 관련 — useChats
   const {
     fetchDeliveryById,
     updateDeliveryStatus,

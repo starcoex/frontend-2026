@@ -12,7 +12,9 @@ import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
 import { REFRESH_TOKEN } from '../gql/auth.queries.js';
-// REFRESH_TOKEN 은 auth.queries.ts (또는 codegen 결과)에서 import
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+import { getMainDefinition } from '@apollo/client/utilities';
 
 // ============================================================================
 // 📝 Types & Config
@@ -37,27 +39,29 @@ const AUTH_ERROR_CODES = [
   'AUTH_TOKEN_INVALID',
 ] as const;
 
-// Auth 서버로 보낼 operationName 목록(스키마에 맞게 조정)
-const AUTH_OPERATIONS = [
-  'LoginStep1',
-  'LoginStep2',
-  'RefreshToken',
-  'Logout',
-  'LogoutAll',
-] as const;
-
-const isAuthOperation = (operationName?: string): boolean =>
-  AUTH_OPERATIONS.includes(operationName as (typeof AUTH_OPERATIONS)[number]);
-
 // ============================================================================
 // 🌐 Endpoint Helpers
 // ============================================================================
 
-const getGraphQLUri = (isDev: boolean): string =>
-  isDev ? '/graphql' : 'http://localhost:4000/graphql';
+// const PROD_GRAPHQL_URL = 'https://api.starcoex.com/graphql';
+// const PROD_WS_URL = 'wss://api.starcoex.com/graphql';
 
-const getAuthGraphQLUri = (isDev: boolean): string =>
-  isDev ? '/auth/graphql' : 'http://localhost:4102/graphql';
+/**
+ * 개발/프로덕션 모두 상대경로(/graphql) 사용 → same-origin
+ * - 개발: Vite 프록시(/graphql) → api.starcoex.com
+ * - 프로덕션: Ingress(/graphql) → starcoex-gateway-service
+ * → CORS 불필요, refreshToken 쿠키가 first-party로 정상 전송 (iOS ITP 회피)
+ */
+const getGraphQLUri = (isDev: boolean): string => '/graphql';
+
+/**
+ * WebSocket도 현재 호스트 기준 상대 경로로 구성
+ * - http → ws, https → wss 자동 매핑
+ */
+const getWsUri = (isDev: boolean): string => {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${window.location.host}/graphql`;
+};
 
 // ============================================================================
 // 💾 Cache
@@ -113,24 +117,42 @@ const createCache = (): InMemoryCache =>
 // 🔗 Links
 // ============================================================================
 
-/**
- * Auth 서버 vs Gateway 서버로 라우팅하는 Link
- */
 const createDirectionalLink = (isDev: boolean): ApolloLink => {
-  const authLink = createHttpLink({
-    uri: getAuthGraphQLUri(isDev),
-    credentials: 'include', // 쿠키 기반 인증
-  });
-
-  const gatewayLink = createHttpLink({
+  // HTTP Link (Query / Mutation)
+  const httpLink = createHttpLink({
     uri: getGraphQLUri(isDev),
     credentials: 'include',
   });
 
+  // WebSocket Link (Subscription)
+  const wsLink = new GraphQLWsLink(
+    createClient({
+      url: getWsUri(isDev),
+      connectionParams: () => ({}),
+      shouldRetry: () => true,
+      retryAttempts: 5,
+      retryWait: (retries) =>
+        new Promise((resolve) =>
+          setTimeout(resolve, Math.min(1000 * 2 ** retries, 10000))
+        ),
+      on: {
+        connected: () => console.info('[WS] WebSocket 연결됨'),
+        closed: () => console.info('[WS] WebSocket 연결 해제'),
+        error: (err) => console.error('[WS] WebSocket 오류:', err),
+      },
+    })
+  );
+
+  // Subscription → WsLink, 나머지 → HttpLink
   return split(
-    (operation) => isAuthOperation(operation.operationName),
-    authLink,
-    gatewayLink
+    ({ query }) => {
+      const def = getMainDefinition(query);
+      return (
+        def.kind === 'OperationDefinition' && def.operation === 'subscription'
+      );
+    },
+    wsLink,
+    httpLink
   );
 };
 
@@ -233,10 +255,14 @@ const createTokenRefreshLink = (
       return;
     }
 
-    // RefreshToken 자체에서의 에러는 재시도하지 않고 바로 AuthError 처리
-    if (operationName === 'RefreshToken') {
-      config.authConfig?.onAuthError?.();
-      return;
+    // ✅ 인증 체크 쿼리 / Refresh 자체는 토큰 갱신 시도하지 않음
+    // → onAuthError 호출도 하지 않음 (로그아웃 방지)
+    if (
+      operationName === 'RefreshToken' ||
+      operationName === 'GetLoggedInUser' ||
+      operationName === 'CheckAuthStatus'
+    ) {
+      return; // ✅ 그냥 반환 — onAuthError 호출 X
     }
 
     const authError = graphQLErrors.find((err) =>
@@ -260,6 +286,7 @@ const createTokenRefreshLink = (
     isRefreshing = true;
 
     return new Observable((observer) => {
+      // ✅ tempClient 대신 주입받은 client 직접 사용
       client
         .mutate({
           mutation: REFRESH_TOKEN,
@@ -267,8 +294,6 @@ const createTokenRefreshLink = (
         })
         .then((result) => {
           const refreshData = (result.data as any)?.refreshToken;
-
-          // 스키마에 따라 success/ok 필드 이름이 다를 수 있음 → 환경에 맞게 조정
           const ok = refreshData?.success ?? refreshData?.ok ?? false;
 
           if (!ok) {
@@ -277,26 +302,19 @@ const createTokenRefreshLink = (
             );
           }
 
-          // ✅ 토큰 갱신 성공
-          // - 서버에서 쿠키/헤더 갱신했다고 가정
-          // - 다른 레이어(서비스/컨텍스트/다른 탭)에게 알림
           window.dispatchEvent(
             new CustomEvent('auth:token-refreshed', {
               detail: { timestamp: new Date().toISOString() },
             })
           );
           config.authConfig?.onTokenRefreshed?.(refreshData);
-
-          // 대기 중인 요청들 재시도
           resolvePendingRequests();
-
-          // 현재 요청 재시도
           forward(operation).subscribe(observer);
         })
         .catch((error) => {
           console.error('[Auth] Token refresh failed:', error);
           pendingRequests = [];
-          config.authConfig?.onAuthError?.();
+          config.authConfig?.onAuthError?.(); // ✅ refresh 실패 시에만 로그아웃
           observer.error(error);
         })
         .finally(() => {
@@ -315,23 +333,38 @@ export const createApolloClient = (
 ): ApolloClient => {
   const isDev = process.env.NODE_ENV === 'development';
 
-  // refresh link에서 사용할 임시 client (HTTP 라우팅만 필요)
-  const tempClient = new ApolloClient({
-    cache: createCache(),
-    link: createDirectionalLink(isDev),
+  // ✅ tempClient 제거 — 순환 참조 없이 메인 client를 직접 사용
+  const cache = createCache();
+  const directionalLink = createDirectionalLink(isDev);
+
+  // ✅ refresh 전용 httpLink — credentials 명시, 링크 체인 없이 순수 HTTP만
+  const refreshHttpLink = createHttpLink({
+    uri: getGraphQLUri(isDev),
+    credentials: 'include', // ← 쿠키 반드시 포함
+  });
+
+  const refreshClient = new ApolloClient({
+    cache: new InMemoryCache(), // ← 메인 cache와 분리 (캐시 오염 방지)
+    link: refreshHttpLink,
+    defaultOptions: {
+      mutate: {
+        errorPolicy: 'all',
+        fetchPolicy: 'network-only',
+      },
+    },
   });
 
   const link = from([
     createErrorLoggingLink(),
-    createTokenRefreshLink(config, tempClient),
+    createTokenRefreshLink(config, refreshClient), // ← refresh 전용 client 사용
     createRetryLink(),
     createAuthContextLink(config),
-    createDirectionalLink(isDev),
+    directionalLink,
   ]);
 
   return new ApolloClient({
     link,
-    cache: createCache(),
+    cache, // ✅ 동일 cache 인스턴스 공유
     defaultOptions: {
       query: {
         errorPolicy: 'all',

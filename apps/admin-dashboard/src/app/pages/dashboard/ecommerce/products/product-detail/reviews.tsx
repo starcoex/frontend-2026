@@ -2,7 +2,7 @@ import { StarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { generateAvatarFallback } from '@/lib/utils';
+import { generateAvatarFallback } from '@/app/utils/generateAvatarFallback';
 
 interface Review {
   id: number;

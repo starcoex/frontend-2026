@@ -5,7 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
-  useEffect,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -36,18 +36,14 @@ const initialState: ReservationsState = {
 export const ReservationsProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<ReservationsState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('reservations')) {
       try {
         initReservationsService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ CartService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -182,10 +178,6 @@ export const ReservationsProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing Reservations Service...</div>;
-  }
 
   return (
     <ReservationsContext.Provider value={value}>

@@ -18,6 +18,7 @@ import { DriverWorkCard } from '@/app/pages/dashboard/ecommerce/delivery/drivers
 import { DriverDeliveryTab } from '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/components/driver-delivery-tab';
 import { DriverSettlementTab } from '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/components/driver-settlement-tab';
 import { DriverLicenseTab } from '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/components/driver-license-tab';
+import { DriverRatingTab } from '@/app/pages/dashboard/ecommerce/delivery/drivers/drivers-detail/components/driver-rating-tab';
 
 export default function DeliveryDriverDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +26,7 @@ export default function DeliveryDriverDetailPage() {
   const {
     fetchDriverById, // ✅ 전용 API 사용
     updateDriverAvailability,
+    updateDriverStatus, // ✅ 추가
     deactivateDriver,
   } = useDelivery();
 
@@ -81,6 +83,24 @@ export default function DeliveryDriverDetailPage() {
     setDriver(updated);
   }, []);
 
+  // ✅ 신규: PENDING → ACTIVE 승인
+  const handleApprove = useCallback(async () => {
+    if (!driver) return;
+    setIsActing(true);
+    const res = await updateDriverStatus({
+      driverId: driver.id,
+      status: 'ACTIVE',
+      reason: '관리자 승인',
+    });
+    if (res.success && res.data?.driver) {
+      setDriver(res.data.driver);
+      toast.success('기사가 승인되었습니다. (ACTIVE)');
+    } else {
+      toast.error(res.error?.message ?? '승인에 실패했습니다.');
+    }
+    setIsActing(false);
+  }, [driver, updateDriverStatus]);
+
   if (isFetching) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -129,6 +149,7 @@ export default function DeliveryDriverDetailPage() {
           driver={driver}
           onToggleAvailability={handleToggleAvailability}
           onDeactivate={handleDeactivate}
+          onApprove={handleApprove} // ✅ 추가
           isLoading={isActing}
         />
 
@@ -149,6 +170,15 @@ export default function DeliveryDriverDetailPage() {
             </TabsTrigger>
             <TabsTrigger value="settlements" className="flex-1">
               정산 내역
+            </TabsTrigger>
+            <TabsTrigger value="ratings" className="flex-1">
+              {/* ✅ 신규 */}
+              평점
+              {driver.ratings.length > 0 && (
+                <span className="bg-primary text-primary-foreground ml-1.5 rounded-full px-1.5 py-0.5 text-xs">
+                  {driver.ratings.length}
+                </span>
+              )}
             </TabsTrigger>
             <TabsTrigger value="license" className="flex-1">
               면허 인증
@@ -190,6 +220,11 @@ export default function DeliveryDriverDetailPage() {
               driver={driver}
               onVerified={handleLicenseVerified}
             />
+          </TabsContent>
+
+          {/* ✅ 신규: 평점 탭 */}
+          <TabsContent value="ratings" className="mt-4">
+            <DriverRatingTab driver={driver} />
           </TabsContent>
         </Tabs>
       </div>

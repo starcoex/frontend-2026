@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useEffect, useState } from 'react';
 import { useCart } from '@starcoex-frontend/cart';
 import {
   CartEmptyState,
@@ -15,31 +12,35 @@ const PROMO_CODES: Record<string, number> = {
 };
 
 export const CartPage: React.FC = () => {
-  const { cart, cartItemCount, cartTotalAmount, isCartEmpty, isLoading } =
-    useCart();
+  const {
+    cart,
+    cartItemCount,
+    cartTotalAmount,
+    isCartEmpty,
+    isLoading,
+    fetchMyCart,
+  } = useCart();
 
-  const [promoInput, setPromoInput] = useState('');
   const [appliedPromo, setAppliedPromo] = useState<{
     code: string;
     percentOff: number;
   } | null>(null);
-  const [promoError, setPromoError] = useState('');
 
-  const applyPromo = () => {
-    const code = promoInput.trim().toUpperCase();
+  useEffect(() => {
+    fetchMyCart();
+  }, [fetchMyCart]);
+
+  const handleApplyPromo = (code: string): boolean => {
     const percentOff = PROMO_CODES[code];
     if (percentOff) {
       setAppliedPromo({ code, percentOff });
-      setPromoError('');
-    } else {
-      setPromoError('유효하지 않은 할인 코드입니다.');
+      return true;
     }
+    return false;
   };
 
-  const removePromo = () => {
+  const handleRemovePromo = () => {
     setAppliedPromo(null);
-    setPromoInput('');
-    setPromoError('');
   };
 
   const discountAmount = appliedPromo
@@ -47,99 +48,53 @@ export const CartPage: React.FC = () => {
     : 0;
   const afterDiscountTotal = Math.max(0, cartTotalAmount - discountAmount);
 
+  if (isCartEmpty) {
+    return (
+      <section className="py-32">
+        <div className="container max-w-lg">
+          <CartEmptyState />
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="mx-auto max-w-5xl px-4 py-20">
-      {/* 헤더 */}
-      <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold">장바구니</h1>
-          <p className="text-muted-foreground text-sm">
-            {cartItemCount > 0
-              ? `총 ${cartItemCount}개의 상품이 담겨 있습니다`
-              : '장바구니가 비어 있습니다'}
-          </p>
-        </div>
+    <section className="py-32">
+      <div className="container">
+        <h1 className="mb-8 text-3xl font-semibold">장바구니</h1>
 
-        {/* 프로모션 코드 */}
-        {!appliedPromo ? (
-          <div className="space-y-1">
-            <div className="flex gap-2">
-              <Input
-                placeholder="할인 코드 입력"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    applyPromo();
-                  }
-                }}
-                className="w-44"
-                aria-invalid={!!promoError}
-              />
-              <Button
-                type="button"
-                onClick={applyPromo}
-                disabled={!promoInput.trim()}
-              >
-                적용
-              </Button>
-            </div>
-            {promoError && (
-              <p className="text-destructive text-xs">{promoError}</p>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-green-600">
-              {appliedPromo.code} ({appliedPromo.percentOff}% 할인 적용됨)
-            </span>
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              className="text-destructive h-auto p-0"
-              onClick={removePromo}
-            >
-              제거
-            </Button>
-          </div>
-        )}
-      </header>
-
-      {/* 본문 */}
-      {isCartEmpty ? (
-        <CartEmptyState />
-      ) : (
-        <div>
-          {/* 테이블 헤더 — 데스크톱 */}
-          <div className="text-muted-foreground bg-muted hidden items-center gap-4 rounded-lg px-4 py-3 text-xs font-medium md:grid md:grid-cols-[1.6fr_0.5fr_0.7fr_0.5fr]">
-            <div>상품</div>
-            <div>단가</div>
-            <div className="text-center">수량</div>
-            <div className="text-right">합계</div>
-          </div>
-
+        <div className="grid gap-8 lg:grid-cols-3">
           {/* 상품 목록 */}
-          <div className="divide-y">
-            {cart?.items?.map((item) => (
-              <CartItemCard key={item.id} item={item} />
-            ))}
+          <div className="lg:col-span-2">
+            <div className="space-y-6">
+              {isLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-40 animate-pulse rounded-xl bg-muted"
+                    />
+                  ))
+                : cart?.items?.map((item) => (
+                    <CartItemCard key={item.id} item={item} />
+                  ))}
+            </div>
           </div>
 
-          <Separator className="my-6" />
-
-          {/* 요약 패널 */}
-          <CartSummaryPanel
-            subtotal={cartTotalAmount}
-            discountAmount={discountAmount}
-            afterDiscountTotal={afterDiscountTotal}
-            appliedPromo={appliedPromo}
-            loading={isLoading}
-            totalItems={cartItemCount}
-          />
+          {/* 주문 요약 */}
+          <div className="lg:col-span-1">
+            <CartSummaryPanel
+              subtotal={cartTotalAmount}
+              discountAmount={discountAmount}
+              afterDiscountTotal={afterDiscountTotal}
+              appliedPromo={appliedPromo}
+              loading={isLoading}
+              totalItems={cartItemCount}
+              onApplyPromo={handleApplyPromo}
+              onRemovePromo={handleRemovePromo}
+            />
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 };

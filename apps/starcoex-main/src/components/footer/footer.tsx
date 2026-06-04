@@ -44,11 +44,7 @@ export const Footer = () => {
         {/* 왼쪽: 로고 및 회사 정보 */}
         <div className="mb-8 flex-1">
           <Link to="/" className="flex items-center gap-3">
-            <StarLogo
-              width={40}
-              height={40}
-              className={'invert dark:invert-0 object-contain'}
-            />
+            <StarLogo width={40} height={40} />
             <div>
               <div className="text-2xl leading-tight font-semibold max-sm:text-xl">
                 {COMPANY_INFO.name}
@@ -189,6 +185,21 @@ export const Footer = () => {
                 </svg>
               </Link>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 사업자 정보 */}
+      <div className="container border-x border-b py-4 lg:py-6">
+        <div className="text-muted-foreground text-xs leading-relaxed space-y-1">
+          <p className="font-medium text-sm">{COMPANY_INFO.legalName}</p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span>대표 : {COMPANY_INFO.representative}</span>
+            <span>사업자등록번호 : {COMPANY_INFO.businessNumber}</span>
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span>이메일 : {COMPANY_INFO.email}</span>
+            <span>주소 : {COMPANY_INFO.address}</span>
           </div>
         </div>
       </div>

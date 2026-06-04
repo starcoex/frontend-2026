@@ -1,15 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { CardTitle } from '@/components/ui/card';
+import { useEffect, useMemo } from 'react';
 import {
   ORDER_ROUTES,
   ORDER_ROUTE_PATTERNS,
@@ -22,15 +12,17 @@ import {
 import { useOrders } from '@starcoex-frontend/orders';
 import { OrderPrimaryActions } from '@/app/pages/dashboard/ecommerce/orders/components/order-primary-action';
 import { OrderStats } from '@/app/pages/dashboard/ecommerce/orders/components/order-stats';
+import { PageLayout } from '@starcoex-frontend/common';
 
 const PATH_TO_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
   [ORDER_ROUTES.LIST]: ORDER_BREADCRUMB_CONFIGS.LIST,
   [ORDER_ROUTES.LIST + '/create']: ORDER_BREADCRUMB_CONFIGS.CREATE,
+  [ORDER_ROUTES.STATS]: ORDER_BREADCRUMB_CONFIGS.STATS,
 };
 
 const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
   const editMatch = pathname.match(/^\/admin\/orders\/(\d+)\/edit$/);
-  if (editMatch) {
+  if (editMatch)
     return {
       label: `주문 수정 #${editMatch[1]}`,
       title: `주문 수정 #${editMatch[1]}`,
@@ -38,10 +30,8 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
       showActions: false,
       showTabs: false,
     };
-  }
-
   const detailMatch = pathname.match(ORDER_ROUTE_PATTERNS.DETAIL);
-  if (detailMatch) {
+  if (detailMatch)
     return {
       label: `주문 #${detailMatch[1]}`,
       title: `주문 #${detailMatch[1]}`,
@@ -49,65 +39,43 @@ const getDynamicRouteConfig = (pathname: string): BreadcrumbConfig | null => {
       showActions: false,
       showTabs: false,
     };
-  }
-
   return null;
 };
 
 export const OrdersLayout = () => {
   const location = useLocation();
-  const { orders } = useOrders();
+  const { orders, fetchOrders } = useOrders();
+  const isListRoute = location.pathname === ORDER_ROUTES.LIST;
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const config = useMemo((): BreadcrumbConfig => {
-    const pathname = location.pathname;
-    const staticConfig = PATH_TO_CONFIG_MAP[pathname];
-    if (staticConfig) return staticConfig;
-
-    const dynamicConfig = getDynamicRouteConfig(pathname);
-    if (dynamicConfig) return dynamicConfig;
-
-    return DEFAULT_ORDER_BREADCRUMB_CONFIG;
+    return (
+      PATH_TO_CONFIG_MAP[location.pathname] ??
+      getDynamicRouteConfig(location.pathname) ??
+      DEFAULT_ORDER_BREADCRUMB_CONFIG
+    );
   }, [location.pathname]);
 
-  return (
-    <main className="flex h-full flex-1 flex-col p-4">
-      <div className="mb-4 flex flex-col gap-4">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/admin">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={ORDER_ROUTES.LIST}>주문 관리</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {config.showInBreadcrumb &&
-              location.pathname !== ORDER_ROUTES.LIST && (
-                <>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{config.label}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </>
-              )}
-          </BreadcrumbList>
-        </Breadcrumb>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="flex-none text-xl font-bold tracking-tight lg:text-2xl">
-            {config.title}
-          </CardTitle>
-          {config.showActions && <OrderPrimaryActions />}
-        </div>
-        {config.showTabs && <OrderStats orders={orders} />}
-      </div>
+  // 브레드크럼 구성
+  const breadcrumbs = isListRoute
+    ? [{ label: 'Home', href: '/admin' }, { label: config.label }]
+    : [
+        { label: 'Home', href: '/admin' },
+        { label: '주문 관리', href: ORDER_ROUTES.LIST },
+        ...(config.showInBreadcrumb ? [{ label: config.label }] : []),
+      ];
 
-      <div className="flex-1">
-        <Outlet />
-      </div>
-    </main>
+  return (
+    <PageLayout
+      breadcrumbs={breadcrumbs}
+      title={config.title}
+      actions={config.showActions ? <OrderPrimaryActions /> : undefined}
+      subContent={config.showTabs ? <OrderStats orders={orders} /> : undefined}
+    >
+      <Outlet />
+    </PageLayout>
   );
 };

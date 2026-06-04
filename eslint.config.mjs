@@ -20,6 +20,7 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          checkDynamicDependenciesExceptions: ['@starcoex-frontend/common'],
           depConstraints: [
             {
               sourceTag: '*',

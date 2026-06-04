@@ -1,127 +1,87 @@
-import React from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Home, Car } from 'lucide-react';
-import { APP_CONFIG } from '../config/app.config';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React, { useEffect } from 'react';
+import { Outlet, useLocation, Navigate, Link } from 'react-router-dom';
+import { Home } from 'lucide-react';
+import { useAuth } from '@starcoex-frontend/auth';
+import { AppConfigProvider } from '@starcoex-frontend/common';
+import { carWashAuthConfig } from '@/app/config/auth.config';
+import { Droplets } from 'lucide-react';
+import { AuthEditorialPanel } from '@/app/pages/auth/components/auth-editorial-panel';
 
+/**
+ * 🔐 인증 페이지 전용 레이아웃
+ * - 로그인, 회원가입, 비밀번호 찾기 등 인증 관련 페이지에서 사용
+ * - 인증된 사용자는 대시보드로 리다이렉트
+ */
 export const AuthLayout: React.FC = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, initialized, checkAuthStatus } = useAuth();
 
-  const handleBack = () => {
-    if (
-      location.pathname === '/auth/login' ||
-      location.pathname === '/auth/register'
-    ) {
-      navigate('/');
-    } else {
-      navigate(-1);
+  useEffect(() => {
+    if (!initialized) {
+      checkAuthStatus().catch((error) => {
+        console.warn('카케어 인증 상태 확인 실패:', error);
+      });
     }
-  };
+  }, []); // ✅ 마운트 시 1회만
 
-  const getPageInfo = () => {
-    if (location.pathname === '/auth/login') {
-      return { title: '로그인', subtitle: '세차 서비스에 로그인하세요' };
-    }
-    if (location.pathname === '/auth/register') {
-      return {
-        title: '회원가입',
-        subtitle: '간편하게 가입하고 세차 서비스를 시작하세요',
-      };
-    }
-    return { title: '인증', subtitle: '계정 처리 중입니다' };
-  };
-
-  const pageInfo = getPageInfo();
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-blue-900/10 dark:via-gray-900 dark:to-purple-900/10">
-      {/* 상단 네비게이션 */}
-      <header className="relative p-6">
-        <div className="max-w-lg mx-auto">
-          <div className="flex justify-between items-center">
-            {/* 뒤로가기 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="p-2 h-auto text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-
-            {/* 로고 */}
-            <div className="text-center">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Car className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-primary">
-                    {APP_CONFIG.app.shortName}
-                  </h1>
-                  <Badge variant="outline" className="text-xs">
-                    세차 전용
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* 홈으로 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="p-2 h-auto text-muted-foreground hover:text-foreground"
-            >
-              <Home className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* 페이지 정보 */}
-          <div className="text-center mt-6">
-            <h2 className="text-xl font-semibold mb-1">{pageInfo.title}</h2>
-            <p className="text-sm text-muted-foreground">{pageInfo.subtitle}</p>
-          </div>
-        </div>
-      </header>
-
-      {/* 포털 연동 안내 */}
-      <div className="max-w-lg mx-auto px-6 mb-6">
-        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="text-2xl">🔗</div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-sm text-blue-900 dark:text-blue-100">
-                스타코엑스 통합 로그인
-              </h3>
-              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                포털 계정으로 모든 서비스 앱이 자동 연결됩니다
-              </p>
-            </div>
-          </div>
+  // ── 초기화 중 로딩 ────────────────────────────────────────────────────────
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-600 via-blue-700 to-cyan-800">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto" />
+          <p className="text-white/70 text-sm">인증 상태 확인 중...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* 메인 콘텐츠 */}
-      <main className="flex-1 flex items-start justify-center px-6 pb-8">
-        <div className="w-full max-w-lg">
-          <Outlet />
-        </div>
-      </main>
+  // ── 이미 인증된 사용자 → 리다이렉트 ──────────────────────────────────────
+  if (isAuthenticated) {
+    const from = location.state?.from?.pathname || '/dashboard';
+    return <Navigate to={from} replace />;
+  }
 
-      {/* 하단 정보 */}
-      <footer className="pb-8">
-        <div className="max-w-lg mx-auto px-6">
-          <div className="text-center text-xs text-muted-foreground">
-            <p>
-              © 2024 {APP_CONFIG.app.name}. 스타코엑스 통합 서비스의 일부입니다.
-            </p>
-            <p className="mt-1">문의: 1588-1234 | 운영시간: 08:00-20:00</p>
+  // ── 레이아웃 렌더링 ───────────────────────────────────────────────────────
+  return (
+    <AppConfigProvider config={carWashAuthConfig}>
+      {/*
+        ✅ 핵심: h-screen + overflow-hidden → 스크롤 없이 뷰포트에 고정
+      */}
+      <div className="flex h-screen overflow-hidden">
+        {/* 좌측 Editorial 패널 (데스크톱) */}
+        <AuthEditorialPanel />
+        {/* 우측 폼 영역 */}
+        <div className="flex flex-1 flex-col bg-white dark:bg-gray-950">
+          {/* 홈 버튼 — 우측 상단 */}
+          <div className="flex justify-between items-center px-6 pt-6">
+            {/* 모바일: 브랜드 로고 */}
+            <div className="flex items-center gap-2 lg:hidden">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                <Droplets className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-bold">제라게</span>
+            </div>
+            {/* 데스크톱: 빈 공간 */}
+            <div className="hidden lg:block" />
+
+            <Link
+              to="/"
+              className="p-2 rounded-full border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+              aria-label="홈으로"
+            >
+              <Home className="w-4 h-4" />
+            </Link>
           </div>
+
+          {/* 폼 콘텐츠 */}
+          <main className="flex flex-1 items-center justify-center px-6 py-8">
+            <div className="w-full max-w-sm">
+              <Outlet />
+            </div>
+          </main>
         </div>
-      </footer>
-    </div>
+      </div>
+    </AppConfigProvider>
   );
 };

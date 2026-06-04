@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MapPin, Clock, Pencil, Check, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { MapPin, Clock, Pencil, Check, X, Plus } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -33,22 +33,41 @@ export function DriverWorkCard({ driver, onUpdated }: Props) {
   const { updateDriverProfile } = useDelivery();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [areasInput, setAreasInput] = useState(
-    ((driver.workingAreas as unknown as string[]) ?? []).join(', ')
-  );
+  // ✅ string[] 상태로 직접 관리
+  const [editAreas, setEditAreas] = useState<string[]>([]);
+  const [areaInput, setAreaInput] = useState('');
+  const areaInputRef = useRef<HTMLInputElement>(null);
 
   const workingHours = driver.workingHours as Record<string, string> | null;
+  const workingAreas = (driver.workingAreas as unknown as string[]) ?? [];
 
+  // ── 편집 시작 ──────────────────────────────────────────────────────────────
+  const handleStartEdit = () => {
+    setEditAreas([...workingAreas]);
+    setAreaInput('');
+    setIsEditing(true);
+  };
+
+  // ── 지역 추가 ──────────────────────────────────────────────────────────────
+  const handleAddArea = () => {
+    const trimmed = areaInput.trim();
+    if (!trimmed) return;
+    if (editAreas.includes(trimmed)) return;
+    setEditAreas((prev) => [...prev, trimmed]);
+    setAreaInput('');
+    areaInputRef.current?.focus();
+  };
+
+  const handleRemoveArea = (area: string) => {
+    setEditAreas((prev) => prev.filter((a) => a !== area));
+  };
+
+  // ── 저장 ───────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     setIsSaving(true);
-    const workingAreas = areasInput
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
     const res = await updateDriverProfile({
       driverId: driver.id,
-      workingAreas,
+      workingAreas: editAreas,
     });
     if (res.success && res.data?.driver) {
       toast.success('근무 지역이 수정되었습니다.');
@@ -61,13 +80,10 @@ export function DriverWorkCard({ driver, onUpdated }: Props) {
   };
 
   const handleCancel = () => {
-    setAreasInput(
-      ((driver.workingAreas as unknown as string[]) ?? []).join(', ')
-    );
+    setEditAreas([]);
+    setAreaInput('');
     setIsEditing(false);
   };
-
-  const workingAreas = (driver.workingAreas as unknown as string[]) ?? [];
 
   return (
     <Card>
@@ -103,7 +119,7 @@ export function DriverWorkCard({ driver, onUpdated }: Props) {
               size="icon"
               variant="ghost"
               className="h-7 w-7"
-              onClick={() => setIsEditing(true)}
+              onClick={handleStartEdit}
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
@@ -114,16 +130,59 @@ export function DriverWorkCard({ driver, onUpdated }: Props) {
         {/* 근무 지역 */}
         <div className="space-y-2">
           <p className="text-sm font-semibold">근무 지역</p>
+
           {isEditing ? (
-            <div className="space-y-1">
-              <Input
-                value={areasInput}
-                onChange={(e) => setAreasInput(e.target.value)}
-                placeholder="제주시, 서귀포시, 애월읍"
-              />
+            <div className="space-y-2">
+              {/* 태그 입력 */}
+              <div className="flex gap-2">
+                <Input
+                  ref={areaInputRef}
+                  value={areaInput}
+                  onChange={(e) => setAreaInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddArea();
+                    }
+                  }}
+                  placeholder="예: 제주시"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddArea}
+                  disabled={!areaInput.trim()}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  추가
+                </Button>
+              </div>
               <p className="text-muted-foreground text-xs">
-                콤마(,)로 구분하여 입력
+                Enter 또는 추가 버튼으로 지역 입력
               </p>
+              {/* 현재 태그 목록 */}
+              {editAreas.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {editAreas.map((area) => (
+                    <Badge
+                      key={area}
+                      variant="secondary"
+                      className="gap-1 pr-1"
+                    >
+                      {area}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveArea(area)}
+                        className="hover:text-destructive ml-0.5 rounded-full"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           ) : workingAreas.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
@@ -138,7 +197,7 @@ export function DriverWorkCard({ driver, onUpdated }: Props) {
           )}
         </div>
 
-        {/* 근무 시간 (읽기 전용 — workingHours 수정은 UpdateDriverProfileInput에 없음) */}
+        {/* 근무 시간 (읽기 전용) */}
         {workingHours && (
           <div className="space-y-2">
             <p className="flex items-center gap-1.5 text-sm font-semibold">

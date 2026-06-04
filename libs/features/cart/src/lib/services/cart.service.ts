@@ -6,6 +6,8 @@ import {
   UPDATE_CART_ITEM,
   REMOVE_FROM_CART,
   CLEAR_CART,
+  GET_ADMIN_CARTS,
+  ADMIN_CLEANUP_CARTS,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -23,6 +25,8 @@ import type {
   UpdateCartItemOutput,
   RemoveFromCartInput,
   RemoveFromCartOutput,
+  AdminCartsFilter,
+  AdminCartsOutput,
 } from '../types';
 
 export class CartService implements ICartService {
@@ -117,6 +121,20 @@ export class CartService implements ICartService {
     return res as unknown as ApiResponse<Cart>;
   }
 
+  async getAdminCarts(
+    filter?: AdminCartsFilter
+  ): Promise<ApiResponse<AdminCartsOutput>> {
+    const res = await this.query<{ adminCarts: AdminCartsOutput }>(
+      GET_ADMIN_CARTS,
+      // filter가 없으면 빈 객체로 전달 → 서버 기본값(limit:20, offset:0) 사용
+      { filter: filter ?? {} }
+    );
+    if (res.success && res.data?.adminCarts) {
+      return { success: true, data: res.data.adminCarts };
+    }
+    return res as unknown as ApiResponse<AdminCartsOutput>;
+  }
+
   // ============================================================================
   // Mutations
   // ============================================================================
@@ -165,5 +183,15 @@ export class CartService implements ICartService {
       return { success: true, data: true };
     }
     return res as unknown as ApiResponse<boolean>;
+  }
+
+  async adminCleanupCarts(): Promise<ApiResponse<number>> {
+    const res = await this.mutate<{ adminCleanupCarts: number }>(
+      ADMIN_CLEANUP_CARTS
+    );
+    if (res.success && res.data?.adminCleanupCarts != null) {
+      return { success: true, data: res.data.adminCleanupCarts };
+    }
+    return res as unknown as ApiResponse<number>;
   }
 }

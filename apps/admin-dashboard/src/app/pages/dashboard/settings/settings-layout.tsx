@@ -11,88 +11,29 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import {
+  BreadcrumbConfig,
+  DEFAULT_SETTINGS_BREADCRUMB_CONFIG,
+  SETTINGS_BREADCRUMB_CONFIGS,
+} from '@/app/constants/settings-breadcrumb-config';
+import { SETTINGS_ROUTES } from '@/app/constants/setting-routes';
 
-interface BreadcrumbConfig {
-  label: string;
-  title: string;
-  description?: string;
-  showInBreadcrumb?: boolean;
-  showActions?: boolean; // 액션 버튼 표시 여부
-  showStats?: boolean; // 통계 표시 여부
-}
+const SETTINGS_PATH_CONFIG_MAP: Record<string, BreadcrumbConfig> = {
+  [SETTINGS_ROUTES.ROOT]: SETTINGS_BREADCRUMB_CONFIGS.ROOT,
+  [SETTINGS_ROUTES.BILLING]: SETTINGS_BREADCRUMB_CONFIGS.BILLING,
+  [SETTINGS_ROUTES.NOTIFICATIONS]: SETTINGS_BREADCRUMB_CONFIGS.NOTIFICATIONS,
+};
 
 export const SettingsLayout = () => {
   const location = useLocation();
 
-  // ✅ sidebar-data.tsx의 설정 그룹 사용
   const sidebarNavItems: NavItem[] = getSettingsNavItems();
 
-  // 경로별 설정 정의
-  const getBreadcrumbConfig = (pathname: string): BreadcrumbConfig => {
-    const pathConfigs: Record<string, BreadcrumbConfig> = {
-      '/settings': {
-        label: 'Settings',
-        title: 'Settings',
-        description: 'Update account preferences and manage integrations.',
-        showInBreadcrumb: true,
-        showActions: false,
-        showStats: false,
-      },
-      '/admin/settings': {
-        label: '일반 설정',
-        title: '일반 설정',
-        description: '기본 애플리케이션 설정 및 환경 설정을 구성합니다.',
-        showInBreadcrumb: true,
-        showActions: true,
-        showStats: false,
-      },
-      '/settings/profile': {
-        label: 'Profile',
-        title: 'Profile Settings',
-        description: 'Manage your personal information and account details.',
-        showInBreadcrumb: true,
-        showActions: true,
-        showStats: false,
-      },
-      '/settings/billing': {
-        label: 'Billing',
-        title: 'Billing & Payments',
-        description:
-          'Manage your subscription, payments methods, and billing history.',
-        showInBreadcrumb: true,
-        showActions: true,
-        showStats: true,
-      },
-      '/settings/notifications': {
-        label: 'Notifications',
-        title: 'Notification Settings',
-        description: 'Configure how and when you receive components.',
-        showInBreadcrumb: true,
-        showActions: true,
-        showStats: false,
-      },
-    };
+  const config: BreadcrumbConfig =
+    SETTINGS_PATH_CONFIG_MAP[location.pathname] ??
+    DEFAULT_SETTINGS_BREADCRUMB_CONFIG;
 
-    return (
-      pathConfigs[pathname] || {
-        label: 'Settings',
-        title: 'Settings',
-        description: 'Manage your application settings.',
-        showInBreadcrumb: true,
-        showActions: false,
-        showStats: false,
-      }
-    );
-  };
-
-  const config = getBreadcrumbConfig(location.pathname);
-
-  // 홈 경로 결정
-  const getHomeUrl = (pathname: string): string => {
-    return pathname.startsWith('/admin') ? '/admin' : '/';
-  };
-
-  const homeUrl = getHomeUrl(location.pathname);
+  const homeUrl = location.pathname.startsWith('/admin') ? '/admin' : '/';
 
   return (
     <main className="flex h-full flex-1 flex-col p-4">
@@ -105,27 +46,41 @@ export const SettingsLayout = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            {config.showInBreadcrumb && (
-              <BreadcrumbItem>
-                <BreadcrumbPage>{config.label}</BreadcrumbPage>
-              </BreadcrumbItem>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={SETTINGS_ROUTES.ROOT}>설정</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {location.pathname !== SETTINGS_ROUTES.ROOT &&
+              config.showInBreadcrumb && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{config.label}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+            {location.pathname === SETTINGS_ROUTES.ROOT && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{config.label}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </>
             )}
           </BreadcrumbList>
         </Breadcrumb>
 
         <div className="space-y-0.5">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight md:text-2xl">
-              {config.title}
-            </h1>
-            {config.description && (
-              <p className="text-muted-foreground">{config.description}</p>
-            )}
-          </div>
+          <h1 className="text-xl font-bold tracking-tight md:text-2xl">
+            {config.title}
+          </h1>
+          {config.description && (
+            <p className="text-muted-foreground">{config.description}</p>
+          )}
         </div>
       </div>
 
-      {/* ✅ 설정 레이아웃: 사이드바 + 컨텐츠 */}
       <div className="flex flex-1 flex-col space-y-8 overflow-auto md:space-y-2 md:overflow-hidden lg:flex-row lg:space-y-0 lg:space-x-12">
         <aside className="lg:sticky lg:w-1/5">
           <SidebarNav items={sidebarNavItems} />

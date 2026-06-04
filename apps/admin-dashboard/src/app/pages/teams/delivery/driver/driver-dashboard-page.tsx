@@ -29,14 +29,14 @@ function extractRoadAddress(
 
 export default function DriverDashboardPage() {
   const navigate = useNavigate();
-  // ✅ fetchDeliveries 유지 — 기존과 동일한 API, skipSocket만 추가
-  const { deliveries, isLoading, fetchDeliveries } = useDelivery({
+  const { deliveries, isLoading, fetchMyDeliveries } = useDelivery({
+    // ✅ fetchDeliveries → fetchMyDeliveries
     skipSocket: true,
   });
 
   useEffect(() => {
-    fetchDeliveries();
-  }, [fetchDeliveries]);
+    fetchMyDeliveries(); // ✅ 변경
+  }, [fetchMyDeliveries]);
 
   if (isLoading) {
     return <LoadingSpinner message="배송 정보를 불러오는 중..." />;

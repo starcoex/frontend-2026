@@ -2,15 +2,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import {
-  ChevronLeft,
-  Loader2,
-  PlusIcon,
-  XIcon,
-  Search,
-  User,
-  Package,
-} from 'lucide-react';
+import { PlusIcon, XIcon, Search, User, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -31,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useOrders } from '@starcoex-frontend/orders';
 import { useStores } from '@starcoex-frontend/stores';
 import { useProducts } from '@starcoex-frontend/products';
@@ -42,6 +34,7 @@ import { AddressSearchInput } from '@/components/address-search';
 import type { JusoApiAddress } from '@starcoex-frontend/graphql';
 import {
   CustomerSearch,
+  FormPageHeader,
   type SelectedCustomer,
 } from '@starcoex-frontend/common';
 
@@ -326,35 +319,24 @@ export default function AddOrderForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         {/* 헤더 */}
-        <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-              <Link to="/admin/orders">
-                <ChevronLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold tracking-tight">주문 추가</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate(-1)}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
-                </>
-              ) : (
-                '등록하기'
-              )}
-            </Button>
-          </div>
-        </div>
+        <FormPageHeader
+          backTo="/admin/orders"
+          title="주문 추가"
+          actions={[
+            {
+              label: '취소',
+              variant: 'secondary',
+              onClick: () => navigate(-1),
+            },
+            {
+              label: '등록하기',
+              loadingLabel: '처리 중...',
+              type: 'submit',
+              isLoading: isSubmitting,
+              disabled: isSubmitting,
+            },
+          ]}
+        />
 
         <div className="grid gap-4 lg:grid-cols-6">
           {/* ─── 좌측 ──────────────────────────────────────────────────────── */}

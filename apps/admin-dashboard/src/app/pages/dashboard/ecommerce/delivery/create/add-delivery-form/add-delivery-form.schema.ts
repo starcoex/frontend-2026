@@ -35,6 +35,7 @@ export const DeliveryFormSchema = z
     platformFee: z.number().min(0).optional(),
 
     priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']),
+    feePolicyId: z.number().optional(), // ✅ 신규: 배달비 정책 ID
   })
   .superRefine((data, ctx) => {
     if (data.sourceType === 'order' && !data.orderId) {

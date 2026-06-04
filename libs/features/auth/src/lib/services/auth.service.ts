@@ -178,6 +178,29 @@ import {
   DELETE_INVITATION,
   DeleteInvitationsMutation,
   DELETE_INVITATIONS,
+  GET_USER_SIMPLE_BY_ID,
+  GenerateVerificationUrlQuery,
+  GenerateVerificationUrlQueryVariables,
+  GENERATE_VERIFICATION_URL,
+  RegisterWithIdentityVerificationInput,
+  RegisterWithIdentityVerificationMutation,
+  RegisterWithIdentityVerificationMutationVariables,
+  REGISTER_WITH_IDENTITY_VERIFICATION,
+  LoginWithIdentityVerificationMutation,
+  LoginWithIdentityVerificationMutationVariables,
+  LOGIN_WITH_IDENTITY_VERIFICATION,
+  GetOnboardingStatusQuery,
+  GET_ONBOARDING_STATUS,
+  CompleteOnboardingMutation,
+  COMPLETE_ONBOARDING,
+  UpdateOnboardingStepInput,
+  UpdateOnboardingStepMutation,
+  UpdateOnboardingStepMutationVariables,
+  UPDATE_ONBOARDING_STEP,
+  UpdateUserMetaInput,
+  UpdateUserMetaMutation,
+  UpdateUserMetaMutationVariables,
+  UPDATE_USER_META,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -420,10 +443,42 @@ export class AuthService implements IAuthService {
   async getSocialLoginUrl(
     input: SocialLoginStartInput
   ): Promise<ApiResponse<GetSocialLoginUrlQuery>> {
-    return this.mutate<GetSocialLoginUrlQuery, GetSocialLoginUrlQueryVariables>(
+    return this.query<GetSocialLoginUrlQuery, GetSocialLoginUrlQueryVariables>(
       GET_SOCIAL_LOGIN_URL,
-      { input }
+      { input },
+      { fetchPolicy: 'network-only' }
     );
+  }
+
+  async generateVerificationUrl(input: {
+    identityVerificationId: string;
+    customRedirectPath?: string;
+  }): Promise<ApiResponse<GenerateVerificationUrlQuery>> {
+    return this.query<
+      GenerateVerificationUrlQuery,
+      GenerateVerificationUrlQueryVariables
+    >(GENERATE_VERIFICATION_URL, {
+      identityVerificationId: input.identityVerificationId,
+      customRedirectPath: input.customRedirectPath,
+    });
+  }
+
+  async registerWithIdentityVerification(
+    input: RegisterWithIdentityVerificationInput
+  ): Promise<ApiResponse<RegisterWithIdentityVerificationMutation>> {
+    return this.mutate<
+      RegisterWithIdentityVerificationMutation,
+      RegisterWithIdentityVerificationMutationVariables
+    >(REGISTER_WITH_IDENTITY_VERIFICATION, { input });
+  }
+
+  async loginWithIdentityVerification(
+    identityVerificationId: string
+  ): Promise<ApiResponse<LoginWithIdentityVerificationMutation>> {
+    return this.mutate<
+      LoginWithIdentityVerificationMutation,
+      LoginWithIdentityVerificationMutationVariables
+    >(LOGIN_WITH_IDENTITY_VERIFICATION, { identityVerificationId });
   }
 
   async verifySocialEmail(
@@ -655,6 +710,10 @@ export class AuthService implements IAuthService {
     );
   }
 
+  async getUserSimpleById(id: number) {
+    return this.query(GET_USER_SIMPLE_BY_ID, { id });
+  }
+
   // ✅ getUsersStats - 캐시 우선
   async getUsersStats(): Promise<ApiResponse<GetUsersStatsQuery>> {
     return this.query<GetUsersStatsQuery>(
@@ -810,12 +869,47 @@ export class AuthService implements IAuthService {
     >(CREATE_GUEST_USER_BY_ADMIN, { input });
   }
 
+  // ─── 온보딩 메서드들 ───────────────────────────────────────────────────────
+
+  async getOnboardingStatus(): Promise<ApiResponse<GetOnboardingStatusQuery>> {
+    return this.query<GetOnboardingStatusQuery>(
+      GET_ONBOARDING_STATUS,
+      undefined,
+      { fetchPolicy: 'network-only' }
+    );
+  }
+
+  async completeOnboarding(): Promise<ApiResponse<CompleteOnboardingMutation>> {
+    return this.mutate<CompleteOnboardingMutation, Record<string, never>>(
+      COMPLETE_ONBOARDING,
+      {} as Record<string, never>
+    );
+  }
+
+  async updateOnboardingStep(
+    input: UpdateOnboardingStepInput
+  ): Promise<ApiResponse<UpdateOnboardingStepMutation>> {
+    return this.mutate<
+      UpdateOnboardingStepMutation,
+      UpdateOnboardingStepMutationVariables
+    >(UPDATE_ONBOARDING_STEP, { input });
+  }
+
+  async updateUserMeta(
+    input: UpdateUserMetaInput
+  ): Promise<ApiResponse<UpdateUserMetaMutation>> {
+    return this.mutate<UpdateUserMetaMutation, UpdateUserMetaMutationVariables>(
+      UPDATE_USER_META,
+      { input }
+    );
+  }
+
   clearAuthCache(): void {
     // 캐시 초기화는 fire-and-forget 로 처리
     this.client
       .clearStore()
       .catch((err) =>
-        console.error('[AddressService] clearAuthCache error', err)
+        console.error('[AnalyticsService] clearAuthCache error', err)
       );
   }
 }

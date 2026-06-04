@@ -5,8 +5,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
-  ChevronLeft,
-  Loader2,
   AlertCircle,
   Package,
   User,
@@ -28,9 +26,9 @@ import {
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
 import { useOrders } from '@starcoex-frontend/orders';
 import { NEXT_STATUS_MAP } from '@/app/pages/dashboard/ecommerce/orders/data/order-data';
+import { FormPageHeader } from '@starcoex-frontend/common';
 
 // ─── 주문 상태 흐름 (schema.prisma OrderStatus 기준) ─────────────────────────
 const ORDER_STATUS_OPTIONS = [
@@ -190,42 +188,24 @@ export default function EditOrderForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         {/* 헤더 */}
-        <div className="mb-4 flex flex-col justify-between space-y-4 lg:flex-row lg:items-center lg:space-y-0">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-              <Link to="/admin/orders">
-                <ChevronLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                주문 상태 변경
-              </h1>
-              <p className="text-muted-foreground text-sm font-mono">
-                {order.orderNumber}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate(-1)}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={isSubmitting || !isStatusChanged}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  처리 중...
-                </>
-              ) : (
-                '상태 저장'
-              )}
-            </Button>
-          </div>
-        </div>
+        <FormPageHeader
+          backTo="/admin/orders"
+          title="주문 상태 변경"
+          subtitle={order.orderNumber}
+          actions={[
+            {
+              label: '취소',
+              variant: 'secondary',
+              onClick: () => navigate(-1),
+            },
+            {
+              label: '상태 저장',
+              type: 'submit',
+              isLoading: isSubmitting,
+              disabled: isSubmitting || !isStatusChanged,
+            },
+          ]}
+        />
 
         <div className="grid gap-4 lg:grid-cols-6">
           {/* ─── 좌측: 주문 요약 (읽기 전용) ──────────────────────────────── */}

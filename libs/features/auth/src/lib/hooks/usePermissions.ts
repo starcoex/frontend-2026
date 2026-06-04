@@ -48,6 +48,11 @@ export const usePermissions = () => {
     return !!currentUser?.activation?.twoFactorActivated;
   }, [currentUser]);
 
+  // 본인인증 여부
+  const isIdentityVerified = useCallback(() => {
+    return !!currentUser?.identityVerified;
+  }, [currentUser]);
+
   return {
     isAdmin,
     isSuperAdmin,
@@ -57,5 +62,6 @@ export const usePermissions = () => {
     isPhoneVerified,
     isBusinessVerified,
     is2FAEnabled,
+    isIdentityVerified,
   };
 };

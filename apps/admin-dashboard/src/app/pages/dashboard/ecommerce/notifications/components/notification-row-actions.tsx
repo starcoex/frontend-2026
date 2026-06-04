@@ -61,6 +61,27 @@ export function NotificationRowActions({
 
   const isUnread = notification.status === NotificationStatus.UNREAD;
 
+  // relatedEntityType → admin 경로 매핑 (actionUrl 없을 때 fallback)
+  const ENTITY_PATH_MAP: Record<string, string> = {
+    order: '/admin/orders',
+    payment: '/admin/payments',
+    reservation: '/admin/reservations',
+    delivery: '/admin/delivery',
+    product: '/admin/products',
+    membership: '/admin/users', // 멤버십 → 유저 상세
+  };
+
+  // actionUrl 우선, 없으면 relatedEntity로 경로 추론
+  const resolvedPath = (() => {
+    if (notification.actionUrl) return notification.actionUrl;
+    const type = notification.relatedEntityType?.toLowerCase();
+    const id = notification.relatedEntityId;
+    if (type && id && ENTITY_PATH_MAP[type]) {
+      return `${ENTITY_PATH_MAP[type]}/${id}`;
+    }
+    return null;
+  })();
+
   const handleMarkAsRead = async () => {
     if (!isUnread) return;
     const res = await markAsRead(notification.id);
@@ -87,25 +108,23 @@ export function NotificationRowActions({
   };
 
   /**
-   * actionUrl 이동 처리
+   * resolvedPath 이동 처리
    * - 절대 URL(http/https): origin이 같으면 내부 이동, 다르면 새 탭
    * - 상대 경로(/orders/18): /admin 접두어 보정 후 내부 이동
    */
   const handleLinkMove = () => {
-    if (!notification.actionUrl) return;
+    if (!resolvedPath) return;
 
     try {
-      const url = new URL(notification.actionUrl);
+      const url = new URL(resolvedPath);
       if (url.origin === window.location.origin) {
-        // 같은 도메인 — pathname에 /admin 없으면 보정
         const pathname = ensureAdminPrefix(url.pathname);
         navigate(pathname);
       } else {
-        window.open(notification.actionUrl, '_blank', 'noopener,noreferrer');
+        window.open(resolvedPath, '_blank', 'noopener,noreferrer');
       }
     } catch {
-      // 상대 경로인 경우
-      const pathname = ensureAdminPrefix(notification.actionUrl);
+      const pathname = ensureAdminPrefix(resolvedPath);
       navigate(pathname);
     }
   };
@@ -132,7 +151,7 @@ export function NotificationRowActions({
               읽음 처리
             </DropdownMenuItem>
           )}
-          {notification.actionUrl && (
+          {resolvedPath && (
             <DropdownMenuItem onSelect={handleLinkMove}>
               <ExternalLink className="mr-2 h-4 w-4" />
               관련 페이지 이동
@@ -186,7 +205,7 @@ export function NotificationRowActions({
                     : ''}
                 </Row>
               )}
-              {notification.actionUrl && (
+              {resolvedPath && (
                 <Row label="이동 경로">
                   <button
                     type="button"
@@ -196,13 +215,12 @@ export function NotificationRowActions({
                     }}
                     className="text-primary max-w-[200px] truncate text-xs underline underline-offset-2"
                   >
-                    {/* 표시는 /admin 보정 후 경로로 */}
                     {ensureAdminPrefix(
                       (() => {
                         try {
-                          return new URL(notification.actionUrl!).pathname;
+                          return new URL(resolvedPath).pathname;
                         } catch {
-                          return notification.actionUrl!;
+                          return resolvedPath;
                         }
                       })()
                     )}
@@ -238,7 +256,7 @@ export function NotificationRowActions({
                   읽음 처리
                 </Button>
               )}
-              {notification.actionUrl && (
+              {resolvedPath && (
                 <Button
                   size="sm"
                   className="flex-1"

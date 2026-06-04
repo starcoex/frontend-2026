@@ -2,10 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   useMemo,
   useCallback,
   type ReactNode,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -52,18 +52,14 @@ export const DeliveryProvider = ({ children }: { children: ReactNode }) => {
   const [realtimeState, setRealtimeState] =
     useState<DeliveryRealtimeState>(initialRealtimeState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('delivery')) {
       try {
         initDeliveryService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
-        console.error('❌ DeliveryService initialization failed:', error);
+        console.error('❌ ChatService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -251,10 +247,6 @@ export const DeliveryProvider = ({ children }: { children: ReactNode }) => {
       removeSubscribedDelivery,
     ]
   );
-
-  if (!serviceInitialized) {
-    return null;
-  }
 
   return (
     <DeliveryContext.Provider value={value}>

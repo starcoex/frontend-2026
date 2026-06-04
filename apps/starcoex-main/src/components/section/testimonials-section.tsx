@@ -2,116 +2,86 @@ import { Handshake, Star, CheckCircle } from 'lucide-react';
 import SectionHeader from '@/components/section/components/section-header';
 import { Card, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const testimonials = [
   {
     id: 1,
-    company: {
-      name: '개인 사용자',
-      logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&auto=format&q=80',
-    },
     quote:
-      '포털에서 가입했는데 주유소 앱이랑 세차 앱에서 바로 로그인되더라고요! 너무 편해요. 각 앱마다 또 가입할 필요 없어서 정말 좋습니다.',
+      '반짝반짝 외부 손세차 받았는데 15분 만에 차가 새 차처럼 깨끗해졌어요! 휠세척이랑 온수고압세척까지 꼼꼼하게 해주셔서 만족스럽습니다.',
     author: {
       name: '김민수',
-      role: '직장인, 개인 사용자',
-      avatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&auto=format&q=80',
+      role: '직장인 · 제주시',
+      initialClass: 'bg-orange-100 text-orange-700',
     },
-    services: ['⛽ 주유소', '🚗 세차'],
+    services: ['🚗 반짝반짝 손세차'],
     verified: true,
     rating: 5,
   },
   {
     id: 2,
-    company: {
-      name: '개인 사용자',
-      logo: 'https://images.unsplash.com/photo-1494790108755-2616b612b602?w=100&h=100&fit=crop&auto=format&q=80',
-    },
     quote:
-      '난방유 주문하려고 앱 깔았는데 이미 로그인되어 있어서 깜짝 놀랐어요. 카카오로 한 번만 가입했는데 모든 서비스를 쓸 수 있어서 신기했습니다!',
+      '겨울마다 난방유 배달 이용하는데 전화 한 통이면 빠르게 와주세요. 안전하게 채워주시고 응대도 친절해서 매년 단골로 쓰고 있습니다.',
     author: {
       name: '이지은',
-      role: '주부, 개인 사용자',
-      avatar:
-        'https://images.unsplash.com/photo-1494790108755-2616b612b602?w=100&h=100&fit=crop&auto=format&q=80',
+      role: '주부 · 제주시',
+      initialClass: 'bg-blue-100 text-blue-700',
     },
-    services: ['🚛 난방유배달'],
+    services: ['🚛 난방유 배달'],
     verified: true,
-    rating: 4,
+    rating: 5,
   },
   {
     id: 3,
-    company: {
-      name: '자영업자',
-      logo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&auto=format&q=80',
-    },
     quote:
-      '세차 예약부터 주유까지 모든 앱에서 같은 계정으로 쓸 수 있어서 관리하기 정말 편해요. 포인트도 통합으로 쌓여서 혜택이 더 많아진 것 같아요.',
+      '주유 3만원 이상 하고 세차전용카드로 결제하니 적립 혜택이 쏠쏠하네요. 5만원 넣으면 59,000원 적립되니까 자주 오게 됩니다.',
     author: {
       name: '박준호',
-      role: '사업자, 자영업자',
-      avatar:
-        'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&auto=format&q=80',
+      role: '자영업 · 제주시',
+      initialClass: 'bg-green-100 text-green-700',
     },
-    services: ['⛽ 주유소', '🚗 세차', '🚛 난방유배달'],
+    services: ['⛽ 별표주유소', '🚗 손세차'],
     verified: true,
     rating: 5,
   },
   {
     id: 4,
-    company: {
-      name: '개인 사용자',
-      logo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&auto=format&q=80',
-    },
     quote:
-      '원래 앱마다 계정 만드는 게 번거로웠는데, 스타코엑스는 한 번만 가입하면 끝이네요! UI도 깔끔하고 사용하기 쉬워서 친구들한테도 추천했어요.',
+      '바쁠 때는 기본 외부 손세차로 8~9분이면 끝나서 정말 편해요. 빠른데도 틈새까지 신경 써주셔서 가성비 최고입니다.',
     author: {
       name: '최서연',
-      role: '대학생, 개인 사용자',
-      avatar:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&auto=format&q=80',
+      role: '대학생 · 제주시',
+      initialClass: 'bg-rose-100 text-rose-700',
     },
-    services: ['⛽ 주유소'],
+    services: ['🚗 기본 손세차'],
     verified: true,
     rating: 4,
   },
   {
     id: 5,
-    company: {
-      name: '개인 사용자',
-      logo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&auto=format&q=80',
-    },
     quote:
-      '통합 결제랑 포인트 적립이 정말 편해요. 주유소에서 쌓은 포인트로 세차도 할 수 있고, 하나의 앱 같은 느낌이라 관리하기 쉬워요.',
+      '앞유리 유막제거 1만원에 해주셔서 비 오는 날 시야가 훨씬 좋아졌어요. 별표 외부 손세차의 코팅왹스 분사도 광이 오래갑니다.',
     author: {
       name: '정민아',
-      role: '회사원, 개인 사용자',
-      avatar:
-        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&auto=format&q=80',
+      role: '회사원 · 제주시',
+      initialClass: 'bg-purple-100 text-purple-700',
     },
-    services: ['⛽ 주유소', '🚗 세차'],
+    services: ['🚗 별표 손세차'],
     verified: true,
     rating: 5,
   },
   {
     id: 6,
-    company: {
-      name: '사업자',
-      logo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&auto=format&q=80',
-    },
     quote:
-      '사업체 여러 대 차량 관리가 정말 편해졌어요. 각 서비스별로 따로 관리할 필요 없이 하나의 계정으로 모든 걸 처리할 수 있어서 업무 효율이 많이 올라갔습니다.',
+      '회사 차량 여러 대를 정기적으로 맡기는데 SUV 대형도 가격이 합리적이에요. 작업 시간도 정확해서 운행 스케줄 짜기 편합니다.',
     author: {
       name: '한상철',
-      role: '운송업, 사업자',
-      avatar:
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&auto=format&q=80',
+      role: '운송업 · 제주시',
+      initialClass: 'bg-amber-100 text-amber-700',
     },
-    services: ['⛽ 주유소', '🚗 세차', '🚛 난방유배달'],
+    services: ['⛽ 별표주유소', '🚗 손세차'],
     verified: true,
-    rating: 4,
+    rating: 5,
   },
 ];
 
@@ -121,9 +91,9 @@ export const TestimonialsSection = () => {
       <div className="border-b">
         <SectionHeader
           iconTitle="고객 후기"
-          title="하이브리드 서비스, 고객들은 어떻게 느낄까요?"
+          title="별표주유소와 제라게 손세차, 고객들의 생생한 후기"
           icon={Handshake}
-          description="한 번 가입으로 모든 서비스를 이용하는 고객들의 생생한 후기"
+          description="빠르고 꼼꼼한 외부 손세차와 합리적인 주유 혜택을 경험한 고객들의 이야기"
         />
       </div>
 
@@ -141,15 +111,11 @@ export const TestimonialsSection = () => {
 };
 
 interface TestimonialProps {
-  company: {
-    name: string;
-    logo: string;
-  };
   quote: string;
   author: {
     name: string;
     role: string;
-    avatar: string;
+    initialClass: string;
   };
   services: string[];
   verified: boolean;
@@ -157,7 +123,6 @@ interface TestimonialProps {
 }
 
 function TestimonialCard({
-  company,
   quote,
   author,
   services,
@@ -178,11 +143,6 @@ function TestimonialCard({
   return (
     <Card className="bg-background flex flex-col gap-6 rounded-md p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <img
-          src={company.logo}
-          alt={company.name}
-          className="w-12 h-12 object-cover rounded-full"
-        />
         <div className="flex items-center gap-1">{renderStars(rating)}</div>
       </div>
 
@@ -202,8 +162,9 @@ function TestimonialCard({
 
       <div className="mt-auto flex items-center gap-4">
         <Avatar className="w-12 h-12">
-          <AvatarImage src={author.avatar} alt={author.name} />
-          <AvatarFallback>{author.name.charAt(0)}</AvatarFallback>
+          <AvatarFallback className={author.initialClass}>
+            {author.name.charAt(0)}
+          </AvatarFallback>
         </Avatar>
         <div>
           <div className="flex items-center gap-2">

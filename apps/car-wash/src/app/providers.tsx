@@ -1,6 +1,8 @@
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@starcoex-frontend/common';
 import * as React from 'react';
+import { LoyaltyProvider } from '@starcoex-frontend/loyalty';
+import { FuelDataProvider } from '@starcoex-frontend/vehicles';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -9,7 +11,9 @@ interface ProvidersProps {
 export const Providers = ({ children }: ProvidersProps) => {
   return (
     <ThemeProvider defaultTheme="system" storageKey="car-wash-theme">
-      {children}
+      <LoyaltyProvider>
+        <FuelDataProvider autoLoad={true}>{children}</FuelDataProvider>
+      </LoyaltyProvider>
       <Toaster
         position="top-right"
         richColors

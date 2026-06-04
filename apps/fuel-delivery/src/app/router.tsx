@@ -1,263 +1,125 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { ErrorBoundary, NotFoundPage } from '@starcoex-frontend/common';
 import { MainLayout } from '@/app/layout/main-layout';
-import {
-  ErrorBoundary,
-  LoadingPage,
-  NotFoundPage,
-} from '@starcoex-frontend/common';
-import { OrderLayout } from '@/app/layout/order-layout';
-import { AuthGuard } from '@/app/guards/auth-guard';
-import { PortalConnectionGuard } from '@/app/guards/portal-connection-guard';
-import { TrackingLayout } from '@/app/layout/tracking-layout';
-import { AnonymousGuard } from '@/app/guards/anonymous-guard';
+import { ProtectedLayout } from '@/app/layout/protected-layout';
 import { AuthLayout } from '@/app/layout/auth-layout';
-import { HomePage } from '@/app/pages/home-page';
-import { ServiceAreasPage } from '@/app/pages/service-areas-page';
-import { ProductsPage } from '@/app/pages/products-page';
-import { PricingPage } from '@/app/pages/pricing-page';
+import { BottomNav } from '@/components/button-nav/botton-nav';
+
+// ─── 로딩 컴포넌트 ───────────────────────────────────────────────────────────
+const Loading = () => (
+  <div className="flex h-screen items-center justify-center">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+  </div>
+);
+const S = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
+  <Suspense fallback={<Loading />}>
+    <Component />
+  </Suspense>
+);
+
+// ─── 공개 페이지 ─────────────────────────────────────────────────────────────
+const HomePage = lazy(() =>
+  import('@/app/pages/home-page').then((m) => ({ default: m.HomePage }))
+);
+const ServiceAreasPage = lazy(() =>
+  import('@/app/pages/service-areas-page').then((m) => ({
+    default: m.ServiceAreasPage,
+  }))
+);
+const ProductsPage = lazy(() =>
+  import('@/app/pages/products-page').then((m) => ({ default: m.ProductsPage }))
+);
+const PricingPage = lazy(() =>
+  import('@/app/pages/pricing-page').then((m) => ({ default: m.PricingPage }))
+);
+const AboutPage = lazy(() =>
+  import('@/app/pages/about/about-page').then((m) => ({ default: m.AboutPage }))
+);
+const ContactPage = lazy(() =>
+  import('@/app/pages/contact/contact-page').then((m) => ({
+    default: m.ContactPage,
+  }))
+);
+
+// ─── 인증 페이지 ─────────────────────────────────────────────────────────────
+const LoginPage = lazy(() =>
+  import('@/app/pages/auth/login').then((m) => ({ default: m.LoginPage }))
+);
+
+// ─── 보호된 페이지 ───────────────────────────────────────────────────────────
+// const ProfilePage = lazy(() =>
+//   import('@/app/pages/profile/profile-page').then((m) => ({
+//     default: m.ProfilePage,
+//   }))
+// );
+
+// ─── BottomNav가 포함된 최상위 래퍼 (RootLayout 대체) ──────────────────────
+// 별도 파일 없이 router 내부에서 인라인으로 정의
+const AppShell = () => (
+  <>
+    <Outlet />
+    <BottomNav />
+  </>
+);
 
 export const router = createBrowserRouter([
-  // 🏠 메인 사이트 (공개 - 포털 연결 불필요)
   {
-    path: '/',
-    element: <MainLayout />,
+    // ✅ AppShell: BottomNav 전역 제공 (Router 컨텍스트 내부)
+    element: <AppShell />,
     errorElement: <ErrorBoundary />,
     children: [
+      // 🏠 공개 페이지 (MainLayout)
       {
-        index: true,
-        element: <HomePage />,
+        path: '/',
+        element: <MainLayout />,
+        children: [
+          { index: true, element: S(HomePage) },
+          { path: 'areas', element: S(ServiceAreasPage) },
+          { path: 'products', element: S(ProductsPage) },
+          { path: 'pricing', element: S(PricingPage) },
+          { path: 'about', element: S(AboutPage) },
+          { path: 'contact', element: S(ContactPage) },
+          { path: 'terms', element: <div>Terms of Service</div> },
+          { path: 'privacy', element: <div>Privacy Policy</div> },
+          { path: 'emergency', element: <div>Emergency Order</div> },
+          // 🚛 배송 추적 — tracking-layout 제거, 페이지에서 직접 UI 처리
+          { path: 'tracking', element: <div>Tracking Page</div> },
+          {
+            path: 'tracking/:trackingNumber',
+            element: <div>Tracking Detail</div>,
+          },
+          // 📦 주문 — order-layout 제거, 페이지에서 직접 처리
+          { path: 'order', element: <div>Order Page</div> },
+          { path: 'order/confirm', element: <div>Order Confirm</div> },
+          { path: 'order/success/:orderId', element: <div>Order Success</div> },
+        ],
       },
-      {
-        path: 'areas',
-        element: <ServiceAreasPage />,
-      },
-      {
-        path: 'products',
-        element: <ProductsPage />,
-      },
-      {
-        path: 'pricing',
-        element: <PricingPage />,
-      },
+
+      // 👤 보호된 페이지 (ProtectedLayout)
       // {
-      //   path: 'help',
-      //   element: <HelpPage />,
+      //   path: '/profile',
+      //   element: <ProtectedLayout />,
+      //   children: [
+      //     { index: true, element: S(ProfilePage) },
+      //     // { path: 'orders', element: S(OrderHistoryPage) },
+      //   ],
       // },
-      // {
-      //   path: 'faq',
-      //   element: <FaqPage />,
-      // },
-      // {
-      //   path: 'contact',
-      //   element: <ContactPage />,
-      // },
+
+      // 🔐 인증 (AuthLayout) - BottomNav 숨김은 bottom-nav.tsx 내부에서 처리
+      {
+        path: '/auth',
+        element: <AuthLayout />,
+        children: [
+          { path: 'login', element: S(LoginPage) },
+          { path: 'forgot-password', element: <div>Forgot Password</div> },
+          { path: 'reset-password/:token', element: <div>Reset Password</div> },
+          { path: 'callback/:provider', element: <div>Social Callback</div> },
+        ],
+      },
+
+      // 🚫 404
+      { path: '*', element: <NotFoundPage /> },
     ],
-  },
-
-  // 📦 주문 관련 (인증 + 포털 연결 필요)
-  {
-    path: '/order',
-    element: (
-      <AuthGuard>
-        <PortalConnectionGuard
-          showSuccessMessage={false}
-          autoRetry={true}
-          maxRetries={3}
-        >
-          <OrderLayout />
-        </PortalConnectionGuard>
-      </AuthGuard>
-    ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      // {
-      //   index: true,
-      //   element: <OrderPage />,
-      // },
-      // {
-      //   path: 'confirm',
-      //   element: <OrderConfirmPage />,
-      // },
-      // {
-      //   path: 'success/:orderId',
-      //   element: <OrderSuccessPage />,
-      // },
-      // {
-      //   path: 'subscription',
-      //   element: <SubscriptionPage />,
-      // },
-    ],
-  },
-
-  // 🚛 배송 추적 (공개 - 추적번호만으로 조회 가능)
-  {
-    path: '/tracking',
-    element: <TrackingLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      // {
-      //   index: true,
-      //   element: <TrackingPage />,
-      // },
-      // {
-      //   path: ':trackingNumber',
-      //   element: <TrackingDetailPage />,
-      // },
-    ],
-  },
-
-  // 👤 사용자 페이지 (인증 + 포털 연결 필요)
-  {
-    path: '/profile',
-    element: (
-      <AuthGuard>
-        <PortalConnectionGuard
-          showSuccessMessage={true}
-          autoRetry={true}
-          maxRetries={3}
-        >
-          <MainLayout />
-        </PortalConnectionGuard>
-      </AuthGuard>
-    ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      // {
-      //   index: true,
-      //   element: <ProfilePage />,
-      // },
-      // {
-      //   path: 'orders',
-      //   element: <OrderHistoryPage />,
-      // },
-      // {
-      //   path: 'subscriptions',
-      //   element: <SubscriptionManagePage />,
-      // },
-    ],
-  },
-
-  // 🔐 인증 관련 라우트 (비인증 사용자만 - 포털 연결 불필요)
-  {
-    path: '/auth',
-    element: (
-      <AnonymousGuard redirectTo="/profile">
-        <AuthLayout />
-      </AnonymousGuard>
-    ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      // {
-      //   path: 'login',
-      //   element: <LoginPage />,
-      // },
-      // {
-      //   path: 'register',
-      //   element: <RegisterPage />,
-      // },
-      {
-        path: 'forgot-password',
-        element: <div>Forgot Password</div>, // TODO: 구현 예정
-      },
-      {
-        path: 'reset-password/:token',
-        element: <div>Reset Password</div>, // TODO: 구현 예정
-      },
-      {
-        path: 'callback/:provider',
-        element: <div>Social Login Callback</div>, // TODO: 구현 예정
-      },
-    ],
-  },
-
-  // 📞 긴급 주문 (전화 안내 - 공개)
-  {
-    path: '/emergency',
-    element: <MainLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <div>Emergency Order</div>, // TODO: 구현 예정
-      },
-    ],
-  },
-
-  // 📄 정적 페이지들 (공개)
-  {
-    path: '/terms',
-    element: <MainLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <div>Terms of Service</div>, // TODO: 구현 예정
-      },
-    ],
-  },
-
-  {
-    path: '/privacy',
-    element: <MainLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <div>Privacy Policy</div>, // TODO: 구현 예정
-      },
-    ],
-  },
-
-  // 🔄 포털 연동 콜백
-  {
-    path: '/portal-connect',
-    element: <LoadingPage message="스타코엑스 포털과 연결 중..." />,
-    loader: async ({ request }) => {
-      const url = new URL(request.url);
-      const token = url.searchParams.get('portal_token');
-      const redirect = url.searchParams.get('redirect') || '/profile';
-
-      if (token) {
-        // 포털 토큰 저장
-        localStorage.setItem('starcoex_portal_token', token);
-        const expiry = new Date();
-        expiry.setHours(expiry.getHours() + 24);
-        localStorage.setItem('starcoex_token_expiry', expiry.toISOString());
-        localStorage.setItem('starcoex_portal_connected', 'true');
-
-        // 난방유 배달 앱 인증 완료 표시
-        localStorage.setItem('fuel_delivery_portal_synced', 'true');
-
-        // 사용자 데이터 동기화
-        try {
-          const userResponse = await fetch('/api/auth/sync-portal-user', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (userResponse.ok) {
-            console.log('난방유 배달 앱 사용자 데이터 동기화 완료');
-          }
-        } catch (error) {
-          console.warn('사용자 데이터 동기화 실패:', error);
-        }
-
-        window.location.href = redirect;
-      } else {
-        // 토큰이 없으면 포털로 리다이렉트
-        window.location.href = `https://${process.env.REACT_APP_PORTAL_DOMAIN}/auth/login`;
-      }
-
-      return null;
-    },
-  },
-
-  // 🚫 404 페이지
-  {
-    path: '*',
-    element: <NotFoundPage />,
   },
 ]);

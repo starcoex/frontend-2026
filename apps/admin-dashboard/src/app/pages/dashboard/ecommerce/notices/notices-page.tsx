@@ -1,0 +1,67 @@
+import { useEffect } from 'react';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { PageHead } from '@starcoex-frontend/common';
+import { COMPANY_INFO } from '@/app/config/company-config';
+import { useNotices } from '@starcoex-frontend/notices';
+import { NoticeTable } from './components/notice-table';
+
+export default function NoticesPage() {
+  const { notices, isLoading, error, fetchAdminNotices } = useNotices();
+
+  useEffect(() => {
+    fetchAdminNotices({});
+  }, [fetchAdminNotices]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">
+            공지 데이터를 불러오는 중...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <PageHead
+        title={`공지 관리 - ${COMPANY_INFO.name}`}
+        description="공지사항 목록을 관리하세요."
+        keywords={['공지 관리', '공지사항', COMPANY_INFO.name]}
+        og={{
+          title: `공지 관리 - ${COMPANY_INFO.name}`,
+          description: '공지사항 목록 조회 및 관리 시스템',
+          image: '/images/og-notices.jpg',
+          type: 'website',
+        }}
+      />
+
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>데이터 로딩 실패</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchAdminNotices({})}
+              className="ml-4"
+            >
+              다시 시도
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!error && (
+        <NoticeTable data={notices} onRefresh={() => fetchAdminNotices({})} />
+      )}
+    </>
+  );
+}

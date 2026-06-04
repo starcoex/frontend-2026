@@ -60,13 +60,21 @@ export const SUGGESTION_BREADCRUMB_CONFIGS: Record<
     showActions: false,
     showStats: false,
   },
-  '/admin/suggestions/create': {
-    label: '건의사항 등록',
-    title: '건의사항 등록',
+  // ✅ 신규 — 배달기사 내 건의사항 경로
+  '/admin/suggestions/my': {
+    label: '내 건의사항',
+    title: '내 건의사항',
     showInBreadcrumb: true,
-    showActions: false,
+    showActions: true, // ✅ Drawer 버튼 표시
     showStats: false,
   },
+  // '/admin/suggestions/create': {
+  //   label: '건의사항 등록',
+  //   title: '건의사항 등록',
+  //   showInBreadcrumb: true,
+  //   showActions: false,
+  //   showStats: false,
+  // },
 
   // 팀 공통 경로
   '/suggestions': {

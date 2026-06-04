@@ -17,6 +17,18 @@ import type {
   UpdateDriverStatusInput, // ✅ 신규
   AssignDriverInput, // ✅ 신규
   UnassignDriverInput, // ✅ 신규
+  // ✅ 신규: 정산
+  GetSettlementsByPeriodInput,
+  CloseSettlementInput,
+  CloseSettlementBulkInput,
+  ApproveSettlementInput,
+  ApproveSettlementBulkInput,
+  ProcessPaymentInput,
+  ProcessPaymentBulkInput,
+  // ✅ 신규: 배달비 정책
+  CalculateFeeInput,
+  CreateDeliveryFeePolicyInput,
+  UpdateDeliveryFeePolicyInput,
 } from '../types';
 import type { NewDeliveryRequestPayload } from '../types';
 
@@ -126,6 +138,157 @@ export const useDelivery = (options: UseDeliveryOptions = {}) => {
         return res;
       }, '배송 정보를 불러오는데 실패했습니다.'),
     [withLoading, setCurrentDelivery, updateDeliveryInContext]
+  );
+
+  // ============================================================================
+  // ✅ 신규: 배달비 정책 Queries
+  // ============================================================================
+
+  const fetchDeliveryFeePolicies = useCallback(
+    async (onlyActive?: boolean) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.deliveryFeePolicies(onlyActive);
+      }, '배달비 정책 목록을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const fetchDefaultDeliveryFeePolicy = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.defaultDeliveryFeePolicy();
+      }, '기본 배달비 정책을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const calculateDeliveryFee = useCallback(
+    async (input: CalculateFeeInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.calculateDeliveryFee(input);
+      }, '배달비 계산에 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ============================================================================
+  // ✅ 신규: 배달비 정책 Mutations
+  // ============================================================================
+
+  const createDeliveryFeePolicy = useCallback(
+    async (input: CreateDeliveryFeePolicyInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.createDeliveryFeePolicy(input);
+      }, '배달비 정책 생성에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const updateDeliveryFeePolicy = useCallback(
+    async (input: UpdateDeliveryFeePolicyInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.updateDeliveryFeePolicy(input);
+      }, '배달비 정책 수정에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const deleteDeliveryFeePolicy = useCallback(
+    async (id: number) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.deleteDeliveryFeePolicy(id);
+      }, '배달비 정책 삭제에 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ============================================================================
+  // ✅ 신규: 정산 Queries
+  // ============================================================================
+
+  const fetchMySettlements = useCallback(
+    async (driverId: number, limit?: number) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.mySettlements(driverId, limit);
+      }, '내 정산 내역을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const fetchSettlementsByPeriod = useCallback(
+    async (input: GetSettlementsByPeriodInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.settlementsByPeriod(input);
+      }, '기간별 정산 내역을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const fetchSettlementSummary = useCallback(
+    async (dateFrom: string, dateTo: string) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.settlementSummary(dateFrom, dateTo);
+      }, '정산 현황 요약을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ============================================================================
+  // ✅ 신규: 정산 Mutations
+  // ============================================================================
+
+  const closeSettlement = useCallback(
+    async (input: CloseSettlementInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.closeSettlement(input);
+      }, '정산 마감 처리에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const closeSettlementBulk = useCallback(
+    async (input: CloseSettlementBulkInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.closeSettlementBulk(input);
+      }, '정산 다건 마감 처리에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const approveSettlement = useCallback(
+    async (input: ApproveSettlementInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.approveSettlement(input);
+      }, '정산 승인에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const approveSettlementBulk = useCallback(
+    async (input: ApproveSettlementBulkInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.approveSettlementBulk(input);
+      }, '정산 다건 승인에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const processSettlementPayment = useCallback(
+    async (input: ProcessPaymentInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.processSettlementPayment(input);
+      }, '정산 지급 처리에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const processSettlementPaymentBulk = useCallback(
+    async (input: ProcessPaymentBulkInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.processSettlementPaymentBulk(input);
+      }, '정산 일괄 지급 처리에 실패했습니다.'),
+    [withLoading]
   );
 
   const fetchDeliveries = useCallback(
@@ -453,6 +616,23 @@ export const useDelivery = (options: UseDeliveryOptions = {}) => {
     // ✅ 신규
     deleteDelivery,
     deleteDeliveries,
+    // ✅ 신규: 정산
+    fetchMySettlements,
+    fetchSettlementsByPeriod,
+    fetchSettlementSummary,
+    closeSettlement,
+    closeSettlementBulk,
+    approveSettlement,
+    approveSettlementBulk,
+    processSettlementPayment,
+    processSettlementPaymentBulk,
+    // ✅ 신규: 배달비 정책
+    fetchDeliveryFeePolicies,
+    fetchDefaultDeliveryFeePolicy,
+    calculateDeliveryFee,
+    createDeliveryFeePolicy,
+    updateDeliveryFeePolicy,
+    deleteDeliveryFeePolicy,
     // 필터 헬퍼
     applyFilters,
     goToPage,

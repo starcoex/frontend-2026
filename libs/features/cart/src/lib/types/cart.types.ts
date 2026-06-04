@@ -13,10 +13,10 @@ export interface CartItem {
   appliedPromotionId?: number | null;
   product?: { id: number } | null;
   store?: { id: number } | null;
-  subtotal: number;
+  subtotal?: number | null;
   currentPrice?: number | null;
-  isPriceChanged: boolean;
-  isAvailable: boolean;
+  isPriceChanged?: boolean | null;
+  isAvailable?: boolean | null;
   availableStock?: number | null;
   createdAt: string;
   updatedAt: string;
@@ -63,6 +63,13 @@ export interface RemoveFromCartInput {
   storeId: number;
 }
 
+export interface AdminCartsFilter {
+  limit?: number;
+  offset?: number;
+  isEmpty?: boolean;
+  isExpired?: boolean;
+}
+
 // ============================================================================
 // Output 타입
 // ============================================================================
@@ -94,12 +101,21 @@ export interface RemoveFromCartOutput {
   message?: string | null;
 }
 
+export interface AdminCartsOutput {
+  carts: Cart[];
+  totalCount: number;
+  hasMore: boolean;
+}
+
 // ============================================================================
 // 서비스 인터페이스
 // ============================================================================
 
 export interface ICartService {
   getMyCart(): Promise<ApiResponse<Cart>>;
+  getAdminCarts(
+    filter?: AdminCartsFilter
+  ): Promise<ApiResponse<AdminCartsOutput>>;
   addToCart(input: AddToCartInput): Promise<ApiResponse<AddToCartOutput>>;
   updateCartItem(
     input: UpdateCartItemInput
@@ -108,6 +124,7 @@ export interface ICartService {
     input: RemoveFromCartInput
   ): Promise<ApiResponse<RemoveFromCartOutput>>;
   clearCart(): Promise<ApiResponse<boolean>>;
+  adminCleanupCarts(): Promise<ApiResponse<number>>;
 }
 
 // ============================================================================
@@ -116,12 +133,16 @@ export interface ICartService {
 
 export interface CartState {
   cart: Cart | null;
+  carts: Cart[];
+  cartsTotal: number;
   isLoading: boolean;
   error: string | null;
 }
 
 export interface CartContextActions {
   setCart: (cart: Cart | null) => void;
+  setCarts: (carts: Cart[]) => void;
+  setCartsTotal: (total: number) => void;
   updateCartInContext: (updates: Partial<Cart>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;

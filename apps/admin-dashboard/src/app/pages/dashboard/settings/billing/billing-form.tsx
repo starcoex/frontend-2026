@@ -1,7 +1,16 @@
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
-import { IconApple, IconBrandPaypal } from '@tabler/icons-react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  CreditCard,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
 import {
   Form,
   FormControl,
@@ -13,8 +22,7 @@ import {
 } from '@/components/ui/form';
 import { toasts } from '@/components/ui/toast.helpers';
 import { Input } from '@/components/ui/input';
-import { RadioGroup } from '@radix-ui/react-dropdown-menu';
-import { RadioGroupItem } from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -23,265 +31,605 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { usePayments } from '@starcoex-frontend/payments';
 
-const formSchema = z.object({
-  username: z.string().min(1, {
-    message: 'Username is required.',
-  }),
-  city: z.string().min(1, {
-    message: 'City is required.',
-  }),
-  payment_method: z.enum(['Card', 'Paypal', 'Apple'], {
-    message: 'Payment method is required.',
-  }),
-  card_number: z.string().min(1, {
-    message: 'Card No is required.',
-  }),
-  expire: z.string({
-    message: 'Expire date is required.',
-  }),
-  year: z.string({
-    message: 'Year is required.',
-  }),
-  cv: z.string().min(1, {
-    message: 'Cv is required.',
-  }),
+// ============================================================================
+// 타입 & 상수
+// ============================================================================
+
+interface PaymentMethod {
+  id: string;
+  type: 'visa' | 'mastercard' | 'amex' | 'paypal';
+  last4?: string;
+  expiryMonth?: number;
+  expiryYear?: number;
+  email?: string;
+  cardholderName?: string;
+  isDefault: boolean;
+}
+
+const PAYMENT_LOGOS: Record<string, string> = {
+  visa: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/payment-methods/visa.svg',
+  mastercard:
+    'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/payment-methods/mastercard.svg',
+  amex: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/payment-methods/amex.svg',
+  paypal:
+    'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/payment-methods/paypal.svg',
+};
+
+const CARD_TYPE_LABELS: Record<string, string> = {
+  visa: 'Visa',
+  mastercard: 'Mastercard',
+  amex: 'American Express',
+  paypal: 'PayPal',
+};
+
+// ============================================================================
+// 결제 수단 관리 섹션
+// - 등록된 카드/PayPal 목록 조회, 수정, 삭제, 기본 설정
+// - 새 결제 수단 추가 (카드 상세 정보 입력은 여기서만)
+// ============================================================================
+
+interface PaymentMethodsSectionProps {
+  selectedId: string | undefined;
+  onSelect: (id: string) => void;
+}
+
+function PaymentMethodsSection({
+  selectedId,
+  onSelect,
+}: PaymentMethodsSectionProps) {
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<PaymentMethod>>({});
+
+  const startEditing = (method: PaymentMethod) => {
+    setEditingId(method.id);
+    setEditForm({ ...method });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  const saveEdit = () => {
+    if (
+      editingId &&
+      editForm.type &&
+      (editForm.type === 'paypal'
+        ? editForm.email
+        : editForm.last4 && editForm.expiryMonth && editForm.expiryYear)
+    ) {
+      setMethods((prev) =>
+        prev.map((m) =>
+          m.id === editingId ? ({ ...m, ...editForm } as PaymentMethod) : m
+        )
+      );
+      setEditingId(null);
+      setEditForm({});
+    }
+  };
+
+  const startAddingNew = () => {
+    setIsAddingNew(true);
+    setEditForm({
+      type: 'visa',
+      last4: '',
+      expiryMonth: undefined,
+      expiryYear: undefined,
+      email: undefined,
+      cardholderName: '',
+      isDefault: methods.length === 0,
+    });
+  };
+
+  const cancelAddingNew = () => {
+    setIsAddingNew(false);
+    setEditForm({});
+  };
+
+  const saveNewMethod = () => {
+    if (
+      editForm.type &&
+      (editForm.type === 'paypal'
+        ? editForm.email
+        : editForm.last4 && editForm.expiryMonth && editForm.expiryYear)
+    ) {
+      const newMethod: PaymentMethod = {
+        id: Date.now().toString(),
+        type: editForm.type as PaymentMethod['type'],
+        last4: editForm.last4,
+        expiryMonth: editForm.expiryMonth,
+        expiryYear: editForm.expiryYear,
+        email: editForm.email,
+        cardholderName: editForm.cardholderName,
+        isDefault: methods.length === 0,
+      };
+      setMethods((prev) => [...prev, newMethod]);
+      setIsAddingNew(false);
+      setEditForm({});
+      // 첫 번째 추가 시 자동 선택
+      if (methods.length === 0) onSelect(newMethod.id);
+    }
+  };
+
+  const deleteMethod = (id: string) => {
+    setMethods((prev) => prev.filter((m) => m.id !== id));
+    if (selectedId === id) {
+      const remaining = methods.filter((m) => m.id !== id);
+      onSelect(remaining[0]?.id ?? '');
+    }
+    if (editingId === id) {
+      setEditingId(null);
+      setEditForm({});
+    }
+  };
+
+  const setAsDefault = (id: string) => {
+    setMethods((prev) => prev.map((m) => ({ ...m, isDefault: m.id === id })));
+  };
+
+  const renderEditFields = (idPrefix: string) => (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <Label htmlFor={`${idPrefix}-type`} className="text-xs">
+          카드 종류
+        </Label>
+        <Select
+          value={editForm.type || 'visa'}
+          onValueChange={(value: PaymentMethod['type']) =>
+            setEditForm({ ...editForm, type: value })
+          }
+        >
+          <SelectTrigger
+            id={`${idPrefix}-type`}
+            className="h-9"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(CARD_TYPE_LABELS).map(([val, label]) => (
+              <SelectItem key={val} value={val}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {editForm.type === 'paypal' ? (
+        <div className="space-y-2">
+          <Label htmlFor={`${idPrefix}-email`} className="text-xs">
+            PayPal 이메일
+          </Label>
+          <Input
+            id={`${idPrefix}-email`}
+            type="email"
+            className="h-9"
+            value={editForm.email || ''}
+            onChange={(e) =>
+              setEditForm({ ...editForm, email: e.target.value })
+            }
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor={`${idPrefix}-name`} className="text-xs">
+              카드 소유자명
+            </Label>
+            <Input
+              id={`${idPrefix}-name`}
+              className="h-9"
+              value={editForm.cardholderName || ''}
+              onChange={(e) =>
+                setEditForm({ ...editForm, cardholderName: e.target.value })
+              }
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`${idPrefix}-last4`} className="text-xs">
+              카드 번호 끝 4자리
+            </Label>
+            <Input
+              id={`${idPrefix}-last4`}
+              className="h-9"
+              maxLength={4}
+              value={editForm.last4 || ''}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  last4: e.target.value.replace(/\D/g, '').slice(0, 4),
+                })
+              }
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor={`${idPrefix}-month`} className="text-xs">
+                만료 월
+              </Label>
+              <Input
+                id={`${idPrefix}-month`}
+                type="number"
+                className="h-9"
+                min={1}
+                max={12}
+                value={editForm.expiryMonth || ''}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    expiryMonth: parseInt(e.target.value) || undefined,
+                  })
+                }
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`${idPrefix}-year`} className="text-xs">
+                만료 연도
+              </Label>
+              <Input
+                id={`${idPrefix}-year`}
+                type="number"
+                className="h-9"
+                min={new Date().getFullYear()}
+                value={editForm.expiryYear || ''}
+                onChange={(e) =>
+                  setEditForm({
+                    ...editForm,
+                    expiryYear: parseInt(e.target.value) || undefined,
+                  })
+                }
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-base font-semibold">등록된 결제 수단</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          아래에서 결제에 사용할 수단을 선택하세요.
+        </p>
+      </div>
+
+      {methods.length === 0 && !isAddingNew ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <CreditCard className="mb-3 size-10 text-muted-foreground" />
+            <p className="text-sm font-medium">등록된 결제 수단이 없습니다</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              결제 수단을 추가하면 여기에 표시됩니다.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={startAddingNew}
+            >
+              <Plus className="mr-2 size-4" />
+              결제 수단 추가
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <RadioGroup value={selectedId} onValueChange={onSelect}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {methods.map((method) => (
+                <Card
+                  key={method.id}
+                  className={cn(
+                    'cursor-pointer transition-all',
+                    selectedId === method.id &&
+                      editingId !== method.id &&
+                      'border-primary ring-2 ring-primary ring-offset-2',
+                    editingId === method.id && 'border-primary'
+                  )}
+                  onClick={() => editingId !== method.id && onSelect(method.id)}
+                >
+                  <CardContent className="p-5">
+                    {editingId === method.id ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-semibold">
+                            결제 수단 수정
+                          </h3>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                cancelEditing();
+                              }}
+                            >
+                              <X className="size-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                saveEdit();
+                              }}
+                            >
+                              <Save className="mr-2 size-4" />
+                              저장
+                            </Button>
+                          </div>
+                        </div>
+                        {renderEditFields(method.id)}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <RadioGroupItem
+                            value={method.id}
+                            id={method.id}
+                            className="mt-1"
+                          />
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startEditing(method);
+                                }}
+                              >
+                                <Pencil className="mr-2 size-4" />
+                                수정
+                              </DropdownMenuItem>
+                              {!method.isDefault && (
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAsDefault(method.id);
+                                  }}
+                                >
+                                  기본 결제 수단으로 설정
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteMethod(method.id);
+                                }}
+                              >
+                                <Trash2 className="mr-2 size-4" />
+                                삭제
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                        <div className="flex size-16 items-center justify-center">
+                          {PAYMENT_LOGOS[method.type] ? (
+                            <img
+                              src={PAYMENT_LOGOS[method.type]}
+                              alt={method.type}
+                              className="h-10 w-auto object-contain"
+                            />
+                          ) : (
+                            <CreditCard className="size-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">
+                              {method.type === 'paypal'
+                                ? 'PayPal'
+                                : `${CARD_TYPE_LABELS[method.type]} •••• ${
+                                    method.last4
+                                  }`}
+                            </span>
+                            {method.isDefault && (
+                              <Badge variant="secondary" className="text-xs">
+                                기본
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {method.type === 'paypal'
+                              ? method.email
+                              : method.cardholderName
+                              ? `${method.cardholderName} · 만료 ${method.expiryMonth}/${method.expiryYear}`
+                              : `만료 ${method.expiryMonth}/${method.expiryYear}`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
+              {isAddingNew && (
+                <Card className="border-primary">
+                  <CardContent className="p-5">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold">
+                          새 결제 수단 추가
+                        </h3>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={cancelAddingNew}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                          <Button size="sm" onClick={saveNewMethod}>
+                            <Save className="mr-2 size-4" />
+                            저장
+                          </Button>
+                        </div>
+                      </div>
+                      {renderEditFields('new')}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </RadioGroup>
+
+          {!isAddingNew && (
+            <Button variant="outline" size="sm" onClick={startAddingNew}>
+              <Plus className="mr-2 size-4" />
+              결제 수단 추가
+            </Button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// 청구지 정보 폼
+// - 사용자명, 도시 등 청구지 정보만 담당
+// - 위 PaymentMethodsSection에서 선택한 결제 수단을 함께 저장
+// ============================================================================
+
+const billingFormSchema = z.object({
+  username: z.string().min(1, { message: '사용자명을 입력해주세요.' }),
+  city: z.string().min(1, { message: '도시명을 입력해주세요.' }),
 });
 
+type BillingFormValues = z.infer<typeof billingFormSchema>;
+
 export default function BillingForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const { createPayment, isSubmitting } = usePayments();
+  const [selectedMethodId, setSelectedMethodId] = useState<string | undefined>(
+    undefined
+  );
+
+  const form = useForm<BillingFormValues>({
+    resolver: zodResolver(billingFormSchema),
     defaultValues: {
       username: '',
       city: '',
-      card_number: '',
-      cv: '',
-      payment_method: 'Card',
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // ✅ 설정에 특화된 토스트 사용
-    toasts.settings.submitValues(values, '결제 설정');
+  async function onSubmit(values: BillingFormValues) {
+    const res = await createPayment({
+      portOneId: `order_${Date.now()}`,
+      amount: 0,
+      currency: 'KRW',
+      orderName: '결제 정보 등록',
+      customData: {
+        username: values.username,
+        city: values.city,
+        paymentMethodId: selectedMethodId,
+      },
+    });
+
+    if (res.success) {
+      toasts.settings.submitValues(values, '결제 설정');
+    }
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="mb-4xx grid grid-cols-6 gap-5"
-      >
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem className="col-span-6 md:col-span-3">
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter username" {...field} />
-              </FormControl>
-              <FormDescription>This is your username.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem className="col-span-6 md:col-span-3">
-              <FormLabel>City</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter City" {...field} />
-              </FormControl>
-              <FormDescription>This is your city name.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="payment_method"
-          render={({ field }) => (
-            <FormItem className="col-span-6">
-              <FormLabel>Payment</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value}
-                  className="grid grid-cols-3 gap-4"
-                >
-                  <FormItem className="col-span-1 flex items-center">
-                    <FormControl>
-                      <RadioGroupItem
-                        value="Card"
-                        id="card"
-                        className="peer sr-only"
-                        aria-label="Card"
-                      />
-                    </FormControl>
-                    <FormLabel
-                      htmlFor="card"
-                      className="border-muted hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary flex flex-1 flex-col items-center justify-between rounded-md border-2 bg-transparent p-4"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        className="mb-3 h-6 w-6"
-                      >
-                        <rect width="20" height="14" x="2" y="5" rx="2" />
-                        <path d="M2 10h20" />
-                      </svg>
-                      Card
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="col-span-1 flex items-center">
-                    <FormControl>
-                      <RadioGroupItem
-                        value="Paypal"
-                        id="paypal"
-                        className="peer sr-only"
-                        aria-label="Paypal"
-                      />
-                    </FormControl>
-                    <FormLabel
-                      htmlFor="paypal"
-                      className="border-muted hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary flex flex-1 flex-col items-center justify-between rounded-md border-2 bg-transparent p-4"
-                    >
-                      <IconBrandPaypal className="mb-3 h-6 w-6" />
-                      Paypal
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="col-span-1 flex items-center">
-                    <FormControl>
-                      <RadioGroupItem
-                        value="Apple"
-                        id="apple"
-                        className="peer sr-only"
-                        aria-label="Apple"
-                      />
-                    </FormControl>
-                    <FormLabel
-                      htmlFor="apple"
-                      className="border-muted hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary flex flex-1 flex-col items-center justify-between rounded-md border-2 bg-transparent p-4"
-                    >
-                      <IconApple className="mb-3 h-6 w-6" />
-                      Apple
-                    </FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="card_number"
-          render={({ field }) => (
-            <FormItem className="col-span-6">
-              <FormLabel>Card Number</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter Card No" {...field} />
-              </FormControl>
-              <FormDescription>This is number of your card No.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="expire"
-          render={({ field }) => (
-            <FormItem className="col-span-3 md:col-span-2">
-              <FormLabel>Expires</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value}
-                >
-                  <SelectTrigger id="month" aria-label="Month">
-                    <SelectValue placeholder="Month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">January</SelectItem>
-                    <SelectItem value="2">February</SelectItem>
-                    <SelectItem value="3">March</SelectItem>
-                    <SelectItem value="4">April</SelectItem>
-                    <SelectItem value="5">May</SelectItem>
-                    <SelectItem value="6">June</SelectItem>
-                    <SelectItem value="7">July</SelectItem>
-                    <SelectItem value="8">August</SelectItem>
-                    <SelectItem value="9">September</SelectItem>
-                    <SelectItem value="10">October</SelectItem>
-                    <SelectItem value="11">November</SelectItem>
-                    <SelectItem value="12">December</SelectItem>
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormDescription>This is your card expire date.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="year"
-          render={({ field }) => (
-            <FormItem className="col-span-3 md:col-span-2">
-              <FormLabel>Year</FormLabel>
-              <FormControl>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value}
-                >
-                  <SelectTrigger id="year" aria-label="Year">
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 10 }, (_, i) => (
-                      <SelectItem
-                        key={i}
-                        value={`${new Date().getFullYear() + i}`}
-                      >
-                        {new Date().getFullYear() + i}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormDescription>This is your card expire year.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="cv"
-          render={({ field }) => (
-            <FormItem className="col-span-6 md:col-span-2">
-              <FormLabel>CV</FormLabel>
-              <FormControl>
-                <Input {...field} id="cvc" placeholder="CVC" />
-              </FormControl>
-              <FormDescription>This is your CV No.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="space-y-8">
+      {/* 결제 수단 관리 */}
+      <PaymentMethodsSection
+        selectedId={selectedMethodId}
+        onSelect={setSelectedMethodId}
+      />
 
-        <Button className="col-span-6" type="submit">
-          Continue
-        </Button>
-      </form>
-    </Form>
+      <Separator />
+
+      {/* 청구지 정보 */}
+      <div>
+        <div className="mb-4">
+          <h3 className="text-base font-semibold">청구지 정보</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            결제 청구서에 표시될 정보를 입력하세요.
+          </p>
+        </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid grid-cols-6 gap-5"
+          >
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem className="col-span-6 md:col-span-3">
+                  <FormLabel>사용자명</FormLabel>
+                  <FormControl>
+                    <Input placeholder="사용자명 입력" {...field} />
+                  </FormControl>
+                  <FormDescription>청구서에 표시될 이름입니다.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem className="col-span-6 md:col-span-3">
+                  <FormLabel>도시</FormLabel>
+                  <FormControl>
+                    <Input placeholder="도시명 입력" {...field} />
+                  </FormControl>
+                  <FormDescription>청구지 도시명입니다.</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              className="col-span-6"
+              type="submit"
+              disabled={isSubmitting || !selectedMethodId}
+            >
+              {isSubmitting ? '처리 중...' : '청구지 정보 저장'}
+            </Button>
+
+            {!selectedMethodId && (
+              <p className="col-span-6 text-xs text-muted-foreground text-center">
+                저장하려면 먼저 결제 수단을 선택해주세요.
+              </p>
+            )}
+          </form>
+        </Form>
+      </div>
+    </div>
   );
 }

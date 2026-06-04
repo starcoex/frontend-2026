@@ -1,8 +1,27 @@
-import {
-  SocialProvider,
-  SocialProviderConfig,
-  AppType,
-} from '@starcoex-platform/api-client';
+import { SocialProvider } from '@starcoex-frontend/graphql';
+
+/**
+ * 앱 타입 정의
+ */
+export type AppType =
+  | 'starcoex-main'
+  | 'gas-station'
+  | 'car-wash'
+  | 'fuel-delivery'
+  | 'admin-dashboard';
+
+/**
+ * 소셜 제공자 설정 인터페이스
+ */
+export interface SocialProviderConfig {
+  provider: SocialProvider;
+  name: string;
+  displayName: string;
+  icon: string;
+  buttonClass: string;
+  enabled: boolean;
+  scope: string[];
+}
 
 /**
  * 소셜 제공자별 설정

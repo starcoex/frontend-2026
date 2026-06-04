@@ -1,7 +1,7 @@
 import type { ApiResponse } from '../types';
 
 // ============================================================================
-// Enum 타입
+// Enum 타입 (schema-notifications.graphql 기준)
 // ============================================================================
 
 export enum NotificationType {
@@ -51,6 +51,7 @@ export enum EmailPriority {
 
 // ============================================================================
 // Federation stub 타입
+// schema: type User { id: Int!, unreadNotificationCount: Float, recentNotifications: [Notification!] }
 // ============================================================================
 
 export interface UserRef {
@@ -71,6 +72,7 @@ export interface ErrorInfo {
 
 // ============================================================================
 // 알림 엔티티 타입
+// schema: type Notification { ... notificationUser: User }
 // ============================================================================
 
 export interface Notification {
@@ -97,6 +99,7 @@ export interface Notification {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
+  /** Federation 연결 유저 정보 */
   notificationUser?: UserRef | null;
 }
 
@@ -187,9 +190,10 @@ export interface GetEmailsOutput {
 }
 
 // ============================================================================
-// Input 타입
+// Input 타입 (schema-notifications.graphql 기준)
 // ============================================================================
 
+/** schema: userId: Int! (필수) */
 export interface GetNotificationsInput {
   userId: number;
   limit?: number;
@@ -202,11 +206,9 @@ export interface GetNotificationsInput {
   activeOnly?: boolean;
 }
 
-/** 관리자 전용 전체 알림 조회 input */
 export interface GetAllNotificationsInput {
   limit?: number;
   offset?: number;
-  /** 특정 유저 필터 */
   userId?: number;
   status?: NotificationStatus;
   type?: NotificationType;
@@ -258,6 +260,19 @@ export interface GetEmailsInput {
   sortOrder?: string;
 }
 
+/**
+ * schema: searchEmails(toEmail, subject, templateName, status, limit, offset)
+ * 반환이 String 이므로 raw JSON 문자열로 처리
+ */
+export interface SearchEmailsInput {
+  toEmail?: string;
+  subject?: string;
+  templateName?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export interface SendEmailInput {
   userId?: number;
   toEmail: string;
@@ -276,14 +291,11 @@ export interface SendEmailInput {
 
 // ============================================================================
 // 관리자 알림 전송 헬퍼 타입
-// (주문 · 결제 · 예약 발생 시 관리자에게 알림)
 // ============================================================================
 
-/** 지원되는 관련 엔티티 종류 */
 export type RelatedEntityType = 'order' | 'payment' | 'reservation' | 'product';
 
 export interface AdminNotificationPayload {
-  /** 관리자 userId */
   adminUserId: number;
   title: string;
   message: string;
@@ -309,7 +321,6 @@ export interface INotificationsService {
     limit?: number
   ): Promise<ApiResponse<GetNotificationsOutput>>;
   getAdminNotificationStats(): Promise<ApiResponse<NotificationStatsOutput>>;
-  /** 관리자 전용: 전체 유저의 알림 목록 조회 */
   adminGetAllNotifications(
     input?: GetAllNotificationsInput
   ): Promise<ApiResponse<GetNotificationsOutput>>;
@@ -334,6 +345,12 @@ export interface INotificationsService {
   // ── Email Queries ──
   getEmails(input: GetEmailsInput): Promise<ApiResponse<GetEmailsOutput>>;
   getEmailById(id: number): Promise<ApiResponse<Email>>;
+  /** schema: searchEmails → String 반환 (raw JSON) */
+  searchEmails(input: SearchEmailsInput): Promise<ApiResponse<string>>;
+  /** schema: getEmailStats → String 반환 (관리자 전용) */
+  getEmailStats(): Promise<ApiResponse<string>>;
+  /** schema: emailHealthCheck → String! */
+  emailHealthCheck(): Promise<ApiResponse<string>>;
 
   // ── Email Mutations ──
   sendEmail(input: SendEmailInput): Promise<ApiResponse<SendEmailOutput>>;

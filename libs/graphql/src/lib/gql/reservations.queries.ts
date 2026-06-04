@@ -131,6 +131,9 @@ export const WALK_IN_FIELDS = gql`
     status
     waitingOrder
     estimatedWaitMinutes
+    ticketNumber
+    queuePosition
+    redisTicketId
     arrivedAt
     calledAt
     startedAt

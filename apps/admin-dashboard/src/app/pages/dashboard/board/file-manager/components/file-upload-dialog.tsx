@@ -93,7 +93,26 @@ export function FileUploadDialog() {
       setOpen(false);
       setFiles([]);
     } else {
-      toast.error(result.error?.message || '업로드에 실패했습니다.');
+      const errMsg = result.error?.message ?? '업로드에 실패했습니다.';
+      // 토큰 만료 에러는 별도 안내
+      if (
+        errMsg.includes('토큰') ||
+        errMsg.includes('token') ||
+        errMsg.includes('401') ||
+        errMsg.includes('Unauthorized')
+      ) {
+        toast.error(
+          '세션이 만료되었습니다. 페이지를 새로고침 후 다시 시도해 주세요.',
+          {
+            action: {
+              label: '새로고침',
+              onClick: () => window.location.reload(),
+            },
+          }
+        );
+      } else {
+        toast.error(errMsg);
+      }
     }
   };
 

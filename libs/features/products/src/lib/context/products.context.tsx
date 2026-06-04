@@ -2,10 +2,10 @@ import {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -33,18 +33,14 @@ const initialState: ProductsState = {
 export const ProductsProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<ProductsState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('products')) {
       try {
         initProductsService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ PaymentsService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -174,14 +170,6 @@ export const ProductsProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return (
-      <div aria-busy="true" aria-label="Products 서비스 초기화 중">
-        Initializing Products Service...
-      </div>
-    );
-  }
 
   return (
     <ProductsContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { UserPlus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +28,7 @@ import {
 } from '@starcoex-frontend/common'; // ✅ add-order-form 패턴 동일
 import { useStores } from '@starcoex-frontend/stores';
 import type { Store, ManagerRole } from '@starcoex-frontend/stores';
+import { useAuth } from '@starcoex-frontend/auth';
 
 const ROLE_LABELS: Record<ManagerRole, string> = {
   OWNER: '점주',
@@ -48,6 +49,7 @@ interface Props {
 
 export function StoreManagerPanel({ store }: Props) {
   const { addStoreManager, removeStoreManager } = useStores();
+  const { getUserSimpleById } = useAuth(); // ✅ 사용자 이름 조회
 
   // ✅ CustomerSearch 패턴 — 직접 userId 입력 대신 사용자 검색/선택
   const [selectedUser, setSelectedUser] = useState<SelectedCustomer | null>(
@@ -56,6 +58,39 @@ export function StoreManagerPanel({ store }: Props) {
   const [role, setRole] = useState<ManagerRole>('STAFF');
   const [removingUserId, setRemovingUserId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  // ✅ userId → name 매핑 캐시
+  const [userNames, setUserNames] = useState<Record<number, string>>({});
+
+  // ✅ storeManagers가 변경될 때마다 이름 일괄 조회
+  useEffect(() => {
+    const fetchNames = async () => {
+      const unknownIds = store.storeManagers
+        .map((m) => m.userId)
+        .filter((id) => !(id in userNames));
+
+      if (unknownIds.length === 0) return;
+
+      const results = await Promise.allSettled(
+        unknownIds.map((id) => getUserSimpleById(id))
+      );
+
+      const newNames: Record<number, string> = {};
+      results.forEach((result, index) => {
+        const id = unknownIds[index];
+        if (result.status === 'fulfilled' && result.value.success) {
+          const user = result.value.data?.getUserById;
+          newNames[id] = user?.name ?? `User #${id}`;
+        } else {
+          newNames[id] = `User #${id}`;
+        }
+      });
+
+      setUserNames((prev) => ({ ...prev, ...newNames }));
+    };
+
+    fetchNames();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.storeManagers]);
 
   const handleSelectUser = (user: SelectedCustomer) => {
     setSelectedUser(user);
@@ -131,7 +166,10 @@ export function StoreManagerPanel({ store }: Props) {
                   <Badge variant={ROLE_VARIANTS[m.role]} className="text-xs">
                     {ROLE_LABELS[m.role]}
                   </Badge>
-                  <span className="text-sm font-medium">User #{m.userId}</span>
+                  {/* ✅ User #id 대신 실제 이름 표시 */}
+                  <span className="text-sm font-medium">
+                    {userNames[m.userId] ?? `User #${m.userId}`}
+                  </span>
                   {!m.isActive && (
                     <span className="text-muted-foreground text-xs">
                       (비활성)
@@ -207,7 +245,12 @@ export function StoreManagerPanel({ store }: Props) {
           <AlertDialogHeader>
             <AlertDialogTitle>관리자 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              User #{removingUserId}을(를) 이 매장의 관리자에서 제거합니다.
+              {/* ✅ 다이얼로그에서도 실제 이름 표시 */}
+              {removingUserId !== null
+                ? `${
+                    userNames[removingUserId] ?? `User #${removingUserId}`
+                  }님을 이 매장의 관리자에서 제거합니다.`
+                : ''}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

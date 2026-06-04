@@ -17,14 +17,13 @@ export function AuthLayout() {
   const navigate = useNavigate();
   const { isAuthenticated, initialized, checkAuthStatus } = useAuth();
 
-  // 1) 아직 인증 초기화가 되지 않았다면, 한 번만 서버에 상태 확인 요청
   useEffect(() => {
     if (!initialized) {
       checkAuthStatus().catch((error) => {
         console.warn('인증 상태 확인 실패:', error);
       });
     }
-  }, [initialized, checkAuthStatus]);
+  }, []); // ✅ 빈 배열 - 마운트 시 1회만 실행, initialized 변화로 재실행 방지
 
   // 2) 초기화 중이거나 로딩 중이면 로딩 UI
   if (!initialized) {

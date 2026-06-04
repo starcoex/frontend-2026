@@ -38,8 +38,10 @@ export function CartSummary({ cart }: CartSummaryProps) {
     setClearOpen(false);
   };
 
-  const hasUnavailableItems = cart.items?.some((item) => !item.isAvailable);
-  const hasPriceChangedItems = cart.items?.some((item) => item.isPriceChanged);
+  const hasUnavailableItems =
+    cart.items?.some((item) => item.isAvailable === false) ?? false;
+  const hasPriceChangedItems =
+    cart.items?.some((item) => item.isPriceChanged === true) ?? false;
 
   return (
     <>
@@ -114,10 +116,12 @@ export function CartSummary({ cart }: CartSummaryProps) {
           <Button
             className="w-full"
             size="lg"
-            disabled={hasUnavailableItems || cart.isExpired}
+            disabled={hasUnavailableItems || cart.isExpired || cart.isEmpty}
             onClick={() => navigate('/checkout')}
           >
-            주문하기 ({cart.itemCount}개)
+            {hasUnavailableItems
+              ? '구매 불가 상품 포함됨'
+              : `주문하기 (${cart.itemCount}개)`}
           </Button>
 
           {/* 장바구니 비우기 */}

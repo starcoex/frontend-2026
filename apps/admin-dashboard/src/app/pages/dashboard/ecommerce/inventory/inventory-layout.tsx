@@ -75,6 +75,8 @@ export const InventoryLayout = () => {
     return DEFAULT_INVENTORY_BREADCRUMB_CONFIG;
   }, [location.pathname]);
 
+  const isListRoute = location.pathname === INVENTORY_ROUTES.LIST;
+
   return (
     <main className="flex h-full flex-1 flex-col p-4">
       <div className="mb-4 flex flex-col gap-4">
@@ -86,20 +88,27 @@ export const InventoryLayout = () => {
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={INVENTORY_ROUTES.LIST}>재고 관리</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {config.showInBreadcrumb &&
-              location.pathname !== INVENTORY_ROUTES.LIST && (
-                <>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>{config.label}</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </>
-              )}
+            {isListRoute ? (
+              <BreadcrumbItem>
+                <BreadcrumbPage>{config.label}</BreadcrumbPage>
+              </BreadcrumbItem>
+            ) : (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={INVENTORY_ROUTES.LIST}>재고 관리</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {config.showInBreadcrumb && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>{config.label}</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                )}
+              </>
+            )}
           </BreadcrumbList>
         </Breadcrumb>
 

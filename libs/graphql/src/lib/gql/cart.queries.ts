@@ -71,6 +71,19 @@ export const GET_MY_CART = gql`
   }
 `;
 
+export const GET_ADMIN_CARTS = gql`
+  ${CART_FIELDS}
+  query AdminCarts($filter: AdminCartsFilter) {
+    adminCarts(filter: $filter) {
+      carts {
+        ...CartFields
+      }
+      totalCount
+      hasMore
+    }
+  }
+`;
+
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 export const ADD_TO_CART = gql`
@@ -127,5 +140,11 @@ export const REMOVE_FROM_CART = gql`
 export const CLEAR_CART = gql`
   mutation ClearCart {
     clearCart
+  }
+`;
+
+export const ADMIN_CLEANUP_CARTS = gql`
+  mutation AdminCleanupCarts {
+    adminCleanupCarts
   }
 `;

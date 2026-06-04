@@ -68,6 +68,7 @@ const FormSchema = z.object({
   isActive: z.boolean(),
   isVisible: z.boolean(),
   businessHours: z.string().optional(),
+  deliverySettings: z.string().optional(),
   // 주소 필드 — 주소 변경 모드일 때만 사용, 평소엔 비어있어도 통과
   roadAddress: z.string().optional(),
   jibunAddress: z.string().optional(),
@@ -85,12 +86,24 @@ interface Props {
 
 export default function StoreEditForm({ store }: Props) {
   const navigate = useNavigate();
-  const { updateStore, brands, businessTypes } = useStores(); // ✅ businessTypes 마스터
+  const {
+    updateStore,
+    addStoreService,
+    removeStoreService,
+    brands,
+    businessTypes,
+  } = useStores();
   const { saveAddress, getUserAddressById } = useAddress(); // ✅ 주소 직접 조회
 
   const [isAddressEditMode, setIsAddressEditMode] = useState(false);
+  // 운영 서비스 관리
+  const currentServiceIds = (store.storeServices ?? [])
+    .filter((ss) => ss.isActive)
+    .map((ss) => ss.serviceTypeId);
+  const [selectedServiceIds, setSelectedServiceIds] =
+    useState<number[]>(currentServiceIds);
 
-  // ✅ addressSnapshot 대신 apps/address에서 직접 조회 (store-detail-page 패턴)
+  // ✅ addressSnapshot 대신 apps/address에서 직접 조회 (queue-detail-page 패턴)
   const [storeAddress, setStoreAddress] = useState<Partial<Address> | null>(
     null
   );
@@ -105,14 +118,14 @@ export default function StoreEditForm({ store }: Props) {
     setAddressLoading(true);
     getUserAddressById(store.addressId)
       .then((res) => {
-        if (res.success && res.data?.getUserAddressById) {
-          setStoreAddress(res.data.getUserAddressById as Partial<Address>);
+        if (res.success && res.data) {
+          setStoreAddress(res.data as Partial<Address>);
         }
       })
       .finally(() => setAddressLoading(false));
   }, [store.addressId]);
 
-  // ✅ 활성화된 비즈니스 타입 마스터 (add-store-form 패턴)
+  // ✅ 활성화된 비즈니스 타입 마스터 (add-queue-form 패턴)
   const activeBusinessTypes = businessTypes.filter((bt) => bt.isActive);
 
   const form = useForm<StoreEditFormData>({
@@ -140,6 +153,14 @@ export default function StoreEditForm({ store }: Props) {
         const bh = store.businessHours as Record<string, unknown>;
         if (typeof bh.text === 'string') return bh.text;
         return '';
+      })(),
+      deliverySettings: (() => {
+        if (!store.deliverySettings) return '';
+        if (typeof store.deliverySettings === 'string')
+          return store.deliverySettings;
+        const ds = store.deliverySettings as Record<string, unknown>;
+        if (typeof ds.text === 'string') return ds.text;
+        return JSON.stringify(store.deliverySettings);
       })(),
     },
   });
@@ -180,7 +201,7 @@ export default function StoreEditForm({ store }: Props) {
         toast.error(addressRes.error?.message || '주소 저장에 실패했습니다.');
         return;
       }
-      addressId = addressRes.data.saveAddress.id;
+      addressId = addressRes.data.id;
     }
 
     const res = await updateStore({
@@ -199,9 +220,28 @@ export default function StoreEditForm({ store }: Props) {
       businessHours: data.businessHours
         ? { text: data.businessHours } // JSON으로 감싸서 저장
         : undefined,
+      deliverySettings: data.deliverySettings
+        ? { text: data.deliverySettings }
+        : undefined,
     });
 
     if (res.success) {
+      // 운영 서비스 변경 처리
+      const toAdd = selectedServiceIds.filter(
+        (id) => !currentServiceIds.includes(id)
+      );
+      const toRemove = currentServiceIds.filter(
+        (id) => !selectedServiceIds.includes(id)
+      );
+
+      await Promise.all([
+        ...toAdd.map((serviceTypeId) =>
+          addStoreService({ storeId: store.id, serviceTypeId })
+        ),
+        ...toRemove.map((serviceTypeId) =>
+          removeStoreService({ storeId: store.id, serviceTypeId })
+        ),
+      ]);
       toast.success('매장 정보가 수정되었습니다.');
       navigate(`/admin/stores/${store.id}`);
     } else {
@@ -428,6 +468,24 @@ export default function StoreEditForm({ store }: Props) {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="deliverySettings"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>배송 설정</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="예: 배달 가능 지역, 최소 주문금액 5,000원, 배달비 3,000원"
+                          className="resize-none"
+                          rows={2}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
           </div>
@@ -473,7 +531,7 @@ export default function StoreEditForm({ store }: Props) {
                   )}
                 />
 
-                {/* ✅ businessTypes 마스터 사용 (add-store-form 패턴) */}
+                {/* ✅ businessTypes 마스터 사용 (add-queue-form 패턴) */}
                 <FormField
                   name="businessTypeId"
                   control={form.control}
@@ -515,16 +573,28 @@ export default function StoreEditForm({ store }: Props) {
                         {allowedServices.length > 0 && (
                           <div className="mt-2">
                             <p className="text-muted-foreground mb-1.5 text-xs font-medium">
-                              운영 가능 서비스
+                              운영할 서비스 선택
                             </p>
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-col gap-1.5">
                               {allowedServices.map((s) => (
-                                <span
+                                <label
                                   key={s.id}
-                                  className="bg-secondary text-secondary-foreground rounded-md px-2 py-0.5 text-xs"
+                                  className="flex items-center gap-2 cursor-pointer"
                                 >
-                                  {s.name}
-                                </span>
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300"
+                                    checked={selectedServiceIds.includes(s.id)}
+                                    onChange={() =>
+                                      setSelectedServiceIds((prev) =>
+                                        prev.includes(s.id)
+                                          ? prev.filter((id) => id !== s.id)
+                                          : [...prev, s.id]
+                                      )
+                                    }
+                                  />
+                                  <span className="text-sm">{s.name}</span>
+                                </label>
                               ))}
                             </div>
                           </div>

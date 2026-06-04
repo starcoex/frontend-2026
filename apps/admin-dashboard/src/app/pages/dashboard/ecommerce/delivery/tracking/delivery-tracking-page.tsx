@@ -17,8 +17,8 @@ import {
 import { DeliveryLiveTracker } from '@/app/pages/dashboard/ecommerce/delivery/tracking/components/deliver-live-tracker';
 
 export default function DeliveryTrackingPage() {
-  // ✅ socketStatus, isSocketConnected — useDelivery return에 존재
-  // ✅ useDeliverySocket은 useDelivery 내부에서 이미 호출됨 (직접 호출 불필요)
+  // ✅ socketStatus, isSocketConnected — useChats return에 존재
+  // ✅ useDeliverySocket은 useChats 내부에서 이미 호출됨 (직접 호출 불필요)
   const { trackingInfo, fetchTrackingInfo, socketStatus, isSocketConnected } =
     useDelivery();
   // joinDriversRoom 제거 — DeliveryLiveTracker(showAllActive)에서 이미 구독함

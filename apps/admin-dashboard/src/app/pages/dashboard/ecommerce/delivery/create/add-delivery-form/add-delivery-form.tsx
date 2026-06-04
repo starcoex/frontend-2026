@@ -120,7 +120,7 @@ export default function AddDeliveryForm() {
     const store = stores.find((s) => String(s.id) === storeId);
     if (!store) return;
 
-    // ✅ store.address 가 문자열이든 객체든 안전하게 추출
+    // ✅ queue.address 가 문자열이든 객체든 안전하게 추출
     const storeRaw = store as unknown as Record<string, unknown>;
     const roadAddress = extractRoadAddress(
       storeRaw['address'] ??
@@ -221,6 +221,7 @@ export default function AddDeliveryForm() {
       priority: data.priority,
       specialInstructions: data.specialInstructions || undefined,
       customerNotes: data.customerNotes || undefined,
+      feePolicyId: data.feePolicyId, // ✅ 신규
       pickupAddress: {
         roadAddress: data.pickupRoadAddress,
         addressDetail: data.pickupAddressDetail,

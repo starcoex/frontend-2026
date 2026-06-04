@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -29,18 +30,14 @@ const initialState: CategoriesState = {
 export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<CategoriesState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('categories')) {
       try {
         initCategoriesService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ CategoriesService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -130,10 +127,6 @@ export const CategoriesProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing Categories Service...</div>;
-  }
 
   return (
     <CategoriesContext.Provider value={value}>

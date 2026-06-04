@@ -12,11 +12,18 @@ export const ORDER_BREADCRUMB_CONFIGS = {
     title: '주문 관리',
     showInBreadcrumb: true,
     showActions: true, // ✅ true로 변경 → 주문 추가 버튼 표시
-    showTabs: true, // ✅ true → OrderStats 표시
+    showTabs: true, // ✅ true → QueueStats 표시
   },
   CREATE: {
     label: '주문 추가',
     title: '주문 추가',
+    showInBreadcrumb: true,
+    showActions: false,
+    showTabs: false,
+  },
+  STATS: {
+    label: '주문 통계',
+    title: '주문 통계',
     showInBreadcrumb: true,
     showActions: false,
     showTabs: false,

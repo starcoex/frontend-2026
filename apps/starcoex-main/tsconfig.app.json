@@ -43,10 +43,25 @@
       "path": "../../libs/graphql/tsconfig.lib.json"
     },
     {
+      "path": "../../libs/pwa/tsconfig.lib.json"
+    },
+    {
       "path": "../../libs/features/auth/tsconfig.lib.json"
     },
     {
       "path": "../../libs/features/common/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/address/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/media/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/jobs/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/loyalty/tsconfig.lib.json"
     }
   ]
 }

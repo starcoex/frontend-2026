@@ -9,6 +9,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 import { useCart } from '@starcoex-frontend/cart';
 import { CART_ROUTES, CART_ROUTE_PATTERNS } from '@/app/constants/cart-routes';
 import {
@@ -20,16 +22,20 @@ import { CartStats } from '@/app/pages/dashboard/ecommerce/cart/components/cart-
 
 const PATH_TO_CONFIG_MAP: Record<string, CartBreadcrumbConfig> = {
   [CART_ROUTES.LIST]: CART_BREADCRUMB_CONFIGS.LIST,
+  [CART_ROUTES.CREATE]: CART_BREADCRUMB_CONFIGS.CREATE,
 };
 
 const getDynamicRouteConfig = (
   pathname: string
 ): CartBreadcrumbConfig | null => {
+  if (CART_ROUTE_PATTERNS.CREATE.test(pathname)) {
+    return CART_BREADCRUMB_CONFIGS.CREATE;
+  }
   const detailMatch = pathname.match(CART_ROUTE_PATTERNS.DETAIL);
   if (detailMatch) {
     return {
-      label: `장바구니 #${detailMatch[1]}`,
-      title: `장바구니 상세 #${detailMatch[1]}`,
+      label: `사용자 #${detailMatch[1]}`,
+      title: `사용자 #${detailMatch[1]} 장바구니`,
       showInBreadcrumb: true,
       showStats: false,
     };
@@ -41,24 +47,23 @@ const isSubRoute = (pathname: string): boolean => pathname !== CART_ROUTES.LIST;
 
 export const CartLayout = () => {
   const location = useLocation();
-  const { fetchMyCart } = useCart();
+  const { fetchAdminCarts } = useCart();
 
   useEffect(() => {
-    fetchMyCart();
-  }, [fetchMyCart]);
+    fetchAdminCarts();
+  }, [fetchAdminCarts]);
 
   const config = useMemo((): CartBreadcrumbConfig => {
     const pathname = location.pathname;
     const staticConfig = PATH_TO_CONFIG_MAP[pathname];
     if (staticConfig) return staticConfig;
-
     const dynamicConfig = getDynamicRouteConfig(pathname);
     if (dynamicConfig) return dynamicConfig;
-
     return DEFAULT_CART_BREADCRUMB_CONFIG;
   }, [location.pathname]);
 
   const showParentBreadcrumb = isSubRoute(location.pathname);
+  const isListPage = location.pathname === CART_ROUTES.LIST;
 
   return (
     <main className="flex h-full flex-1 flex-col p-4">
@@ -99,6 +104,15 @@ export const CartLayout = () => {
           <CardTitle className="flex-none text-2xl font-bold tracking-tight">
             {config.title}
           </CardTitle>
+
+          {isListPage && (
+            <Button size="sm" asChild>
+              <Link to={CART_ROUTES.CREATE}>
+                <PlusCircle className="mr-1.5 h-4 w-4" />
+                장바구니 상품 추가
+              </Link>
+            </Button>
+          )}
         </div>
 
         {config.showStats && <CartStats />}

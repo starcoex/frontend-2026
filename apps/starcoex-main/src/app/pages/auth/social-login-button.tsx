@@ -33,7 +33,13 @@ export function SocialLoginButtons({
 
         // ✅ 현재 앱의 origin을 redirect_uri로 추가
         const loginUrl = new URL(result.data.getSocialLoginUrl.loginUrl);
-        loginUrl.searchParams.set('redirect_uri', window.location.origin);
+        // ✅ state에 현재 앱 origin을 base64url로 인코딩하여 전달
+        const statePayload = Buffer.from(
+          JSON.stringify({ redirectUri: window.location.origin }),
+          'utf-8'
+        ).toString('base64');
+        loginUrl.searchParams.set('state', statePayload);
+        // loginUrl.searchParams.set('redirect_uri', window.location.origin);
 
         // 2. 생성된 URL로 리다이렉트 (전체 페이지 이동)
         window.location.href = loginUrl.toString();

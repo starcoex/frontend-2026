@@ -19,7 +19,10 @@ export function AddMediaFromUrl({ children }: { children: React.ReactNode }) {
           <DialogTitle>Add Media From Url</DialogTitle>
         </DialogHeader>
         <div className="mt-4">
-          <Input placeholder="https://www.example.com/image.jpg" />
+          <Input
+            aria-label="Media URL"
+            placeholder="https://www.example.com/image.jpg"
+          />
         </div>
         <DialogFooter>
           <Button type="submit">Add</Button>

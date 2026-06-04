@@ -123,5 +123,5 @@ export type SocketConnectionStatus =
   | 'disconnected'
   | 'error';
 
-// ✅ delivery.types.ts 에서 re-export (중복 선언 제거)
+// ✅ chats.types.ts 에서 re-export (중복 선언 제거)
 export type { LiveDriverLocation };

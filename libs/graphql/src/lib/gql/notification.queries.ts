@@ -29,6 +29,10 @@ export const NOTIFICATION_FRAGMENT = gql`
     createdAt
     updatedAt
     deletedAt
+    notificationUser {
+      id
+      unreadNotificationCount
+    }
   }
 `;
 
@@ -278,6 +282,44 @@ export const GET_EMAIL_BY_ID = gql`
     getEmailById(id: $id) {
       ...EmailFields
     }
+  }
+`;
+
+/**
+ * schema: searchEmails(toEmail, subject, templateName, status, limit, offset): String
+ * 반환값이 String 이므로 별도 fragment 없이 단순 조회
+ */
+export const SEARCH_EMAILS = gql`
+  query SearchEmails(
+    $toEmail: String
+    $subject: String
+    $templateName: String
+    $status: String
+    $limit: Float
+    $offset: Float
+  ) {
+    searchEmails(
+      toEmail: $toEmail
+      subject: $subject
+      templateName: $templateName
+      status: $status
+      limit: $limit
+      offset: $offset
+    )
+  }
+`;
+
+/** schema: getEmailStats: String (관리자 전용) */
+export const GET_EMAIL_STATS = gql`
+  query GetEmailStats {
+    getEmailStats
+  }
+`;
+
+/** schema: emailHealthCheck: String! */
+export const EMAIL_HEALTH_CHECK = gql`
+  query EmailHealthCheck {
+    emailHealthCheck
   }
 `;
 

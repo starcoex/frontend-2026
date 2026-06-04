@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -28,18 +29,14 @@ const initialState: OrdersState = {
 export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<OrdersState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('orders')) {
       try {
         initOrdersService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ NoticesService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
@@ -123,10 +120,6 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing Orders Service...</div>;
-  }
 
   return (
     <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>

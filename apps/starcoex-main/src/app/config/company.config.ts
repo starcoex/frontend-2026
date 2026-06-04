@@ -1,32 +1,33 @@
 export const COMPANY_INFO = {
   name: '스타코엑스',
   nameEn: 'STARCOEX',
-  businessNumber: '123-45-67890',
+  legalName: '주식회사 스타코엑스',
+  businessNumber: '864-86-01329',
   representative: '김현진',
-  address: '제주시 연삼로 79',
+  address: '제주특별자치도 제주시 연미길 10(오라삼동)',
   phone: '064-713-2002',
   email: 'starcoex@naver.co.kr',
   hours: '09:00 - 18:00',
   description:
-    '별표주유소, 난방유 배달, 제라게 카케어, 세차 서비스를 제공하는 종합 에너지 및 자동차 관리 솔루션 회사입니다. 통합 포털과 각 서비스별 전용 앱으로 더욱 편리한 서비스를 제공합니다.',
+    '제주 별표주유소와 제라게 카케어를 중심으로 주유, 손세차, 난방유 배달까지 제공하는 종합 에너지·자동차 관리 서비스입니다. 세차전용카드 하나로 더욱 편리하게 이용하세요.',
 
   // 도메인 설정
   domains: {
-    main: 'starcoex.com',
-    gasStation: 'gas-station.starcoex.com',
-    carWash: 'car-wash.starcoex.com',
-    fuelDelivery: 'fuels-delivery.starcoex.com',
+    main: 'www.starcoex.com',
+    gasStation: 'staroil.starcoex.co.kr',
+    carWash: 'zeragae.starcoex.co.kr',
+    fuelDelivery: 'delivery.starcoex.co.kr',
     admin: 'admin.starcoex.com',
   },
 
-  // 슬라이드 형태의 Hero 섹션
+  // 슬라이드 형태의 Hero 섹션 (실제 서비스 기준)
   heroSlides: [
     {
       id: 'main',
-      title: '종합 에너지 & 자동차 관리',
-      subtitle: '통합 플랫폼',
+      title: '별표주유소 & 제라게 카케어',
+      subtitle: '주유부터 손세차까지 한 곳에서',
       description:
-        '별표주유소, 난방유 배달, 세차, 카케어까지\n모든 서비스를 한 곳에서 간편하게',
+        '믿을 수 있는 별표주유소와 제라게 카케어의 외부 손세차\n주유 3만원 이상 또는 세차전용카드로 더 큰 혜택을 받으세요',
       primaryButton: {
         text: '서비스 둘러보기',
         action: 'services',
@@ -38,30 +39,30 @@ export const COMPANY_INFO = {
       backgroundImage: 'main',
     },
     {
-      id: 'hybrid-platform',
-      title: '하이브리드 서비스',
-      subtitle: '포털 + 전용 앱',
+      id: 'car-wash-price',
+      title: '반짝반짝 외부 손세차',
+      subtitle: 'Best 추천 · 15분 완성',
       description:
-        '통합 포털에서 모든 서비스를 한눈에\n각 서비스별 전용 앱으로 더욱 편리하게',
+        '버블분사 · 휠세척 · 온수고압세척까지 꼼꼼하게\n승용차 25,000원부터 / 타이어 드레싱 포함',
       primaryButton: {
-        text: '전용 앱 보기',
-        action: 'apps',
+        text: '세차 가격표 보기',
+        action: 'car-wash',
       },
       secondaryButton: {
-        text: '포털 둘러보기',
-        action: 'portal',
+        text: '서비스 소개',
+        action: 'service-info',
       },
-      backgroundImage: 'hero-hybrid',
+      backgroundImage: 'hero-carwash',
     },
     {
       id: 'event1',
-      title: '신년 특가 이벤트',
-      subtitle: '최대 30% 할인',
+      title: '앞유리 유막제거 1만원',
+      subtitle: '세차전용카드 적립 혜택',
       description:
-        '새해를 맞아 모든 서비스 특가 제공\n소셜 로그인으로 간편하게 가입하고 혜택을 받아보세요',
+        '세차전용카드 이용 시 5만원 결제하면 59,000원 적립!\n주유와 세차를 한 번에, 더 큰 혜택으로 만나보세요',
       primaryButton: {
-        text: '이벤트 참여하기',
-        action: 'event',
+        text: '카드 혜택 보기',
+        action: 'services',
       },
       secondaryButton: {
         text: '카카오 간편가입',
@@ -70,55 +71,65 @@ export const COMPANY_INFO = {
       backgroundImage: 'hero-event1',
     },
     {
-      id: 'service-highlight',
-      title: '프리미엄 세차 서비스',
-      subtitle: '전용 앱 런칭',
+      id: 'fuel-delivery',
+      title: '난방유 배달 서비스',
+      subtitle: '집까지 안전하게',
       description:
-        '전문가가 직접 방문하는 프리미엄 세차\n새 앱 출시 기념 첫 이용 고객 50% 할인',
+        '추운 겨울, 따뜻한 우리 집을 위한 난방유\n전화 한 통으로 빠르고 안전하게 배달해드립니다',
       primaryButton: {
-        text: '세차 앱으로 이동',
-        action: 'car-wash-app',
+        text: '난방유 주문 문의',
+        action: 'phone',
       },
       secondaryButton: {
         text: '서비스 소개',
-        action: 'service-info',
+        action: 'services',
       },
-      backgroundImage: 'hero-carwash',
+      backgroundImage: 'hero-fuel',
     },
   ],
 
   stats: [
     { label: '누적 고객 수', value: '10,000+', key: 'customers' },
     { label: '운영 년수', value: '15년', key: 'years' },
-    { label: '고객 만족도', value: '98%', key: 'satisfaction' },
-    { label: '서비스 앱', value: '4개', key: 'apps' }, // 새로 추가
+    { label: '세차 작업 시간', value: '8~15분', key: 'washTime' },
+    { label: '제공 서비스', value: '3종', key: 'services' },
   ],
 
-  // 앱별 정보
+  // 서비스별 정보 (실제 운영 기준)
   apps: {
     portal: {
       name: '스타코엑스 포털',
       description: '모든 서비스를 한눈에',
-      url: 'https://starcoex.com',
+      url: 'https://www.starcoex.com',
       features: ['서비스 소개', '통합 회원가입', '소셜 로그인', '서비스 연결'],
     },
     gasStation: {
-      name: '별표주유소 앱',
-      description: '주유소 전용 서비스',
-      url: 'https://gas-station.starcoex.com',
-      features: ['주유소 찾기', '가격 비교', '간편 결제', '소셜 로그인'],
+      name: '별표주유소',
+      description: '믿을 수 있는 연료와 합리적인 가격',
+      url: 'https://staroil.starcoex.co.kr',
+      features: [
+        '고품질 연료',
+        '앞유리 유막제거',
+        '세차 연계 혜택',
+        '간편 결제',
+      ],
     },
     carWash: {
-      name: '세차 서비스 앱',
-      description: '세차 예약 전용',
-      url: 'https://car-wash.starcoex.com',
-      features: ['온라인 예약', '실시간 진행상황', '간편 결제', '소셜 로그인'],
+      name: '제라게 카케어 (외부 손세차)',
+      description: '8~15분 완성 외부 손세차',
+      url: 'https://zeragae.starcoex.co.kr',
+      features: [
+        '기본 외부 손세차 (8~9분)',
+        '별표 외부 손세차 (12분)',
+        '반짝반짝 외부 손세차 (15분)',
+        '세차전용카드 적립',
+      ],
     },
     fuelDelivery: {
-      name: '난방유 배달 앱',
-      description: '난방유 주문 전용',
-      url: 'https://fuel-delivery.starcoex.com',
-      features: ['간편 주문', '배송 추적', '정기 배송', '소셜 로그인'],
+      name: '난방유 배달',
+      description: '안전하고 빠른 난방유 배달',
+      url: 'https://delivery.starcoex.co.kr',
+      features: ['당일 배달', '정기 배달', '전화 주문', '안전 배송'],
     },
     admin: {
       name: '사업자 관리',
@@ -130,7 +141,7 @@ export const COMPANY_INFO = {
 
   social: {
     facebook: '',
-    instagram: '',
+    instagram: 'https://instagram.com/jeju_secha',
     youtube: '',
     blog: '',
   },

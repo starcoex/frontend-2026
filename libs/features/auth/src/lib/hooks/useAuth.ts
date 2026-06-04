@@ -82,6 +82,17 @@ import {
   DeleteUsersByAdminMutation,
   DeleteInvitationMutation,
   DeleteInvitationsMutation,
+  GetUserSimpleByIdQuery,
+  GenerateVerificationUrlQuery,
+  RegisterWithIdentityVerificationInput,
+  RegisterWithIdentityVerificationMutation,
+  LoginWithIdentityVerificationMutation,
+  GetOnboardingStatusQuery,
+  CompleteOnboardingMutation,
+  UpdateOnboardingStepInput,
+  UpdateOnboardingStepMutation,
+  UpdateUserMetaInput,
+  UpdateUserMetaMutation,
 } from '@starcoex-frontend/graphql';
 import type { ApiResponse, IAuthService } from '../types';
 
@@ -195,6 +206,18 @@ interface UseAuthReturn {
     businessNumber: string
   ): Promise<ApiResponse<ValidateBusinessNumberQuery>>;
 
+  // ✅ 신규: 본인인증 확장 메서드
+  generateVerificationUrl(input: {
+    identityVerificationId: string;
+    customRedirectPath?: string;
+  }): Promise<ApiResponse<GenerateVerificationUrlQuery>>;
+  registerWithIdentityVerification(
+    input: RegisterWithIdentityVerificationInput
+  ): Promise<ApiResponse<RegisterWithIdentityVerificationMutation>>;
+  loginWithIdentityVerification(
+    identityVerificationId: string
+  ): Promise<ApiResponse<LoginWithIdentityVerificationMutation>>;
+
   getAllUsers(variables: {
     page?: number;
     limit?: number;
@@ -203,6 +226,7 @@ interface UseAuthReturn {
     status?: string[];
   }): Promise<ApiResponse<GetAllUsersQuery>>;
   getUserById(id: number): Promise<ApiResponse<GetUserByIdQuery>>;
+  getUserSimpleById(id: number): Promise<ApiResponse<GetUserSimpleByIdQuery>>;
   getUsersStats(): Promise<ApiResponse<GetUsersStatsQuery>>;
   getInvitations(variables: {
     page?: number;
@@ -250,6 +274,16 @@ interface UseAuthReturn {
     phoneNumber: string;
     email?: string;
   }): Promise<ApiResponse<CreateGuestUserByAdminMutation>>;
+
+  // ✅ 온보딩 관련 메서드들
+  getOnboardingStatus(): Promise<ApiResponse<GetOnboardingStatusQuery>>;
+  completeOnboarding(): Promise<ApiResponse<CompleteOnboardingMutation>>;
+  updateOnboardingStep(
+    input: UpdateOnboardingStepInput
+  ): Promise<ApiResponse<UpdateOnboardingStepMutation>>;
+  updateUserMeta(
+    input: UpdateUserMetaInput
+  ): Promise<ApiResponse<UpdateUserMetaMutation>>;
 
   clearError: () => void;
   clearAuthCache: () => void;
@@ -392,10 +426,17 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
         async () => {
           const service = getAuthService();
           const res = await service.loginStep1(input);
+
           if (res.success && res.data && !res.data.loginStep1.requires2FA) {
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            const status = await service.checkAuthStatus();
-            if (status.user) setUserRef.current(status.user);
+            // ✅ loginStep1 응답의 user를 직접 사용 (checkAuthStatus 불필요)
+            if (res.data.loginStep1.user) {
+              setUserRef.current(res.data.loginStep1.user as any);
+              onAuthStateChange?.(true);
+            } else {
+              await new Promise((resolve) => setTimeout(resolve, 500));
+              const status = await service.checkAuthStatus();
+              if (status.user) setUserRef.current(status.user);
+            }
           }
           return res;
         },
@@ -751,6 +792,67 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
+  const generateVerificationUrl = useCallback(
+    (input: { identityVerificationId: string; customRedirectPath?: string }) =>
+      withLoading(
+        () => getAuthService().generateVerificationUrl(input),
+        '본인인증 URL 생성에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
+  const registerWithIdentityVerification = useCallback(
+    (input: RegisterWithIdentityVerificationInput) =>
+      withLoading(
+        async () => {
+          const service = getAuthService();
+          const res = await service.registerWithIdentityVerification(input);
+          if (res.success) {
+            const status = await service.checkAuthStatus();
+            if (status.user) {
+              setUserRef.current(status.user);
+              onAuthStateChange?.(true);
+            }
+          }
+          return res;
+        },
+        '본인인증 회원가입에 실패했습니다',
+        false,
+        {
+          operationId: `register-identity-${input.email}`,
+          preventDuplicate: true,
+        }
+      ),
+    [withLoading, onAuthStateChange]
+  );
+
+  const loginWithIdentityVerification = useCallback(
+    (identityVerificationId: string) =>
+      withLoading(
+        async () => {
+          const service = getAuthService();
+          const res = await service.loginWithIdentityVerification(
+            identityVerificationId
+          );
+          if (res.success && res.data?.loginWithIdentityVerification) {
+            const loginData = res.data.loginWithIdentityVerification;
+            if (loginData.user) {
+              setUserRef.current(loginData.user as any);
+              onAuthStateChange?.(true);
+            }
+          }
+          return res;
+        },
+        '본인인증 로그인에 실패했습니다',
+        false,
+        {
+          operationId: `login-identity-${identityVerificationId}`,
+          preventDuplicate: true,
+        }
+      ),
+    [withLoading, onAuthStateChange]
+  );
+
   // ── 관리자 전용 ───────────────────────────────────────────────────────────────
 
   const getAllUsers = useCallback(
@@ -773,6 +875,15 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
       withLoading(
         () => getAuthService().getUserById(id),
         '사용자 조회에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
+  const getUserSimpleById = useCallback(
+    (id: number) =>
+      withLoading(
+        () => getAuthService().getUserSimpleById(id),
+        '사용자 정보 조회에 실패했습니다'
       ),
     [withLoading]
   );
@@ -929,6 +1040,46 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     [withLoading]
   );
 
+  // ── 온보딩 ────────────────────────────────────────────────────────────────────
+
+  const getOnboardingStatus = useCallback(
+    () =>
+      withLoading(
+        () => getAuthService().getOnboardingStatus(),
+        '온보딩 상태 조회에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
+  const completeOnboarding = useCallback(
+    () =>
+      withLoading(
+        () => getAuthService().completeOnboarding(),
+        '온보딩 완료 처리에 실패했습니다',
+        false,
+        { operationId: 'complete-onboarding', preventDuplicate: true }
+      ),
+    [withLoading]
+  );
+
+  const updateOnboardingStep = useCallback(
+    (input: UpdateOnboardingStepInput) =>
+      withLoading(
+        () => getAuthService().updateOnboardingStep(input),
+        '온보딩 단계 업데이트에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
+  const updateUserMeta = useCallback(
+    (input: UpdateUserMetaInput) =>
+      withLoading(
+        () => getAuthService().updateUserMeta(input),
+        '사용자 메타데이터 업데이트에 실패했습니다'
+      ),
+    [withLoading]
+  );
+
   // ── 유틸리티 ──────────────────────────────────────────────────────────────────
 
   const clearAuthCache = useCallback(() => {
@@ -995,8 +1146,12 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     requestIdentityVerification,
     verifyIdentityVerification,
     validateBusinessNumber,
+    generateVerificationUrl,
+    registerWithIdentityVerification,
+    loginWithIdentityVerification,
     getAllUsers,
     getUserById,
+    getUserSimpleById,
     getUsersStats,
     getInvitations,
     updateUserByAdmin,
@@ -1012,6 +1167,10 @@ export const useAuth = (options: UseAuthOptions = {}): UseAuthReturn => {
     promoteToSuperAdminWithMasterKey,
     changeUserRole,
     createGuestUserByAdmin,
+    getOnboardingStatus,
+    completeOnboarding,
+    updateOnboardingStep,
+    updateUserMeta,
     clearError: context.clearError,
     clearAuthCache,
     checkServiceStatus,

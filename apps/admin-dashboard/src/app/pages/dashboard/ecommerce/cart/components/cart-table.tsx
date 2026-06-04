@@ -27,9 +27,11 @@ import { CartTableToolbar } from './cart-table-toolbar';
 
 interface CartTableProps {
   data: Cart[];
+  total?: number;
+  onPageChange?: (offset: number) => void;
 }
 
-export function CartTable({ data }: CartTableProps) {
+export function CartTable({ data, total, onPageChange }: CartTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []

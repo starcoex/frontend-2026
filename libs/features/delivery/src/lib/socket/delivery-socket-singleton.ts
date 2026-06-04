@@ -3,7 +3,7 @@ import { DELIVERY_SOCKET_NAMESPACE } from '../types';
 
 let socketInstance: Socket | null = null;
 
-const SOCKET_URL = 'http://localhost:4105';
+// ❌ 제거: const SOCKET_URL = 'http://localhost:4105';
 
 /**
  * ✅ 소켓 싱글톤 반환 — 없으면 생성, 있으면 기존 것 반환
@@ -11,13 +11,30 @@ const SOCKET_URL = 'http://localhost:4105';
  */
 export function getDeliverySocket(): Socket {
   if (!socketInstance) {
-    socketInstance = io(`${SOCKET_URL}${DELIVERY_SOCKET_NAMESPACE}`, {
+    // socketInstance = io(`${SOCKET_URL}${DELIVERY_SOCKET_NAMESPACE}`, {
+    socketInstance = io(DELIVERY_SOCKET_NAMESPACE, {
+      // ✅ 개발: Vite 프록시(/delivery/socket.io) → api.starcoex.com → delivery 서비스
+      // ✅ 프로덕션: api.starcoex.com → K3s Ingress → delivery 서비스
+      path: '/delivery/socket.io',
       withCredentials: true,
-      transports: ['websocket'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
       autoConnect: false,
+    });
+    // 연결 디버깅
+    socketInstance.on('connect', () => {
+      console.info('[DeliverySocket] 연결됨:', socketInstance?.id);
+    });
+    socketInstance.on('disconnect', (reason) => {
+      console.info('[DeliverySocket] 연결 해제:', reason);
+      if (reason === 'io server disconnect') {
+        console.warn('[DeliverySocket] 서버에 의한 연결 해제 — 인증 확인 필요');
+      }
+    });
+    socketInstance.on('connect_error', (err) => {
+      console.error('[DeliverySocket] 연결 오류:', err.message);
     });
   }
   return socketInstance;

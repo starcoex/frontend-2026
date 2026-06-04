@@ -16,10 +16,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import {
+  useNotifications,
+  NotificationChannel,
+} from '@starcoex-frontend/notifications';
 
 const notificationsFormSchema = z.object({
   type: z.enum(['all', 'mentions', 'none'], {
-    message: 'You need to select a notification type.',
+    message: '알림 유형을 선택해주세요.',
   }),
   mobile: z.boolean().default(false).optional(),
   communication_emails: z.boolean().default(false).optional(),
@@ -30,7 +34,6 @@ const notificationsFormSchema = z.object({
 
 type NotificationsFormValues = z.infer<typeof notificationsFormSchema>;
 
-// This can come from your database or API.
 const defaultValues: Partial<NotificationsFormValues> = {
   communication_emails: false,
   marketing_emails: false,
@@ -39,13 +42,23 @@ const defaultValues: Partial<NotificationsFormValues> = {
 };
 
 export function NotificationsForm() {
+  const { isLoading, sendNotification } = useNotifications();
+
   const form = useForm<NotificationsFormValues>({
     resolver: zodResolver(notificationsFormSchema),
     defaultValues,
   });
 
-  function onSubmit(data: NotificationsFormValues) {
-    // ✅ 설정에 특화된 토스트 사용
+  async function onSubmit(data: NotificationsFormValues) {
+    // 알림 설정 변경을 서버에 반영 (채널 선택 예시: EMAIL)
+    await sendNotification({
+      userId: 0, // 실제 환경에서는 현재 로그인한 유저 ID로 교체
+      title: '알림 설정 변경',
+      message: `알림 유형: ${data.type}, 마케팅: ${data.marketing_emails}, 소셜: ${data.social_emails}`,
+      type: 'SYSTEM' as any,
+      channel: NotificationChannel.EMAIL,
+    });
+
     toasts.settings.submitValues(data, '알림 설정');
   }
 
@@ -57,7 +70,7 @@ export function NotificationsForm() {
           name="type"
           render={({ field }) => (
             <FormItem className="relative space-y-3">
-              <FormLabel>Notify me about...</FormLabel>
+              <FormLabel>알림 수신 대상</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -69,7 +82,7 @@ export function NotificationsForm() {
                       <RadioGroupItem value="all" />
                     </FormControl>
                     <FormLabel className="font-normal">
-                      All new messages
+                      모든 새 메시지
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-y-0 space-x-3">
@@ -77,14 +90,16 @@ export function NotificationsForm() {
                       <RadioGroupItem value="mentions" />
                     </FormControl>
                     <FormLabel className="font-normal">
-                      Direct messages and mentions
+                      다이렉트 메시지 및 멘션
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-y-0 space-x-3">
                     <FormControl>
                       <RadioGroupItem value="none" />
                     </FormControl>
-                    <FormLabel className="font-normal">Nothing</FormLabel>
+                    <FormLabel className="font-normal">
+                      알림 받지 않음
+                    </FormLabel>
                   </FormItem>
                 </RadioGroup>
               </FormControl>
@@ -92,8 +107,9 @@ export function NotificationsForm() {
             </FormItem>
           )}
         />
+
         <div className="relative">
-          <h3 className="mb-4 text-lg font-medium">Email Notifications</h3>
+          <h3 className="mb-4 text-lg font-medium">이메일 알림</h3>
           <div className="space-y-4">
             <FormField
               control={form.control}
@@ -102,10 +118,10 @@ export function NotificationsForm() {
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">
-                      Communication emails
+                      커뮤니케이션 이메일
                     </FormLabel>
                     <FormDescription>
-                      Receive emails about your account activity.
+                      계정 활동과 관련된 이메일을 수신합니다.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -123,11 +139,9 @@ export function NotificationsForm() {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Marketing emails
-                    </FormLabel>
+                    <FormLabel className="text-base">마케팅 이메일</FormLabel>
                     <FormDescription>
-                      Receive emails about new products, features, and more.
+                      새 상품, 기능 업데이트 등의 이메일을 수신합니다.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -145,9 +159,9 @@ export function NotificationsForm() {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Social emails</FormLabel>
+                    <FormLabel className="text-base">소셜 이메일</FormLabel>
                     <FormDescription>
-                      Receive emails for friend requests, follows, and more.
+                      친구 요청, 팔로우 등 소셜 활동 이메일을 수신합니다.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -165,9 +179,9 @@ export function NotificationsForm() {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Security emails</FormLabel>
+                    <FormLabel className="text-base">보안 이메일</FormLabel>
                     <FormDescription>
-                      Receive emails about your account activity and security.
+                      계정 활동 및 보안과 관련된 이메일을 수신합니다. (필수)
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -183,6 +197,7 @@ export function NotificationsForm() {
             />
           </div>
         </div>
+
         <FormField
           control={form.control}
           name="mobile"
@@ -195,24 +210,25 @@ export function NotificationsForm() {
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
-                <FormLabel>
-                  Use different settings for my mobile devices
-                </FormLabel>
+                <FormLabel>모바일 기기에 별도 알림 설정 사용</FormLabel>
                 <FormDescription>
-                  You can manage your mobile notifications in the{' '}
+                  모바일 알림은{' '}
                   <Link
                     to="/admin/settings"
                     className="underline decoration-dashed underline-offset-4 hover:decoration-solid"
                   >
-                    mobile settings
+                    모바일 설정
                   </Link>{' '}
-                  page.
+                  페이지에서 관리할 수 있습니다.
                 </FormDescription>
               </div>
             </FormItem>
           )}
         />
-        <Button type="submit">Update notifications</Button>
+
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? '저장 중...' : '알림 설정 저장'}
+        </Button>
       </form>
     </Form>
   );

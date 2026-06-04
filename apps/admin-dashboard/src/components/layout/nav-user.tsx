@@ -2,6 +2,7 @@ import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
+  CreditCard,
   LogOut,
   Settings,
   Shield,
@@ -156,6 +157,12 @@ export function NavUser({ user }: NavUserProps) {
                 <Link to={APP_ROUTES.SETTINGS}>
                   <Settings className="mr-2 h-4 w-4" />
                   설정
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to={APP_ROUTES.BILLING}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  결제
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

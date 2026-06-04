@@ -1,4 +1,4 @@
-import { Star, Users, Award, Smartphone } from 'lucide-react';
+import { Star, Users, Award, Clock, LayoutGrid } from 'lucide-react';
 import { COMPANY_INFO } from '@/app/config/company.config';
 import {
   Card,
@@ -10,37 +10,39 @@ import {
 const STATS_ICONS = {
   customers: Users,
   years: Award,
-  satisfaction: Star,
-  apps: Smartphone,
+  washTime: Clock,
+  services: LayoutGrid,
 } as const;
 
 const STATS_DATA = COMPANY_INFO.stats.map((stat) => {
   const coreMessages = {
     customers: {
       title: '검증된 신뢰',
-      subtitle: '많은 고객들이 선택한 플랫폼',
+      subtitle: '많은 고객들이 선택한 서비스',
     },
     years: {
       title: '축적된 경험',
       subtitle: '지속적인 성장과 발전',
     },
-    satisfaction: {
-      title: '높은 만족도',
-      subtitle: '우수한 서비스 품질',
+    washTime: {
+      title: '빠른 손세차',
+      subtitle: '8~15분 완성 외부 손세차',
     },
-    apps: {
-      title: '통합 연결',
-      subtitle: '하나로 연결되는 모든 서비스',
+    services: {
+      title: '다양한 서비스',
+      subtitle: '주유 · 손세차 · 난방유 배달',
     },
   };
 
-  const message = coreMessages[stat.key as keyof typeof coreMessages];
+  const fallback = { title: stat.label, subtitle: '' };
+  const message =
+    coreMessages[stat.key as keyof typeof coreMessages] ?? fallback;
 
   return {
     title: stat.label,
     coreTitle: message.title,
     subtitle: message.subtitle,
-    icon: STATS_ICONS[stat.key as keyof typeof STATS_ICONS],
+    icon: STATS_ICONS[stat.key as keyof typeof STATS_ICONS] ?? Star,
     value: stat.value,
     key: stat.key,
   };
@@ -54,7 +56,7 @@ const StatsList = () => {
           {STATS_DATA.map((item) => {
             const Icon = item.icon;
             const isHighlight =
-              item.key === 'satisfaction' || item.key === 'apps';
+              item.key === 'washTime' || item.key === 'services';
 
             return (
               <Card
@@ -107,9 +109,9 @@ const StatsList = () => {
                     >
                       {item.coreTitle}
                     </div>
-                    {item.key === 'apps' && (
+                    {item.key === 'services' && (
                       <div className="text-xs text-purple-600 mt-1">
-                        자동 연결 지원
+                        세차전용카드 혜택
                       </div>
                     )}
                   </div>

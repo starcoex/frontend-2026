@@ -1,164 +1,88 @@
-import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
-import { ArrowLeft, Truck, Shield, Users } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React, { useEffect } from 'react';
+import {
+  Outlet,
+  useNavigate,
+  useLocation,
+  Navigate,
+  Link,
+} from 'react-router-dom';
+import { ArrowLeft, Home } from 'lucide-react';
+import { useAuth } from '@starcoex-frontend/auth';
+import { AppConfigProvider } from '@starcoex-frontend/common';
+import { fuelDeliveryAuthConfig } from '@/app/config/auth.config';
 
+/**
+ * 🔐 인증 페이지 전용 레이아웃
+ * - 로그인, 회원가입, 비밀번호 찾기 등 인증 관련 페이지에서 사용
+ * - 인증된 사용자는 홈으로 리다이렉트
+ */
 export const AuthLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, initialized, checkAuthStatus } = useAuth();
 
-  // 인증 페이지 타입 확인
-  const getAuthPageType = () => {
-    if (location.pathname.includes('login')) {
-      return {
-        type: 'login',
-        title: '로그인',
-        subtitle: '난방유 배달 서비스에 오신 것을 환영합니다',
-      };
+  useEffect(() => {
+    if (!initialized) {
+      checkAuthStatus().catch((error) => {
+        console.warn('인증 상태 확인 실패:', error);
+      });
     }
-    if (location.pathname.includes('register')) {
-      return {
-        type: 'register',
-        title: '회원가입',
-        subtitle: '간편하게 가입하고 당일 배송을 이용하세요',
-      };
-    }
-    return {
-      type: 'auth',
-      title: '인증',
-      subtitle: '서비스 이용을 위해 인증이 필요합니다',
-    };
-  };
+  }, []); // ✅ 마운트 시 1회만
 
-  const pageInfo = getAuthPageType();
+  // 초기화 중 로딩 UI
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-950 dark:to-orange-950/30">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto" />
+          <p className="text-muted-foreground text-sm">인증 상태 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 이미 인증된 사용자 → 홈으로 리다이렉트
+  if (isAuthenticated) {
+    const from =
+      (location.state as { from?: { pathname?: string } })?.from?.pathname ||
+      '/';
+    return <Navigate to={from} replace />;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-white dark:from-orange-900/10 dark:via-amber-900/10 dark:to-gray-900">
-      {/* 인증 전용 헤더 */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-orange-200/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
+    <AppConfigProvider config={fuelDeliveryAuthConfig}>
+      <div className="min-h-screen flex flex-col">
+        {/* 상단 네비게이션 */}
+        <header className="fixed top-0 left-0 right-0 z-50 p-4">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
             {/* 뒤로가기 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              className="p-2 h-auto hover:bg-orange-50"
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-800 transition-all shadow-sm"
+              aria-label="뒤로가기"
             >
-              <ArrowLeft className="w-5 h-5 text-orange-600" />
-            </Button>
+              <ArrowLeft className="w-5 h-5" />
+            </button>
 
-            {/* 로고 */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <Truck className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg text-orange-900">
-                  난방유 배달
-                </h1>
-                <Badge
-                  variant="outline"
-                  className="text-xs -mt-1 border-orange-300 text-orange-600"
-                >
-                  by 스타코엑스
-                </Badge>
-              </div>
-            </div>
-
-            {/* 빈 공간 (균형 맞추기) */}
-            <div className="w-10"></div>
+            {/* 홈으로 */}
+            <Link
+              to="/"
+              className="p-2 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white dark:hover:bg-gray-800 transition-all shadow-sm"
+              aria-label="홈으로"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* 인증 페이지 소개 */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-8">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl font-bold mb-2">{pageInfo.title}</h2>
-          <p className="text-orange-100 mb-6">{pageInfo.subtitle}</p>
-
-          {/* 서비스 특징 */}
-          <div className="flex justify-center gap-8 text-sm">
-            <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4" />
-              <span>당일 배송</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              <span>안전한 배송</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span>통합 서비스</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 메인 콘텐츠 */}
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto">
+        {/* 메인 콘텐츠 */}
+        <main className="flex-1 flex items-center justify-center px-6 py-8">
+          <div className="w-full max-w-md">
             <Outlet />
           </div>
-        </div>
-      </main>
-
-      {/* 하단 안내 */}
-      <div className="bg-orange-50 dark:bg-orange-950/20 border-t border-orange-200/50 py-6">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="font-semibold text-orange-900 mb-3">
-              🌟 스타코엑스 통합 서비스의 장점
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-orange-200">
-                <div className="text-lg mb-2">⛽</div>
-                <div className="font-medium text-orange-900 mb-1">
-                  주유소 연계
-                </div>
-                <div className="text-orange-600">실시간 유가 정보</div>
-              </div>
-              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-orange-200">
-                <div className="text-lg mb-2">🚗</div>
-                <div className="font-medium text-orange-900 mb-1">
-                  세차 서비스
-                </div>
-                <div className="text-orange-600">전문 카케어</div>
-              </div>
-              <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-orange-200">
-                <div className="text-lg mb-2">🚛</div>
-                <div className="font-medium text-orange-900 mb-1">
-                  배달 서비스
-                </div>
-                <div className="text-orange-600">당일 배송</div>
-              </div>
-            </div>
-
-            <p className="text-xs text-orange-600 mt-4">
-              한 번의 가입으로 모든 스타코엑스 서비스를 자동 연결하여
-              이용하세요!
-            </p>
-          </div>
-        </div>
+        </main>
       </div>
-
-      {/* 고객지원 플로팅 */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <div className="bg-white dark:bg-gray-800 rounded-full shadow-lg border border-orange-200 p-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-full text-orange-600 hover:bg-orange-50"
-            onClick={() => window.open('tel:1588-9999')}
-          >
-            📞 도움말
-          </Button>
-        </div>
-      </div>
-    </div>
+    </AppConfigProvider>
   );
 };

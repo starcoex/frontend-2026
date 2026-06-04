@@ -1,31 +1,13 @@
 import React from 'react';
-import { Minus, Plus, X, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Button, Badge, AspectRatio } from '../ui';
 import { useCart } from '@starcoex-frontend/cart';
 import type { CartItem } from '@starcoex-frontend/cart';
+import { useProducts } from '@starcoex-frontend/products';
 
 interface CartItemCardProps {
   item: CartItem;
 }
-
-const TYPE_CONFIG: Record<string, { label: string; className: string }> = {
-  fuel: {
-    label: '연료',
-    className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  },
-  service: {
-    label: '서비스',
-    className:
-      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  },
-  product: {
-    label: '상품',
-    className:
-      'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-  },
-};
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('ko-KR', {
@@ -36,118 +18,133 @@ function formatMoney(value: number) {
 
 export const CartItemCard: React.FC<CartItemCardProps> = ({ item }) => {
   const { updateCartItem, removeFromCart, isLoading } = useCart();
+  const { products } = useProducts();
 
-  const typeConfig = TYPE_CONFIG[item.type ?? ''] ?? {
-    label: '상품',
-    className: 'bg-gray-100 text-gray-800',
-  };
+  const product = products.find((p) => p.id === item.productId);
+  const imageUrl = product?.imageUrl ?? product?.imageUrls?.[0] ?? null;
+  const productName = product?.name ?? `상품 #${item.productId}`;
 
-  const unitPrice = item.price ?? item.unitPrice ?? 0;
-  const totalPrice = unitPrice * item.quantity;
+  const unitPrice = item.currentPrice ?? 0;
+  const totalPrice = item.subtotal ?? 0;
 
   const handleQuantityChange = async (newQty: number) => {
     if (newQty < 1) {
-      await removeFromCart({ cartItemId: item.id });
+      await removeFromCart({
+        productId: item.productId,
+        storeId: item.storeId,
+      });
       return;
     }
-    await updateCartItem({ cartItemId: item.id, quantity: newQty });
+    await updateCartItem({
+      productId: item.productId,
+      storeId: item.storeId,
+      quantity: newQty,
+    });
   };
 
   const handleRemove = async () => {
-    await removeFromCart({ cartItemId: item.id });
+    await removeFromCart({ productId: item.productId, storeId: item.storeId });
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 py-4 md:grid-cols-[1.6fr_0.5fr_0.7fr_0.5fr] md:items-center md:px-4">
-      {/* 상품 정보 */}
-      <div className="flex items-center gap-3">
-        <div className="w-16 h-16 flex-shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-          {item.image ? (
+    <div className="flex gap-4 rounded-xl border bg-card p-4">
+      {/* 이미지: 있으면 AspectRatio + img, 없으면 고정 크기 플레이스홀더 */}
+      {imageUrl ? (
+        <div className="w-28 shrink-0">
+          <AspectRatio
+            ratio={1}
+            className="overflow-hidden rounded-lg bg-muted"
+          >
             <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-full object-cover"
+              src={imageUrl}
+              alt={productName}
+              className="size-full object-cover"
             />
-          ) : (
-            <span className="text-lg text-muted-foreground font-medium">
-              {item.name.charAt(0)}
-            </span>
-          )}
+          </AspectRatio>
         </div>
+      ) : (
+        <div className="w-28 h-28 shrink-0 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+          <span className="text-xl font-bold text-muted-foreground">
+            #{item.productId}
+          </span>
+        </div>
+      )}
 
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium truncate">{item.name}</p>
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            {item.type && (
+      {/* 중앙: 상품 정보 + 수량 */}
+      <div className="flex flex-1 flex-col justify-between min-w-0 py-0.5">
+        <div className="space-y-1">
+          <h3 className="text-base font-medium leading-snug">{productName}</h3>
+          <p className="text-sm text-muted-foreground">
+            스토어 #{item.storeId}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            SKU: {String(item.productId).padStart(6, '0')}
+          </p>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {item.isAvailable !== false ? (
               <Badge
                 variant="secondary"
-                className={cn('text-xs', typeConfig.className)}
+                className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
               >
-                {typeConfig.label}
+                재고 있음
               </Badge>
+            ) : (
+              <Badge variant="secondary">품절</Badge>
             )}
-            {item.stationName && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <MapPin className="w-3 h-3" />
-                <span className="truncate">{item.stationName}</span>
-              </div>
+            {item.isPriceChanged === true && (
+              <Badge variant="destructive">가격 변동</Badge>
             )}
           </div>
         </div>
 
-        {/* 모바일 제거 버튼 */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="md:hidden w-8 h-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
-          onClick={handleRemove}
-          disabled={isLoading}
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        {/* 수량 조절 */}
+        <div className="flex items-center gap-2 pt-3">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8"
+            onClick={() => handleQuantityChange(item.quantity - 1)}
+            disabled={isLoading || item.quantity <= 1}
+          >
+            <Minus className="size-3.5" />
+          </Button>
+          <span className="w-8 text-center text-base font-medium">
+            {item.quantity}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8"
+            onClick={() => handleQuantityChange(item.quantity + 1)}
+            disabled={
+              isLoading ||
+              item.isAvailable === false ||
+              (item.availableStock != null &&
+                item.quantity >= item.availableStock)
+            }
+          >
+            <Plus className="size-3.5" />
+          </Button>
+        </div>
       </div>
 
-      {/* 단가 — 데스크톱 */}
-      <div className="hidden md:block text-sm text-muted-foreground">
-        {formatMoney(unitPrice)}
-      </div>
-
-      {/* 수량 조절 */}
-      <div className="flex items-center justify-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-8 h-8 p-0"
-          onClick={() => handleQuantityChange(item.quantity - 1)}
-          disabled={isLoading || item.quantity <= 1}
-        >
-          <Minus className="w-3 h-3" />
-        </Button>
-        <div className="min-w-[2rem] h-8 flex items-center justify-center text-sm font-medium bg-muted rounded">
-          {item.quantity}
+      {/* 우측: 가격 + 삭제 */}
+      <div className="flex flex-col items-end justify-between py-0.5">
+        <div className="text-right">
+          <p className="text-lg font-semibold">{formatMoney(totalPrice)}</p>
+          <p className="text-sm text-muted-foreground">
+            {formatMoney(unitPrice)} 개당
+          </p>
         </div>
         <Button
-          variant="outline"
-          size="sm"
-          className="w-8 h-8 p-0"
-          onClick={() => handleQuantityChange(item.quantity + 1)}
-          disabled={isLoading}
-        >
-          <Plus className="w-3 h-3" />
-        </Button>
-      </div>
-
-      {/* 합계 + 데스크톱 제거 버튼 */}
-      <div className="flex items-center justify-between md:justify-end gap-2">
-        <span className="text-sm font-semibold">{formatMoney(totalPrice)}</span>
-        <Button
           variant="ghost"
           size="sm"
-          className="hidden md:flex w-8 h-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+          className="text-muted-foreground hover:text-destructive"
           onClick={handleRemove}
           disabled={isLoading}
         >
-          <X className="w-4 h-4" />
+          <Trash2 className="mr-1.5 size-4" />
+          삭제
         </Button>
       </div>
     </div>

@@ -4,7 +4,7 @@ export const DRIVER_BREADCRUMB_CONFIGS = {
   DASHBOARD: {
     label: '대시보드',
     title: '배송 현황',
-    showInBreadcrumb: false, // 루트라 breadcrumb 불필요
+    showInBreadcrumb: false,
     showActions: false,
     showStats: true,
   },
@@ -25,6 +25,21 @@ export const DRIVER_BREADCRUMB_CONFIGS = {
   PROFILE: {
     label: '내 프로필',
     title: '내 프로필',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
+  SETTLEMENTS: {
+    label: '내 정산',
+    title: '정산 내역',
+    showInBreadcrumb: true,
+    showActions: false,
+    showStats: false,
+  },
+  SUGGESTIONS: {
+    // ✅ 신규
+    label: '건의사항',
+    title: '건의사항',
     showInBreadcrumb: true,
     showActions: false,
     showStats: false,

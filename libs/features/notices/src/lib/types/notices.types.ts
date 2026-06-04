@@ -42,6 +42,7 @@ export interface Notice {
   updatedBy?: number | null;
   publishedBy?: number | null;
   archivedBy?: number | null;
+  deletedBy?: number | null;
   sourceSuggestionId?: number | null;
   metadata?: Record<string, any> | null;
   createdAt: string;
@@ -98,6 +99,7 @@ export interface Manual {
   updatedBy?: number | null;
   publishedBy?: number | null;
   archivedBy?: number | null;
+  deletedBy?: number | null;
   relatedManualIds: number[];
   metadata?: Record<string, any> | null;
   publishedAt?: string | null;
@@ -118,6 +120,45 @@ export interface ErrorInfo {
   code?: string | null;
   message: string;
   details?: string | null;
+}
+
+// ============================================================================
+// OverviewOrderStatus 타입 (스키마 추가분)
+// ============================================================================
+
+export interface NoticeStats {
+  success?: boolean | null;
+  error?: ErrorInfo | null;
+  totalCount: number;
+  statusCounts: Record<string, number>;
+  typeCounts: Record<string, number>;
+}
+
+export interface ManualSummaryStats {
+  total: number;
+  draft: number;
+  published: number;
+  archived: number;
+}
+
+// ============================================================================
+// BulkDelete Output 타입 (스키마 추가분)
+// ============================================================================
+
+export interface BulkDeleteNoticesOutput {
+  success: boolean;
+  message: string;
+  successCount: number;
+  failCount: number;
+  failedIds: number[];
+}
+
+export interface BulkDeleteManualsOutput {
+  success: boolean;
+  message: string;
+  successCount: number;
+  failCount: number;
+  failedIds: number[];
 }
 
 // ============================================================================
@@ -237,6 +278,16 @@ export interface ArchiveNoticeInput {
   reason?: string;
 }
 
+export interface DeleteNoticeInput {
+  id: number;
+  hardDelete?: boolean;
+}
+
+export interface BulkDeleteNoticesInput {
+  ids: number[];
+  hardDelete?: boolean;
+}
+
 export interface GetManualsInput {
   page?: number;
   limit?: number;
@@ -314,6 +365,16 @@ export interface ArchiveManualInput {
   reason?: string;
 }
 
+export interface DeleteManualInput {
+  id: number;
+  hardDelete?: boolean;
+}
+
+export interface BulkDeleteManualsInput {
+  ids: number[];
+  hardDelete?: boolean;
+}
+
 // ============================================================================
 // 서비스 인터페이스
 // ============================================================================
@@ -321,8 +382,12 @@ export interface ArchiveManualInput {
 export interface INoticesService {
   // Notice Queries
   getNotices(input: GetNoticesInput): Promise<ApiResponse<GetNoticesOutput>>;
+  getAdminNotices(
+    input: GetNoticesInput
+  ): Promise<ApiResponse<GetNoticesOutput>>;
   getNoticeById(id: number): Promise<ApiResponse<Notice>>;
   getPublishedNotices(targetApp?: string): Promise<ApiResponse<Notice[]>>;
+  getNoticeStats(): Promise<ApiResponse<NoticeStats>>;
   // Notice Mutations
   createNotice(
     input: CreateNoticeInput
@@ -336,8 +401,10 @@ export interface INoticesService {
   archiveNotice(
     input: ArchiveNoticeInput
   ): Promise<ApiResponse<UpdateNoticeOutput>>;
-  deleteNotice(id: number): Promise<ApiResponse<boolean>>;
-  deleteNotices(ids: number[]): Promise<ApiResponse<boolean>>;
+  deleteNotice(input: DeleteNoticeInput): Promise<ApiResponse<boolean>>;
+  bulkDeleteNotices(
+    input: BulkDeleteNoticesInput
+  ): Promise<ApiResponse<BulkDeleteNoticesOutput>>;
   createNoticeFromSuggestion(
     suggestionId: number,
     suggestionTitle: string,
@@ -345,6 +412,10 @@ export interface INoticesService {
   ): Promise<ApiResponse<CreateNoticeOutput>>;
   // Manual Category
   getManualCategories(
+    targetBusiness?: NoticeBusinessType,
+    targetApp?: string
+  ): Promise<ApiResponse<ManualCategory[]>>;
+  getAdminManualCategories(
     targetBusiness?: NoticeBusinessType,
     targetApp?: string
   ): Promise<ApiResponse<ManualCategory[]>>;
@@ -357,6 +428,9 @@ export interface INoticesService {
   deleteManualCategory(id: number): Promise<ApiResponse<boolean>>;
   // Manual
   getManuals(input: GetManualsInput): Promise<ApiResponse<GetManualsOutput>>;
+  getAdminManuals(
+    input: GetManualsInput
+  ): Promise<ApiResponse<GetManualsOutput>>;
   getManualById(id: number): Promise<ApiResponse<Manual>>;
   getPublishedManuals(
     targetBusiness: NoticeBusinessType,
@@ -364,6 +438,7 @@ export interface INoticesService {
     categoryId?: number
   ): Promise<ApiResponse<Manual[]>>;
   getManualHistories(manualId: number): Promise<ApiResponse<ManualHistory[]>>;
+  getManualStats(): Promise<ApiResponse<ManualSummaryStats>>;
   createManual(
     input: CreateManualInput
   ): Promise<ApiResponse<CreateManualOutput>>;
@@ -376,8 +451,10 @@ export interface INoticesService {
   archiveManual(
     input: ArchiveManualInput
   ): Promise<ApiResponse<UpdateManualOutput>>;
-  deleteManual(id: number): Promise<ApiResponse<boolean>>;
-  deleteManuals(ids: number[]): Promise<ApiResponse<boolean>>;
+  deleteManual(input: DeleteManualInput): Promise<ApiResponse<boolean>>;
+  bulkDeleteManuals(
+    input: BulkDeleteManualsInput
+  ): Promise<ApiResponse<BulkDeleteManualsOutput>>;
 }
 
 // ============================================================================
@@ -404,10 +481,12 @@ export interface NoticesState {
   notices: Notice[];
   currentNotice: Notice | null;
   noticeFilters: NoticeFilters;
+  noticeStats: NoticeStats | null;
   manuals: Manual[];
   currentManual: Manual | null;
   manualCategories: ManualCategory[];
   manualFilters: ManualFilters;
+  manualStats: ManualSummaryStats | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -419,6 +498,7 @@ export interface NoticesContextActions {
   removeNotice: (id: number) => void;
   setCurrentNotice: (notice: Notice | null) => void;
   setNoticeFilters: (filters: Partial<NoticeFilters>) => void;
+  setNoticeStats: (stats: NoticeStats | null) => void;
   setManuals: (manuals: Manual[]) => void;
   addManual: (manual: Manual) => void;
   updateManualInContext: (id: number, updates: Partial<Manual>) => void;
@@ -426,6 +506,7 @@ export interface NoticesContextActions {
   setCurrentManual: (manual: Manual | null) => void;
   setManualCategories: (categories: ManualCategory[]) => void;
   setManualFilters: (filters: Partial<ManualFilters>) => void;
+  setManualStats: (stats: ManualSummaryStats | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;

@@ -88,7 +88,6 @@ export class PaymentsService implements IPaymentsService {
         mutation,
         variables,
         errorPolicy: 'all',
-        fetchPolicy: 'network-only',
       });
 
       if (error) {

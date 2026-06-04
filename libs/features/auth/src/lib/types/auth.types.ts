@@ -79,6 +79,17 @@ import {
   DeleteUsersByAdminMutation,
   DeleteInvitationMutation,
   DeleteInvitationsMutation,
+  GetUserSimpleByIdQuery,
+  GenerateVerificationUrlQuery,
+  RegisterWithIdentityVerificationInput,
+  RegisterWithIdentityVerificationMutation,
+  LoginWithIdentityVerificationMutation,
+  GetOnboardingStatusQuery,
+  CompleteOnboardingMutation,
+  UpdateOnboardingStepInput,
+  UpdateOnboardingStepMutation,
+  UpdateUserMetaInput,
+  UpdateUserMetaMutation,
 } from '@starcoex-frontend/graphql';
 import { ApiResponse } from './common.types';
 
@@ -181,12 +192,25 @@ export interface IAuthService {
     identityVerificationId: string;
     customRedirectPath?: string;
   }): Promise<ApiResponse<GenerateVerificationRequestQuery>>;
+  // ✅ 신규: SSR용 본인인증 URL 생성
+  generateVerificationUrl(input: {
+    identityVerificationId: string;
+    customRedirectPath?: string;
+  }): Promise<ApiResponse<GenerateVerificationUrlQuery>>;
   requestIdentityVerification(
     input: RequestIdentityVerificationInput
   ): Promise<ApiResponse<RequestIdentityVerificationMutation>>;
   verifyIdentityVerification(
     input: VerifyIdentityVerificationInput
   ): Promise<ApiResponse<VerifyIdentityVerificationMutation>>;
+  // ✅ 신규: 본인인증으로 회원가입
+  registerWithIdentityVerification(
+    input: RegisterWithIdentityVerificationInput
+  ): Promise<ApiResponse<RegisterWithIdentityVerificationMutation>>;
+  // ✅ 신규: 본인인증으로 로그인
+  loginWithIdentityVerification(
+    identityVerificationId: string
+  ): Promise<ApiResponse<LoginWithIdentityVerificationMutation>>;
   validateBusinessNumber(
     businessNumber: string
   ): Promise<ApiResponse<ValidateBusinessNumberQuery>>;
@@ -200,6 +224,7 @@ export interface IAuthService {
     status?: string[];
   }): Promise<ApiResponse<GetAllUsersQuery>>;
   getUserById(id: number): Promise<ApiResponse<GetUserByIdQuery>>;
+  getUserSimpleById(id: number): Promise<ApiResponse<GetUserSimpleByIdQuery>>;
   getUsersStats(): Promise<ApiResponse<GetUsersStatsQuery>>;
   getInvitations(variables: {
     page?: number;
@@ -250,6 +275,16 @@ export interface IAuthService {
     phoneNumber: string;
     email?: string;
   }): Promise<ApiResponse<CreateGuestUserByAdminMutation>>;
+
+  // ✅ 온보딩 관련 메서드들
+  getOnboardingStatus(): Promise<ApiResponse<GetOnboardingStatusQuery>>;
+  completeOnboarding(): Promise<ApiResponse<CompleteOnboardingMutation>>;
+  updateOnboardingStep(
+    input: UpdateOnboardingStepInput
+  ): Promise<ApiResponse<UpdateOnboardingStepMutation>>;
+  updateUserMeta(
+    input: UpdateUserMetaInput
+  ): Promise<ApiResponse<UpdateUserMetaMutation>>;
 
   // 유틸리티 메서드들 (추가)
   clearAuthCache(): void;

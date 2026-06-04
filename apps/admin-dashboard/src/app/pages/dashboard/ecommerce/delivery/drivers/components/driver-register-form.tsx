@@ -30,6 +30,7 @@ import { useDelivery } from '@starcoex-frontend/delivery';
 import type { DeliveryDriver } from '@starcoex-frontend/delivery';
 import type { SelectedDriver } from '@starcoex-frontend/common';
 import { DriverGqlLicenseVerify } from '@/app/pages/dashboard/ecommerce/delivery/drivers/components/driver-gql-license-verify';
+import { WorkingAreasTagInput } from '@/app/pages/dashboard/ecommerce/delivery/drivers/components/working-areas-tag-input';
 
 const VEHICLE_TYPES = [
   { value: 'BICYCLE', label: '자전거' },
@@ -51,7 +52,9 @@ const schema = z.object({
   paymentType: z.enum(['PER_DELIVERY', 'HOURLY', 'MONTHLY']),
   ratePerDelivery: z.number().min(0).optional(),
   hourlyRate: z.number().min(0).optional(),
-  workingAreas: z.string(),
+  workingAreas: z // ✅ string → string[]
+    .array(z.string().min(1))
+    .min(1, '담당 지역을 1개 이상 입력해주세요.'),
   maxConcurrentOrders: z.number().min(1).max(10),
 });
 
@@ -85,7 +88,7 @@ export function DriverRegisterForm({
       paymentType: 'PER_DELIVERY',
       ratePerDelivery: 0,
       hourlyRate: 0,
-      workingAreas: '',
+      workingAreas: [], // ✅ '' → []
       maxConcurrentOrders: 3,
     },
   });
@@ -107,11 +110,6 @@ export function DriverRegisterForm({
       return;
     }
 
-    const workingAreasArray = data.workingAreas
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-
     const res = await createDeliveryDriver({
       userId: selectedDriver.userId,
       name: selectedDriver.name,
@@ -125,7 +123,7 @@ export function DriverRegisterForm({
       ratePerDelivery:
         data.paymentType === 'PER_DELIVERY' ? data.ratePerDelivery : undefined,
       hourlyRate: data.paymentType === 'HOURLY' ? data.hourlyRate : undefined,
-      workingAreas: workingAreasArray,
+      workingAreas: data.workingAreas, // ✅ 이미 string[]
       maxConcurrentOrders: data.maxConcurrentOrders,
     });
 
@@ -357,13 +355,11 @@ export function DriverRegisterForm({
               name="workingAreas"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>근무 지역</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="제주시, 서귀포시, 애월읍" />
-                  </FormControl>
-                  <FormDescription>
-                    콤마(,)로 구분 — 예: 제주시, 서귀포시
-                  </FormDescription>
+                  <FormLabel>근무 지역 *</FormLabel>
+                  <WorkingAreasTagInput
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
                   <FormMessage />
                 </FormItem>
               )}

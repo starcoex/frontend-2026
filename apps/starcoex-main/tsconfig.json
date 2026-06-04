@@ -6,10 +6,25 @@
       "path": "../../libs/graphql"
     },
     {
+      "path": "../../libs/pwa"
+    },
+    {
       "path": "../../libs/features/auth"
     },
     {
       "path": "../../libs/features/common"
+    },
+    {
+      "path": "../../libs/features/address"
+    },
+    {
+      "path": "../../libs/features/media"
+    },
+    {
+      "path": "../../libs/features/jobs"
+    },
+    {
+      "path": "../../libs/features/loyalty"
     },
     {
       "path": "./tsconfig.app.json"

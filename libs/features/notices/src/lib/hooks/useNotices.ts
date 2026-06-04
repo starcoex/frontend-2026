@@ -8,6 +8,8 @@ import type {
   UpdateNoticeInput,
   PublishNoticeInput,
   ArchiveNoticeInput,
+  DeleteNoticeInput,
+  BulkDeleteNoticesInput,
   GetManualsInput,
   CreateManualCategoryInput,
   UpdateManualCategoryInput,
@@ -15,6 +17,8 @@ import type {
   UpdateManualInput,
   PublishManualInput,
   ArchiveManualInput,
+  DeleteManualInput,
+  BulkDeleteManualsInput,
   NoticeBusinessType,
 } from '../types';
 
@@ -28,6 +32,7 @@ export const useNotices = () => {
     removeNotice,
     setCurrentNotice,
     setNoticeFilters,
+    setNoticeStats,
     setManuals,
     addManual,
     updateManualInContext,
@@ -35,6 +40,7 @@ export const useNotices = () => {
     setCurrentManual,
     setManualCategories,
     setManualFilters,
+    setManualStats,
     setLoading,
     setError,
     clearError,
@@ -42,10 +48,12 @@ export const useNotices = () => {
     notices,
     currentNotice,
     noticeFilters,
+    noticeStats,
     manuals,
     currentManual,
     manualCategories,
     manualFilters,
+    manualStats,
   } = context;
 
   const isLoadingRef = useRef(contextIsLoading);
@@ -88,11 +96,20 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.getNotices(input);
-        if (res.success && res.data) {
-          setNotices(res.data.notices);
-        }
+        if (res.success && res.data) setNotices(res.data.notices);
         return res;
       }, '공지 목록을 불러오는데 실패했습니다.'),
+    [withLoading, setNotices]
+  );
+
+  const fetchAdminNotices = useCallback(
+    async (input: GetNoticesInput = {}) =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.getAdminNotices(input);
+        if (res.success && res.data) setNotices(res.data.notices);
+        return res;
+      }, '관리자 공지 목록을 불러오는데 실패했습니다.'),
     [withLoading, setNotices]
   );
 
@@ -115,12 +132,21 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.getPublishedNotices(targetApp);
-        if (res.success && res.data) {
-          setNotices(res.data);
-        }
+        if (res.success && res.data) setNotices(res.data);
         return res;
       }, '발행된 공지를 불러오는데 실패했습니다.'),
     [withLoading, setNotices]
+  );
+
+  const fetchNoticeStats = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.getNoticeStats();
+        if (res.success && res.data) setNoticeStats(res.data);
+        return res;
+      }, '공지 통계를 불러오는데 실패했습니다.'),
+    [withLoading, setNoticeStats]
   );
 
   // ============================================================================
@@ -132,9 +158,7 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.createNotice(input);
-        if (res.success && res.data?.notice) {
-          addNotice(res.data.notice);
-        }
+        if (res.success && res.data?.notice) addNotice(res.data.notice);
         return res;
       }, '공지 생성에 실패했습니다.'),
     [withLoading, addNotice]
@@ -145,9 +169,8 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.updateNotice(input);
-        if (res.success && res.data?.notice) {
+        if (res.success && res.data?.notice)
           updateNoticeInContext(input.id, res.data.notice);
-        }
         return res;
       }, '공지 수정에 실패했습니다.'),
     [withLoading, updateNoticeInContext]
@@ -158,9 +181,8 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.publishNotice(input);
-        if (res.success && res.data?.notice) {
+        if (res.success && res.data?.notice)
           updateNoticeInContext(input.id, res.data.notice);
-        }
         return res;
       }, '공지 발행에 실패했습니다.'),
     [withLoading, updateNoticeInContext]
@@ -171,41 +193,44 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.archiveNotice(input);
-        if (res.success && res.data?.notice) {
+        if (res.success && res.data?.notice)
           updateNoticeInContext(input.id, res.data.notice);
-        }
         return res;
       }, '공지 종료에 실패했습니다.'),
     [withLoading, updateNoticeInContext]
   );
 
   const deleteNotice = useCallback(
-    async (id: number) =>
+    async (input: DeleteNoticeInput) =>
       withLoading(async () => {
         const service = getNoticesService();
-        const res = await service.deleteNotice(id);
+        const res = await service.deleteNotice(input);
         if (res.success) {
-          removeNotice(id);
-          if (currentNotice?.id === id) setCurrentNotice(null);
+          removeNotice(input.id);
+          if (currentNotice?.id === input.id) setCurrentNotice(null);
         }
         return res;
       }, '공지 삭제에 실패했습니다.'),
     [withLoading, removeNotice, currentNotice, setCurrentNotice]
   );
 
-  const deleteNotices = useCallback(
-    async (ids: number[]) =>
+  const bulkDeleteNotices = useCallback(
+    async (input: BulkDeleteNoticesInput) =>
       withLoading(async () => {
         const service = getNoticesService();
-        const res = await service.deleteNotices(ids);
-        if (res.success) {
-          ids.forEach((id) => removeNotice(id));
-          if (currentNotice && ids.includes(currentNotice.id)) {
+        const res = await service.bulkDeleteNotices(input);
+        if (res.success && res.data?.successCount) {
+          // failedIds 제외 삭제 처리
+          const deletedIds = input.ids.filter(
+            (id) => !(res.data!.failedIds ?? []).includes(id)
+          );
+          deletedIds.forEach((id) => removeNotice(id));
+          if (currentNotice && deletedIds.includes(currentNotice.id)) {
             setCurrentNotice(null);
           }
         }
         return res;
-      }, '공지 다건 삭제에 실패했습니다.'),
+      }, '공지 일괄 삭제에 실패했습니다.'),
     [withLoading, removeNotice, currentNotice, setCurrentNotice]
   );
 
@@ -222,9 +247,7 @@ export const useNotices = () => {
           suggestionTitle,
           suggestionContent
         );
-        if (res.success && res.data?.notice) {
-          addNotice(res.data.notice);
-        }
+        if (res.success && res.data?.notice) addNotice(res.data.notice);
         return res;
       }, '건의사항으로부터 공지 생성에 실패했습니다.'),
     [withLoading, addNotice]
@@ -242,11 +265,23 @@ export const useNotices = () => {
           targetBusiness,
           targetApp
         );
-        if (res.success && res.data) {
-          setManualCategories(res.data);
-        }
+        if (res.success && res.data) setManualCategories(res.data);
         return res;
       }, '매뉴얼 카테고리를 불러오는데 실패했습니다.'),
+    [withLoading, setManualCategories]
+  );
+
+  const fetchAdminManualCategories = useCallback(
+    async (targetBusiness?: NoticeBusinessType, targetApp?: string) =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.getAdminManualCategories(
+          targetBusiness,
+          targetApp
+        );
+        if (res.success && res.data) setManualCategories(res.data);
+        return res;
+      }, '관리자 매뉴얼 카테고리를 불러오는데 실패했습니다.'),
     [withLoading, setManualCategories]
   );
 
@@ -285,9 +320,8 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.deleteManualCategory(id);
-        if (res.success) {
+        if (res.success)
           setManualCategories(manualCategories.filter((c) => c.id !== id));
-        }
         return res;
       }, '매뉴얼 카테고리 삭제에 실패했습니다.'),
     [withLoading, setManualCategories, manualCategories]
@@ -302,11 +336,20 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.getManuals(input);
-        if (res.success && res.data) {
-          setManuals(res.data.manuals);
-        }
+        if (res.success && res.data) setManuals(res.data.manuals);
         return res;
       }, '매뉴얼 목록을 불러오는데 실패했습니다.'),
+    [withLoading, setManuals]
+  );
+
+  const fetchAdminManuals = useCallback(
+    async (input: GetManualsInput = {}) =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.getAdminManuals(input);
+        if (res.success && res.data) setManuals(res.data.manuals);
+        return res;
+      }, '관리자 매뉴얼 목록을 불러오는데 실패했습니다.'),
     [withLoading, setManuals]
   );
 
@@ -337,12 +380,30 @@ export const useNotices = () => {
           targetApp,
           categoryId
         );
-        if (res.success && res.data) {
-          setManuals(res.data);
-        }
+        if (res.success && res.data) setManuals(res.data);
         return res;
       }, '발행된 매뉴얼을 불러오는데 실패했습니다.'),
     [withLoading, setManuals]
+  );
+
+  const fetchManualHistories = useCallback(
+    async (manualId: number) =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        return await service.getManualHistories(manualId);
+      }, '매뉴얼 히스토리를 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const fetchManualStats = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getNoticesService();
+        const res = await service.getManualStats();
+        if (res.success && res.data) setManualStats(res.data);
+        return res;
+      }, '매뉴얼 통계를 불러오는데 실패했습니다.'),
+    [withLoading, setManualStats]
   );
 
   const createManual = useCallback(
@@ -350,9 +411,7 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.createManual(input);
-        if (res.success && res.data?.manual) {
-          addManual(res.data.manual);
-        }
+        if (res.success && res.data?.manual) addManual(res.data.manual);
         return res;
       }, '매뉴얼 생성에 실패했습니다.'),
     [withLoading, addManual]
@@ -363,9 +422,8 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.updateManual(input);
-        if (res.success && res.data?.manual) {
+        if (res.success && res.data?.manual)
           updateManualInContext(input.id, res.data.manual);
-        }
         return res;
       }, '매뉴얼 수정에 실패했습니다.'),
     [withLoading, updateManualInContext]
@@ -376,9 +434,8 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.publishManual(input);
-        if (res.success && res.data?.manual) {
+        if (res.success && res.data?.manual)
           updateManualInContext(input.id, res.data.manual);
-        }
         return res;
       }, '매뉴얼 발행에 실패했습니다.'),
     [withLoading, updateManualInContext]
@@ -389,52 +446,44 @@ export const useNotices = () => {
       withLoading(async () => {
         const service = getNoticesService();
         const res = await service.archiveManual(input);
-        if (res.success && res.data?.manual) {
+        if (res.success && res.data?.manual)
           updateManualInContext(input.id, res.data.manual);
-        }
         return res;
       }, '매뉴얼 종료에 실패했습니다.'),
     [withLoading, updateManualInContext]
   );
 
   const deleteManual = useCallback(
-    async (id: number) =>
+    async (input: DeleteManualInput) =>
       withLoading(async () => {
         const service = getNoticesService();
-        const res = await service.deleteManual(id);
+        const res = await service.deleteManual(input);
         if (res.success) {
-          removeManual(id);
-          if (currentManual?.id === id) setCurrentManual(null);
+          removeManual(input.id);
+          if (currentManual?.id === input.id) setCurrentManual(null);
         }
         return res;
       }, '매뉴얼 삭제에 실패했습니다.'),
     [withLoading, removeManual, currentManual, setCurrentManual]
   );
 
-  const deleteManuals = useCallback(
-    async (ids: number[]) =>
+  const bulkDeleteManuals = useCallback(
+    async (input: BulkDeleteManualsInput) =>
       withLoading(async () => {
         const service = getNoticesService();
-        const res = await service.deleteManuals(ids);
-        if (res.success) {
-          ids.forEach((id) => removeManual(id));
-          if (currentManual && ids.includes(currentManual.id)) {
+        const res = await service.bulkDeleteManuals(input);
+        if (res.success && res.data?.successCount) {
+          const deletedIds = input.ids.filter(
+            (id) => !(res.data!.failedIds ?? []).includes(id)
+          );
+          deletedIds.forEach((id) => removeManual(id));
+          if (currentManual && deletedIds.includes(currentManual.id)) {
             setCurrentManual(null);
           }
         }
         return res;
-      }, '매뉴얼 다건 삭제에 실패했습니다.'),
+      }, '매뉴얼 일괄 삭제에 실패했습니다.'),
     [withLoading, removeManual, currentManual, setCurrentManual]
-  );
-
-  const fetchManualHistories = useCallback(
-    async (manualId: number) =>
-      withLoading(async () => {
-        const service = getNoticesService();
-        const res = await service.getManualHistories(manualId);
-        return res;
-      }, '매뉴얼 히스토리를 불러오는데 실패했습니다.'),
-    [withLoading]
   );
 
   return {
@@ -442,8 +491,10 @@ export const useNotices = () => {
 
     // Notice Queries
     fetchNotices,
+    fetchAdminNotices,
     fetchNoticeById,
     fetchPublishedNotices,
+    fetchNoticeStats,
 
     // Notice Mutations
     createNotice,
@@ -451,35 +502,40 @@ export const useNotices = () => {
     publishNotice,
     archiveNotice,
     deleteNotice,
-    deleteNotices,
+    bulkDeleteNotices,
     createNoticeFromSuggestion,
 
     // Manual Category
     fetchManualCategories,
+    fetchAdminManualCategories,
     createManualCategory,
     updateManualCategory,
     deleteManualCategory,
 
     // Manual
     fetchManuals,
+    fetchAdminManuals,
     fetchManualById,
     fetchPublishedManuals,
     fetchManualHistories,
+    fetchManualStats,
     createManual,
     updateManual,
     publishManual,
     archiveManual,
     deleteManual,
-    deleteManuals,
+    bulkDeleteManuals,
 
     // 편의 값
     notices,
     currentNotice,
     noticeFilters,
+    noticeStats,
     manuals,
     currentManual,
     manualCategories,
     manualFilters,
+    manualStats,
     setNoticeFilters,
     setManualFilters,
   };

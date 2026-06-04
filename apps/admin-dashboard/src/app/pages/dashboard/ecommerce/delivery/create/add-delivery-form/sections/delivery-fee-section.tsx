@@ -20,6 +20,10 @@ import {
 } from '@/components/ui/select';
 import type { DeliveryFormValues } from '../add-delivery-form.schema';
 import { PRIORITY_OPTIONS } from '../add-delivery-form.constants';
+import { DeliveryFeePolicy, useDelivery } from '@starcoex-frontend/delivery';
+import { useCallback, useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { IconCalculator } from '@tabler/icons-react';
 
 interface Props {
   form: UseFormReturn<DeliveryFormValues>;
@@ -30,8 +34,105 @@ export function DeliveryFeeSection({ form }: Props) {
   const driverFee = useWatch({ control: form.control, name: 'driverFee' });
   const platformFee = Math.max(0, (deliveryFee ?? 0) - (driverFee ?? 0));
 
+  const { fetchDeliveryFeePolicies, calculateDeliveryFee } = useDelivery();
+  const [policies, setPolicies] = useState<DeliveryFeePolicy[]>([]);
+
+  useEffect(() => {
+    fetchDeliveryFeePolicies(true).then((res) => {
+      // onlyActive: true
+      if (res.success && res.data?.policies) setPolicies(res.data.policies);
+    });
+  }, [fetchDeliveryFeePolicies]);
+
+  // 정책 선택 시 자동 계산
+  const handlePolicyChange = useCallback(
+    async (policyIdStr: string) => {
+      // ✅ "none" 선택 시 정책 해제
+      if (policyIdStr === 'none') {
+        form.setValue('feePolicyId', undefined);
+        return;
+      }
+
+      const policyId = parseInt(policyIdStr);
+      form.setValue('feePolicyId', policyId);
+
+      const priority = form.getValues('priority');
+      const res = await calculateDeliveryFee({ policyId, priority });
+
+      if (res.success && res.data) {
+        form.setValue('deliveryFee', res.data.deliveryFee, {
+          shouldValidate: true,
+        });
+        form.setValue('driverFee', res.data.driverFee, {
+          shouldValidate: true,
+        });
+        form.setValue('platformFee', res.data.platformFee);
+      }
+    },
+    [form, calculateDeliveryFee]
+  );
+
+  // 수동 재계산
+  const handleRecalc = useCallback(async () => {
+    const policyId = form.getValues('feePolicyId');
+    const priority = form.getValues('priority');
+    if (!policyId) return;
+
+    const res = await calculateDeliveryFee({ policyId, priority });
+    if (res.success && res.data) {
+      form.setValue('deliveryFee', res.data.deliveryFee, {
+        shouldValidate: true,
+      });
+      form.setValue('driverFee', res.data.driverFee, { shouldValidate: true });
+      form.setValue('platformFee', res.data.platformFee);
+    }
+  }, [form, calculateDeliveryFee]);
+
   return (
-    <>
+    <div className="space-y-4">
+      {/* ✅ 신규: 배달비 정책 선택 */}
+      <FormField
+        control={form.control}
+        name="feePolicyId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>배달비 정책 (선택)</FormLabel>
+            <div className="flex gap-2">
+              <Select
+                value={field.value ? String(field.value) : 'none'} // ✅ undefined → "none"
+                onValueChange={handlePolicyChange}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="정책 선택 시 자동 계산" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="none">직접 입력</SelectItem>{' '}
+                  {policies.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name}
+                      {p.isDefault && ' (기본)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {field.value && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={handleRecalc}
+                  title="재계산"
+                >
+                  <IconCalculator className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       {/* 요금 설정 */}
       <Card>
         <CardHeader>
@@ -189,6 +290,6 @@ export function DeliveryFeeSection({ form }: Props) {
           </p>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

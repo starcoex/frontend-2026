@@ -8,7 +8,7 @@ import {
   FulfillmentBadge,
   OrderStatusBadge,
   PaymentStatusBadge,
-} from '@/app/pages/dashboard/ecommerce/orders/components/order-status-bage';
+} from './order-status-badge';
 import { DataTableColumnHeader } from '@starcoex-frontend/common';
 
 export const orderColumns: ColumnDef<Order>[] = [

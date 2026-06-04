@@ -2,8 +2,12 @@ import React from 'react';
 import { useAuth } from '@starcoex-frontend/auth';
 import { APP_CONFIG } from '@/app/config/app.config';
 import { PageHead } from '@starcoex-frontend/common';
-import { HeroSection } from '@/components/sections/home/hero-section';
-import { ServicesSection } from '@/components/sections/home/services-section';
+import { DeliveryHero } from '@/components/sections/hero-section';
+import { GuaranteeSection } from '@/components/sections/guarantee-section';
+import { OrderOptionsSection } from '@/components/sections/order-options-section';
+import { TestimonialsSection } from '@/components/sections/testimonials-section';
+import { FaqSection } from '@/components/sections/faq-section';
+import { CtaSection } from '@/components/sections/cta-section';
 
 export const HomePage: React.FC = () => {
   const { isAuthenticated, currentUser } = useAuth();
@@ -32,8 +36,12 @@ export const HomePage: React.FC = () => {
       />
 
       <div className="space-y-0">
-        <HeroSection />
-        <ServicesSection />
+        <DeliveryHero />
+        <GuaranteeSection />
+        <OrderOptionsSection />
+        <TestimonialsSection />
+        <FaqSection />
+        <CtaSection />
       </div>
     </>
   );

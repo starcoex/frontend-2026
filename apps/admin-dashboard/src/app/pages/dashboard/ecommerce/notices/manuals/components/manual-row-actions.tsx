@@ -1,0 +1,158 @@
+import { useState } from 'react';
+import {
+  MoreHorizontal,
+  Eye,
+  Pencil,
+  Send,
+  Archive,
+  Trash2,
+  Copy,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useNotices } from '@starcoex-frontend/notices';
+import type { Manual } from '@starcoex-frontend/notices';
+
+interface ManualRowActionsProps {
+  manual: Manual;
+  onRefresh?: () => void;
+}
+
+export function ManualRowActions({ manual, onRefresh }: ManualRowActionsProps) {
+  const navigate = useNavigate();
+  const { publishManual, archiveManual, deleteManual } = useNotices();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const canPublish = manual.status === 'DRAFT';
+  const canArchive = manual.status === 'PUBLISHED';
+
+  const handlePublish = async () => {
+    const res = await publishManual({ id: manual.id });
+    if (res.success) {
+      toast.success('매뉴얼이 발행되었습니다.');
+      onRefresh?.();
+    } else {
+      toast.error(res.error?.message ?? '발행에 실패했습니다.');
+    }
+  };
+
+  const handleArchive = async () => {
+    const res = await archiveManual({ id: manual.id });
+    if (res.success) {
+      toast.success('매뉴얼이 종료되었습니다.');
+      onRefresh?.();
+    } else {
+      toast.error(res.error?.message ?? '종료에 실패했습니다.');
+    }
+  };
+
+  const handleDelete = async () => {
+    const res = await deleteManual({ id: manual.id });
+    if (res.success) {
+      toast.success('매뉴얼이 삭제되었습니다.');
+      onRefresh?.();
+    } else {
+      toast.error(res.error?.message ?? '삭제에 실패했습니다.');
+    }
+  };
+
+  const handleCopyTitle = () => {
+    navigator.clipboard.writeText(manual.title);
+    toast.success('제목이 복사되었습니다.');
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">메뉴 열기</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>액션</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => navigate(`/admin/notices/manuals/${manual.id}`)}
+          >
+            <Eye className="mr-2 h-4 w-4" />
+            상세 보기
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() =>
+              navigate(`/admin/notices/manuals/${manual.id}/edit`)
+            }
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            수정
+          </DropdownMenuItem>
+          {canPublish && (
+            <DropdownMenuItem onSelect={handlePublish}>
+              <Send className="mr-2 h-4 w-4" />
+              발행
+            </DropdownMenuItem>
+          )}
+          {canArchive && (
+            <DropdownMenuItem onSelect={handleArchive}>
+              <Archive className="mr-2 h-4 w-4" />
+              종료
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onSelect={handleCopyTitle}>
+            <Copy className="mr-2 h-4 w-4" />
+            제목 복사
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={() => setDeleteOpen(true)}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            삭제
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>매뉴얼 삭제</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-medium">"{manual.title}"</span> 매뉴얼을
+              삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}

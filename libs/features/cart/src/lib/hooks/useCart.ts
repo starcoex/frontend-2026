@@ -9,6 +9,8 @@ import type {
   AddToCartOutput,
   UpdateCartItemOutput,
   RemoveFromCartOutput,
+  AdminCartsFilter,
+  AdminCartsOutput,
 } from '../types';
 
 export const useCart = () => {
@@ -16,11 +18,15 @@ export const useCart = () => {
 
   const {
     setCart,
+    setCarts,
+    setCartsTotal,
     setLoading,
     setError,
     clearError,
     isLoading: contextIsLoading,
     cart,
+    carts,
+    cartsTotal,
   } = context;
 
   const isLoadingRef = useRef(contextIsLoading);
@@ -69,6 +75,20 @@ export const useCart = () => {
         return res;
       }, '장바구니를 불러오는데 실패했습니다.'),
     [withLoading, setCart]
+  );
+
+  const fetchAdminCarts = useCallback(
+    async (filter?: AdminCartsFilter): Promise<ApiResponse<AdminCartsOutput>> =>
+      withLoading(async () => {
+        const service = getCartService();
+        const res = await service.getAdminCarts(filter);
+        if (res.success && res.data) {
+          setCarts(res.data.carts);
+          setCartsTotal(res.data.totalCount);
+        }
+        return res;
+      }, '장바구니 목록을 불러오는데 실패했습니다.'),
+    [withLoading, setCarts, setCartsTotal]
   );
 
   // ============================================================================
@@ -124,7 +144,7 @@ export const useCart = () => {
         const service = getCartService();
         const res = await service.clearCart();
         if (res.success) {
-          // ✅ null 처리 제거 — clearCart 후 서버에서 최신 cart 상태 재조회
+          // clearCart 후 서버에서 최신 cart 상태 재조회
           const cartRes = await service.getMyCart();
           if (cartRes.success && cartRes.data) {
             setCart(cartRes.data);
@@ -133,6 +153,24 @@ export const useCart = () => {
         return res;
       }, '장바구니 비우기에 실패했습니다.'),
     [withLoading, setCart]
+  );
+
+  const adminCleanupCarts = useCallback(
+    async (): Promise<ApiResponse<number>> =>
+      withLoading(async () => {
+        const service = getCartService();
+        const res = await service.adminCleanupCarts();
+        if (res.success) {
+          // 정리 후 어드민 목록 갱신 — filter 없이 서버 기본값 사용
+          const listRes = await service.getAdminCarts();
+          if (listRes.success && listRes.data) {
+            setCarts(listRes.data.carts);
+            setCartsTotal(listRes.data.totalCount);
+          }
+        }
+        return res;
+      }, '장바구니 정리에 실패했습니다.'),
+    [withLoading, setCarts, setCartsTotal]
   );
 
   // ============================================================================
@@ -149,15 +187,19 @@ export const useCart = () => {
 
     // Queries
     fetchMyCart,
+    fetchAdminCarts,
 
     // Mutations
     addToCart,
     updateCartItem,
     removeFromCart,
     clearCart,
+    adminCleanupCarts,
 
     // 편의 값
     cart,
+    carts,
+    cartsTotal,
     cartItemCount,
     cartTotalAmount,
     isCartEmpty,

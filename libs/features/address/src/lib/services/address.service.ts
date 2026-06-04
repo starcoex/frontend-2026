@@ -1,6 +1,5 @@
 import { ApolloClient, OperationVariables } from '@apollo/client';
 import type { GraphQLFormattedError } from 'graphql/error';
-
 import {
   SMART_SEARCH_ADDRESSES,
   SEARCH_ADDRESSES_FROM_API,
@@ -8,58 +7,111 @@ import {
   GET_USER_ADDRESS_BY_ID,
   GET_USER_ADDRESSES,
   GET_USER_ADDRESS_STATS,
-  GET_USER_SEARCH_LOGS, // ✅ 추가
+  GET_USER_SEARCH_LOGS,
   SAVE_ADDRESS,
   UPDATE_ADDRESS,
   REMOVE_ADDRESS,
+  BULK_REMOVE_ADDRESSES,
   CREATE_ADDRESS_POPUP_URL,
-  SmartSearchInput,
-  ExternalAddressSearchInput,
-  SearchAddressInput,
-  FilterAddressInput,
-  SearchAddressLogInput, // ✅ 추가
-  SaveAddressInput,
-  UpdateAddressInput,
-  CreateAddressPopupInput,
-  SmartSearchAddressesQuery,
-  SmartSearchAddressesQueryVariables,
-  SearchAddressesFromApiQuery,
-  SearchAddressesFromApiQueryVariables,
-  SearchUserAddressesQuery,
-  SearchUserAddressesQueryVariables,
-  GetUserAddressByIdQuery,
-  GetUserAddressByIdQueryVariables,
-  GetUserAddressesQuery,
-  GetUserAddressesQueryVariables,
-  GetUserAddressStatsQuery,
-  GetUserSearchLogsQuery, // ✅ 추가
-  GetUserSearchLogsQueryVariables, // ✅ 추가
-  SaveAddressMutation,
-  SaveAddressMutationVariables,
-  UpdateAddressMutation,
-  UpdateAddressMutationVariables,
-  RemoveAddressMutation,
-  RemoveAddressMutationVariables,
-  CreateAddressPopupUrlMutation,
-  CreateAddressPopupUrlMutationVariables,
+  ADMIN_GET_ALL_ADDRESSES,
+  ADMIN_GET_SEARCH_LOGS,
+  ADMIN_GET_API_LOGS,
+  ADMIN_GET_ADDRESS_STATS,
+  ADMIN_UPDATE_ADDRESS_STATUS,
+  ADMIN_BULK_REMOVE_ADDRESSES,
 } from '@starcoex-frontend/graphql';
-
 import {
   apiErrorFromGraphQLErrors,
   apiErrorFromNetwork,
   apiErrorFromUnknown,
   createErrorResponse,
-} from '../errors/api-error';
-import { IAddressService, ApiResponse } from '../types';
+} from '../errors';
+import type { ApiResponse } from '../types';
+import type {
+  IAddressService,
+  SmartSearchInput,
+  SmartSearchResult,
+  ExternalAddressSearchInput,
+  ExternalAddressSearchResult,
+  SearchAddressInput,
+  AddressSearchResult,
+  FilterAddressInput,
+  SearchAddressLogInput,
+  PaginatedSearchLogResult,
+  SaveAddressInput,
+  UpdateAddressInput,
+  BulkRemoveAddressInput,
+  BulkRemoveResult,
+  CreateAddressPopupInput,
+  AddressPopupUrlResult,
+  Address,
+  AddressStatsResult,
+  AdminAddressFilterInput,
+  AdminAddressListResult,
+  AdminSearchLogFilterInput,
+  AdminSearchLogListResult,
+  AdminApiLogFilterInput,
+  AdminApiLogListResult,
+  AdminAddressStatsResult,
+  AdminUpdateAddressStatusInput,
+} from '../types';
 
 export class AddressService implements IAddressService {
   constructor(private client: ApolloClient) {}
 
-  // 공통 mutation helper
+  // ============================================================================
+  // 공통 헬퍼
+  // ============================================================================
+
+  private async query<
+    TData = any,
+    TVars extends OperationVariables = OperationVariables
+  >(
+    query: any,
+    variables?: TVars,
+    options?: {
+      fetchPolicy?: 'cache-first' | 'network-only' | 'cache-and-network';
+    }
+  ): Promise<ApiResponse<TData>> {
+    try {
+      const result = await this.client.query<TData, TVars>({
+        query,
+        variables: variables as TVars,
+        errorPolicy: 'all',
+        fetchPolicy: 'network-only',
+      });
+
+      const { data, error, extensions } = result as {
+        data?: TData;
+        error?: { message?: string };
+        extensions?: Record<string, unknown>;
+      };
+
+      if (error) {
+        const gqlError: GraphQLFormattedError = {
+          message: error.message ?? '요청 처리 중 오류가 발생했습니다.',
+          extensions: extensions ?? {},
+        };
+        return createErrorResponse<TData>(
+          apiErrorFromGraphQLErrors([gqlError])
+        );
+      }
+
+      return { success: true, data: data as TData };
+    } catch (e) {
+      const apiError =
+        e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e);
+      return createErrorResponse<TData>(apiError);
+    }
+  }
+
   private async mutate<
     TData = any,
     TVars extends OperationVariables = OperationVariables
-  >(mutation: any, variables: TVars): Promise<ApiResponse<TData>> {
+  >(
+    mutation: any,
+    variables: TVars = {} as TVars
+  ): Promise<ApiResponse<TData>> {
     try {
       const { data, error, extensions } = await this.client.mutate<
         TData,
@@ -78,15 +130,12 @@ export class AddressService implements IAddressService {
           path: undefined,
           extensions: (extensions ?? {}) as Record<string, unknown>,
         };
-
-        const apiError = apiErrorFromGraphQLErrors([gqlError]);
-        return createErrorResponse<TData>(apiError);
+        return createErrorResponse<TData>(
+          apiErrorFromGraphQLErrors([gqlError])
+        );
       }
 
-      return {
-        success: true,
-        data: data as TData,
-      };
+      return { success: true, data: data as TData };
     } catch (e) {
       const apiError =
         e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e);
@@ -94,89 +143,56 @@ export class AddressService implements IAddressService {
     }
   }
 
-  // 공통 query helper
-  private async query<
-    TData = any,
-    TVars extends OperationVariables = OperationVariables
-  >(
-    query: any,
-    variables?: TVars,
-    options?: {
-      fetchPolicy?: 'cache-first' | 'network-only' | 'cache-and-network';
-    }
-  ): Promise<ApiResponse<TData>> {
-    try {
-      const result = await this.client.query<TData, TVars>({
-        query,
-        variables: variables as TVars,
-        errorPolicy: 'all',
-        fetchPolicy: options?.fetchPolicy || 'cache-first',
-      } as any);
-
-      const { data, error, extensions } = result as {
-        data?: TData;
-        error?: { message?: string };
-        extensions?: Record<string, unknown>;
-      };
-
-      if (error) {
-        const gqlError: GraphQLFormattedError = {
-          message: error.message ?? '요청 처리 중 오류가 발생했습니다.',
-          locations: undefined,
-          path: undefined,
-          extensions: extensions ?? {},
-        };
-
-        const apiError = apiErrorFromGraphQLErrors([gqlError]);
-        return createErrorResponse<TData>(apiError);
-      }
-
-      return {
-        success: true,
-        data: data as TData,
-      };
-    } catch (e) {
-      const apiError =
-        e instanceof Error ? apiErrorFromNetwork(e) : apiErrorFromUnknown(e);
-      return createErrorResponse<TData>(apiError);
-    }
+  private isValidId(id: number): boolean {
+    return !!id && id > 0 && !isNaN(id);
   }
 
   // ============================================================================
-  // 주소 검색 API
+  // 주소 검색
   // ============================================================================
 
   async smartSearchAddresses(
     input: SmartSearchInput
-  ): Promise<ApiResponse<SmartSearchAddressesQuery>> {
-    return this.query<
-      SmartSearchAddressesQuery,
-      SmartSearchAddressesQueryVariables
-    >(SMART_SEARCH_ADDRESSES, { input }, { fetchPolicy: 'network-only' });
+  ): Promise<ApiResponse<SmartSearchResult>> {
+    const res = await this.query<{ smartSearchAddresses: SmartSearchResult }>(
+      SMART_SEARCH_ADDRESSES,
+      { input },
+      { fetchPolicy: 'network-only' }
+    );
+    if (res.success && res.data?.smartSearchAddresses) {
+      return { success: true, data: res.data.smartSearchAddresses };
+    }
+    return res as unknown as ApiResponse<SmartSearchResult>;
   }
 
   async searchAddressesFromAPI(
     input: ExternalAddressSearchInput
-  ): Promise<ApiResponse<SearchAddressesFromApiQuery>> {
-    return this.query<
-      SearchAddressesFromApiQuery,
-      SearchAddressesFromApiQueryVariables
-    >(SEARCH_ADDRESSES_FROM_API, { input }, { fetchPolicy: 'network-only' });
+  ): Promise<ApiResponse<ExternalAddressSearchResult>> {
+    const res = await this.query<{
+      searchAddressesFromAPI: ExternalAddressSearchResult;
+    }>(SEARCH_ADDRESSES_FROM_API, { input }, { fetchPolicy: 'network-only' });
+    if (res.success && res.data?.searchAddressesFromAPI) {
+      return { success: true, data: res.data.searchAddressesFromAPI };
+    }
+    return res as unknown as ApiResponse<ExternalAddressSearchResult>;
   }
 
   async searchUserAddresses(
     input: SearchAddressInput
-  ): Promise<ApiResponse<SearchUserAddressesQuery>> {
-    return this.query<
-      SearchUserAddressesQuery,
-      SearchUserAddressesQueryVariables
-    >(SEARCH_USER_ADDRESSES, { input }, { fetchPolicy: 'cache-first' });
+  ): Promise<ApiResponse<AddressSearchResult>> {
+    const res = await this.query<{ searchUserAddresses: AddressSearchResult }>(
+      SEARCH_USER_ADDRESSES,
+      { input },
+      { fetchPolicy: 'network-only' }
+    );
+    if (res.success && res.data?.searchUserAddresses) {
+      return { success: true, data: res.data.searchUserAddresses };
+    }
+    return res as unknown as ApiResponse<AddressSearchResult>;
   }
 
-  async getUserAddressById(
-    id: number
-  ): Promise<ApiResponse<GetUserAddressByIdQuery>> {
-    if (!id || id <= 0 || isNaN(id)) {
+  async getUserAddressById(id: number): Promise<ApiResponse<Address>> {
+    if (!this.isValidId(id)) {
       return {
         success: false,
         error: {
@@ -185,66 +201,83 @@ export class AddressService implements IAddressService {
         },
       };
     }
-
-    return this.query<
-      GetUserAddressByIdQuery,
-      GetUserAddressByIdQueryVariables
-    >(GET_USER_ADDRESS_BY_ID, { id }, { fetchPolicy: 'network-only' });
+    const res = await this.query<{ getUserAddressById: Address }>(
+      GET_USER_ADDRESS_BY_ID,
+      { id },
+      { fetchPolicy: 'network-only' }
+    );
+    if (res.success && res.data?.getUserAddressById) {
+      return { success: true, data: res.data.getUserAddressById };
+    }
+    return res as unknown as ApiResponse<Address>;
   }
 
   async getUserAddresses(
     filter: FilterAddressInput
-  ): Promise<ApiResponse<GetUserAddressesQuery>> {
-    return this.query<GetUserAddressesQuery, GetUserAddressesQueryVariables>(
+  ): Promise<ApiResponse<AddressSearchResult>> {
+    const res = await this.query<{ getUserAddresses: AddressSearchResult }>(
       GET_USER_ADDRESSES,
       { filter },
       { fetchPolicy: 'cache-first' }
     );
+    if (res.success && res.data?.getUserAddresses) {
+      return { success: true, data: res.data.getUserAddresses };
+    }
+    return res as unknown as ApiResponse<AddressSearchResult>;
   }
 
-  async getUserAddressStats(): Promise<ApiResponse<GetUserAddressStatsQuery>> {
-    return this.query<GetUserAddressStatsQuery>(
+  async getUserAddressStats(): Promise<ApiResponse<AddressStatsResult>> {
+    const res = await this.query<{ getUserAddressStats: AddressStatsResult }>(
       GET_USER_ADDRESS_STATS,
       undefined,
       { fetchPolicy: 'cache-first' }
     );
+    if (res.success && res.data?.getUserAddressStats) {
+      return { success: true, data: res.data.getUserAddressStats };
+    }
+    return res as unknown as ApiResponse<AddressStatsResult>;
   }
 
-  // ✅ 새로운 메서드 추가
   async getUserSearchLogs(
     filter: SearchAddressLogInput
-  ): Promise<ApiResponse<GetUserSearchLogsQuery>> {
-    return this.query<GetUserSearchLogsQuery, GetUserSearchLogsQueryVariables>(
-      GET_USER_SEARCH_LOGS,
-      { filter },
-      { fetchPolicy: 'cache-first' }
-    );
+  ): Promise<ApiResponse<PaginatedSearchLogResult>> {
+    const res = await this.query<{
+      getUserSearchLogs: PaginatedSearchLogResult;
+    }>(GET_USER_SEARCH_LOGS, { filter }, { fetchPolicy: 'cache-first' });
+    if (res.success && res.data?.getUserSearchLogs) {
+      return { success: true, data: res.data.getUserSearchLogs };
+    }
+    return res as unknown as ApiResponse<PaginatedSearchLogResult>;
   }
 
   // ============================================================================
-  // 주소 관리 Mutations
+  // 주소 관리
   // ============================================================================
 
-  async saveAddress(
-    input: SaveAddressInput
-  ): Promise<ApiResponse<SaveAddressMutation>> {
-    return this.mutate<SaveAddressMutation, SaveAddressMutationVariables>(
-      SAVE_ADDRESS,
-      { input }
-    );
+  async saveAddress(input: SaveAddressInput): Promise<ApiResponse<Address>> {
+    const res = await this.mutate<{ saveAddress: Address }>(SAVE_ADDRESS, {
+      input,
+    });
+    if (res.success && res.data?.saveAddress) {
+      return { success: true, data: res.data.saveAddress };
+    }
+    return res as unknown as ApiResponse<Address>;
   }
 
   async updateAddress(
     input: UpdateAddressInput
-  ): Promise<ApiResponse<UpdateAddressMutation>> {
-    return this.mutate<UpdateAddressMutation, UpdateAddressMutationVariables>(
-      UPDATE_ADDRESS,
-      { input }
-    );
+  ): Promise<ApiResponse<Address>> {
+    const res = await this.mutate<{ updateAddress: Address }>(UPDATE_ADDRESS, {
+      input,
+    });
+    if (res.success && res.data?.updateAddress) {
+      return { success: true, data: res.data.updateAddress };
+    }
+    return res as unknown as ApiResponse<Address>;
   }
 
-  async removeAddress(id: number): Promise<ApiResponse<RemoveAddressMutation>> {
-    if (!id || id <= 0 || isNaN(id)) {
+  async removeAddress(id: number): Promise<ApiResponse<boolean>> {
+    if (!this.isValidId(id)) {
       return {
         success: false,
         error: {
@@ -253,11 +286,26 @@ export class AddressService implements IAddressService {
         },
       };
     }
+    const res = await this.mutate<{ removeAddress: boolean }>(REMOVE_ADDRESS, {
+      id,
+    });
+    if (res.success && res.data?.removeAddress === true) {
+      return { success: true, data: true };
+    }
+    return res as unknown as ApiResponse<boolean>;
+  }
 
-    return this.mutate<RemoveAddressMutation, RemoveAddressMutationVariables>(
-      REMOVE_ADDRESS,
-      { id }
+  async bulkRemoveAddresses(
+    input: BulkRemoveAddressInput
+  ): Promise<ApiResponse<BulkRemoveResult>> {
+    const res = await this.mutate<{ bulkRemoveAddresses: BulkRemoveResult }>(
+      BULK_REMOVE_ADDRESSES,
+      { input }
     );
+    if (res.success && res.data?.bulkRemoveAddresses) {
+      return { success: true, data: res.data.bulkRemoveAddresses };
+    }
+    return res as unknown as ApiResponse<BulkRemoveResult>;
   }
 
   // ============================================================================
@@ -266,11 +314,91 @@ export class AddressService implements IAddressService {
 
   async createAddressPopupUrl(
     input: CreateAddressPopupInput
-  ): Promise<ApiResponse<CreateAddressPopupUrlMutation>> {
-    return this.mutate<
-      CreateAddressPopupUrlMutation,
-      CreateAddressPopupUrlMutationVariables
-    >(CREATE_ADDRESS_POPUP_URL, { input });
+  ): Promise<ApiResponse<AddressPopupUrlResult>> {
+    const res = await this.mutate<{
+      createAddressPopupUrl: AddressPopupUrlResult;
+    }>(CREATE_ADDRESS_POPUP_URL, { input });
+    if (res.success && res.data?.createAddressPopupUrl) {
+      return { success: true, data: res.data.createAddressPopupUrl };
+    }
+    return res as unknown as ApiResponse<AddressPopupUrlResult>;
+  }
+
+  // ============================================================================
+  // 어드민
+  // ============================================================================
+
+  async adminGetAllAddresses(
+    filter: AdminAddressFilterInput
+  ): Promise<ApiResponse<AdminAddressListResult>> {
+    const res = await this.query<{
+      adminGetAllAddresses: AdminAddressListResult;
+    }>(ADMIN_GET_ALL_ADDRESSES, { filter }, { fetchPolicy: 'network-only' });
+    if (res.success && res.data?.adminGetAllAddresses) {
+      return { success: true, data: res.data.adminGetAllAddresses };
+    }
+    return res as unknown as ApiResponse<AdminAddressListResult>;
+  }
+
+  async adminGetSearchLogs(
+    filter: AdminSearchLogFilterInput
+  ): Promise<ApiResponse<AdminSearchLogListResult>> {
+    const res = await this.query<{
+      adminGetSearchLogs: AdminSearchLogListResult;
+    }>(ADMIN_GET_SEARCH_LOGS, { filter }, { fetchPolicy: 'network-only' });
+    if (res.success && res.data?.adminGetSearchLogs) {
+      return { success: true, data: res.data.adminGetSearchLogs };
+    }
+    return res as unknown as ApiResponse<AdminSearchLogListResult>;
+  }
+
+  async adminGetApiLogs(
+    filter: AdminApiLogFilterInput
+  ): Promise<ApiResponse<AdminApiLogListResult>> {
+    const res = await this.query<{ adminGetApiLogs: AdminApiLogListResult }>(
+      ADMIN_GET_API_LOGS,
+      { filter },
+      { fetchPolicy: 'network-only' }
+    );
+    if (res.success && res.data?.adminGetApiLogs) {
+      return { success: true, data: res.data.adminGetApiLogs };
+    }
+    return res as unknown as ApiResponse<AdminApiLogListResult>;
+  }
+
+  async adminGetAddressStats(): Promise<ApiResponse<AdminAddressStatsResult>> {
+    const res = await this.query<{
+      adminGetAddressStats: AdminAddressStatsResult;
+    }>(ADMIN_GET_ADDRESS_STATS, undefined, { fetchPolicy: 'network-only' });
+    if (res.success && res.data?.adminGetAddressStats) {
+      return { success: true, data: res.data.adminGetAddressStats };
+    }
+    return res as unknown as ApiResponse<AdminAddressStatsResult>;
+  }
+
+  async adminUpdateAddressStatus(
+    input: AdminUpdateAddressStatusInput
+  ): Promise<ApiResponse<Address>> {
+    const res = await this.mutate<{ adminUpdateAddressStatus: Address }>(
+      ADMIN_UPDATE_ADDRESS_STATUS,
+      { input }
+    );
+    if (res.success && res.data?.adminUpdateAddressStatus) {
+      return { success: true, data: res.data.adminUpdateAddressStatus };
+    }
+    return res as unknown as ApiResponse<Address>;
+  }
+
+  async adminBulkRemoveAddresses(
+    input: BulkRemoveAddressInput
+  ): Promise<ApiResponse<BulkRemoveResult>> {
+    const res = await this.mutate<{
+      adminBulkRemoveAddresses: BulkRemoveResult;
+    }>(ADMIN_BULK_REMOVE_ADDRESSES, { input });
+    if (res.success && res.data?.adminBulkRemoveAddresses) {
+      return { success: true, data: res.data.adminBulkRemoveAddresses };
+    }
+    return res as unknown as ApiResponse<BulkRemoveResult>;
   }
 
   // ============================================================================
@@ -281,7 +409,7 @@ export class AddressService implements IAddressService {
     this.client
       .clearStore()
       .catch((err) =>
-        console.error('[AddressService] clearAddressCache error', err)
+        console.error('[AnalyticsService] clearAddressCache error', err)
       );
   }
 }

@@ -1,5 +1,9 @@
 import { useCallback, useRef } from 'react';
-import type { ApiResponse, GetAllNotificationsInput } from '../types';
+import type {
+  ApiResponse,
+  GetAllNotificationsInput,
+  SearchEmailsInput,
+} from '../types';
 import { useNotificationsContext } from '../context';
 import { getNotificationsService } from '../services';
 import type {
@@ -353,6 +357,43 @@ export const useNotifications = () => {
     [withLoading]
   );
 
+  /**
+   * schema: searchEmails → String (raw JSON)
+   * 이메일 키워드 검색 (관리자용)
+   */
+  const searchEmails = useCallback(
+    async (input: SearchEmailsInput) =>
+      withLoading(async () => {
+        const service = getNotificationsService();
+        return service.searchEmails(input);
+      }, '이메일 검색에 실패했습니다.'),
+    [withLoading]
+  );
+
+  /**
+   * schema: getEmailStats → String (관리자 전용)
+   */
+  const fetchEmailStats = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getNotificationsService();
+        return service.getEmailStats();
+      }, '이메일 통계를 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  /**
+   * schema: emailHealthCheck → String!
+   */
+  const checkEmailHealth = useCallback(
+    async () =>
+      withLoading(async () => {
+        const service = getNotificationsService();
+        return service.emailHealthCheck();
+      }, '이메일 서비스 상태 확인에 실패했습니다.'),
+    [withLoading]
+  );
+
   // ============================================================================
   // Email Mutations
   // ============================================================================
@@ -431,6 +472,9 @@ export const useNotifications = () => {
     // Email Queries
     fetchEmails,
     fetchEmailById,
+    searchEmails, // ← 신규
+    fetchEmailStats, // ← 신규
+    checkEmailHealth, // ← 신규
     // Email Mutations
     sendEmail,
     retryEmail,

@@ -10,6 +10,14 @@ import type {
   UpdateDriverStatusInput,
   VerifyDriverLicenseInput,
   OcrDriverLicenseInput,
+  // ✅ 신규: 정산
+  GetSettlementsByPeriodInput,
+  CloseSettlementInput,
+  CloseSettlementBulkInput,
+  ApproveSettlementInput,
+  ApproveSettlementBulkInput,
+  ProcessPaymentInput,
+  ProcessPaymentBulkInput,
 } from '../types';
 
 export const useDrivers = () => {
@@ -81,6 +89,95 @@ export const useDrivers = () => {
         const service = getDeliveryService();
         return service.getDriverSettlements(input);
       }, '정산 내역을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ============================================================================
+  // ✅ 신규: 정산 Queries
+  // ============================================================================
+
+  const fetchMySettlements = useCallback(
+    async (driverId: number, limit?: number) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.mySettlements(driverId, limit);
+      }, '내 정산 내역을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const fetchSettlementsByPeriod = useCallback(
+    async (input: GetSettlementsByPeriodInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.settlementsByPeriod(input);
+      }, '기간별 정산 내역을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  const fetchSettlementSummary = useCallback(
+    async (dateFrom: string, dateTo: string) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.settlementSummary(dateFrom, dateTo);
+      }, '정산 현황 요약을 불러오는데 실패했습니다.'),
+    [withLoading]
+  );
+
+  // ============================================================================
+  // ✅ 신규: 정산 Mutations
+  // ============================================================================
+
+  const closeSettlement = useCallback(
+    async (input: CloseSettlementInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.closeSettlement(input);
+      }, '정산 마감 처리에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const closeSettlementBulk = useCallback(
+    async (input: CloseSettlementBulkInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.closeSettlementBulk(input);
+      }, '정산 다건 마감 처리에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const approveSettlement = useCallback(
+    async (input: ApproveSettlementInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.approveSettlement(input);
+      }, '정산 승인에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const approveSettlementBulk = useCallback(
+    async (input: ApproveSettlementBulkInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.approveSettlementBulk(input);
+      }, '정산 다건 승인에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const processSettlementPayment = useCallback(
+    async (input: ProcessPaymentInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.processSettlementPayment(input);
+      }, '정산 지급 처리에 실패했습니다.'),
+    [withLoading]
+  );
+
+  const processSettlementPaymentBulk = useCallback(
+    async (input: ProcessPaymentBulkInput) =>
+      withLoading(async () => {
+        const service = getDeliveryService();
+        return service.processSettlementPaymentBulk(input);
+      }, '정산 일괄 지급 처리에 실패했습니다.'),
     [withLoading]
   );
 
@@ -202,6 +299,9 @@ export const useDrivers = () => {
     fetchDriverById,
     fetchDrivers,
     fetchDriverSettlements,
+    fetchMySettlements, // ✅ 신규
+    fetchSettlementsByPeriod, // ✅ 신규
+    fetchSettlementSummary, // ✅ 신규
     // Mutations — 등록 / 수정
     createDeliveryDriver,
     updateDriverProfile,
@@ -216,5 +316,12 @@ export const useDrivers = () => {
     // Mutations — 면허
     verifyDriverLicense,
     ocrDriverLicense,
+    // ✅ 신규: 정산
+    closeSettlement,
+    closeSettlementBulk,
+    approveSettlement,
+    approveSettlementBulk,
+    processSettlementPayment,
+    processSettlementPaymentBulk,
   };
 };

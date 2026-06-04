@@ -1,9 +1,16 @@
 import { gql } from '@apollo/client';
-import { ERROR_INFO_FIELDS } from './auth.queries.js';
 
 // ============================================================================
 // Fragments
 // ============================================================================
+
+export const STORE_ERROR_INFO_FIELDS = gql`
+  fragment StoreErrorInfoFields on ErrorInfo {
+    code
+    message
+    details
+  }
+`;
 
 export const BRAND_FIELDS = gql`
   fragment BrandFields on Brand {
@@ -167,18 +174,18 @@ export const STORE_STATS_FIELDS = gql`
 `;
 
 export const ADD_STORE_SERVICE_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   fragment AddStoreServiceOutputFields on AddStoreServiceOutput {
     success
     message
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;
 
 export const CREATE_STORE_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   ${STORE_FIELDS}
   fragment CreateStoreOutputFields on CreateStoreOutput {
     success
@@ -188,13 +195,13 @@ export const CREATE_STORE_OUTPUT_FIELDS = gql`
       ...StoreFields
     }
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;
 
 export const UPDATE_STORE_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   ${STORE_FIELDS}
   fragment UpdateStoreOutputFields on UpdateStoreOutput {
     success
@@ -204,25 +211,25 @@ export const UPDATE_STORE_OUTPUT_FIELDS = gql`
       ...StoreFields
     }
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;
 
 export const DELETE_STORE_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   fragment DeleteStoreOutputFields on DeleteStoreOutput {
     success
     storeId
     message
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;
 
 export const CREATE_BRAND_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   ${BRAND_FIELDS}
   fragment CreateBrandOutputFields on CreateBrandOutput {
     success
@@ -232,13 +239,13 @@ export const CREATE_BRAND_OUTPUT_FIELDS = gql`
       ...BrandFields
     }
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;
 
 export const UPDATE_BRAND_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   ${BRAND_FIELDS}
   fragment UpdateBrandOutputFields on UpdateBrandOutput {
     success
@@ -248,19 +255,19 @@ export const UPDATE_BRAND_OUTPUT_FIELDS = gql`
       ...BrandFields
     }
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;
 
 export const DELETE_BRAND_OUTPUT_FIELDS = gql`
-  ${ERROR_INFO_FIELDS}
+  ${STORE_ERROR_INFO_FIELDS}
   fragment DeleteBrandOutputFields on DeleteBrandOutput {
     success
     brandId
     message
     error {
-      ...ErrorInfoFields
+      ...StoreErrorInfoFields
     }
   }
 `;

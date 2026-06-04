@@ -5,6 +5,7 @@ import {
   ReactNode,
   useMemo,
   useCallback,
+  useLayoutEffect,
 } from 'react';
 import { useApolloClient } from '@apollo/client/react';
 import type {
@@ -15,6 +16,8 @@ import type {
   Notice,
   Manual,
   ManualCategory,
+  NoticeStats,
+  ManualSummaryStats,
 } from '../types';
 import { serviceRegistry, initNoticesService } from '../services';
 
@@ -26,10 +29,12 @@ const initialState: NoticesState = {
   notices: [],
   currentNotice: null,
   noticeFilters: {},
+  noticeStats: null,
   manuals: [],
   currentManual: null,
   manualCategories: [],
   manualFilters: {},
+  manualStats: null,
   isLoading: false,
   error: null,
 };
@@ -37,22 +42,18 @@ const initialState: NoticesState = {
 export const NoticesProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<NoticesState>(initialState);
   const apolloClient = useApolloClient();
-  const [serviceInitialized, setServiceInitialized] = useState(false);
 
-  useMemo(() => {
+  useLayoutEffect(() => {
     if (!serviceRegistry.isServiceInitialized('notices')) {
       try {
         initNoticesService(apolloClient);
-        setServiceInitialized(true);
       } catch (error) {
         console.error('❌ NoticesService initialization failed:', error);
       }
-    } else {
-      setServiceInitialized(true);
     }
   }, [apolloClient]);
 
-  // ── Notice Actions ───────────────────────────────────────────────────────────
+  // ── Notice Actions ────────────────────────────────────────────────────────────
 
   const setNotices = useCallback((notices: Notice[]) => {
     setState((prev) => ({ ...prev, notices }));
@@ -96,7 +97,11 @@ export const NoticesProvider = ({ children }: { children: ReactNode }) => {
     }));
   }, []);
 
-  // ── Manual Actions ───────────────────────────────────────────────────────────
+  const setNoticeStats = useCallback((noticeStats: NoticeStats | null) => {
+    setState((prev) => ({ ...prev, noticeStats }));
+  }, []);
+
+  // ── Manual Actions ────────────────────────────────────────────────────────────
 
   const setManuals = useCallback((manuals: Manual[]) => {
     setState((prev) => ({ ...prev, manuals }));
@@ -144,7 +149,14 @@ export const NoticesProvider = ({ children }: { children: ReactNode }) => {
     }));
   }, []);
 
-  // ── 공통 Actions ─────────────────────────────────────────────────────────────
+  const setManualStats = useCallback(
+    (manualStats: ManualSummaryStats | null) => {
+      setState((prev) => ({ ...prev, manualStats }));
+    },
+    []
+  );
+
+  // ── 공통 Actions ──────────────────────────────────────────────────────────────
 
   const setLoading = useCallback((isLoading: boolean) => {
     setState((prev) => ({ ...prev, isLoading }));
@@ -171,6 +183,7 @@ export const NoticesProvider = ({ children }: { children: ReactNode }) => {
       removeNotice,
       setCurrentNotice,
       setNoticeFilters,
+      setNoticeStats,
       setManuals,
       addManual,
       updateManualInContext,
@@ -178,6 +191,7 @@ export const NoticesProvider = ({ children }: { children: ReactNode }) => {
       setCurrentManual,
       setManualCategories,
       setManualFilters,
+      setManualStats,
       setLoading,
       setError,
       clearError,
@@ -191,6 +205,7 @@ export const NoticesProvider = ({ children }: { children: ReactNode }) => {
       removeNotice,
       setCurrentNotice,
       setNoticeFilters,
+      setNoticeStats,
       setManuals,
       addManual,
       updateManualInContext,
@@ -198,16 +213,13 @@ export const NoticesProvider = ({ children }: { children: ReactNode }) => {
       setCurrentManual,
       setManualCategories,
       setManualFilters,
+      setManualStats,
       setLoading,
       setError,
       clearError,
       reset,
     ]
   );
-
-  if (!serviceInitialized) {
-    return <div>Initializing Notices Service...</div>;
-  }
 
   return (
     <NoticesContext.Provider value={value}>{children}</NoticesContext.Provider>

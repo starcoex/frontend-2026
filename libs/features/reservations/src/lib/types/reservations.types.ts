@@ -234,6 +234,9 @@ export interface WalkIn {
   status: WalkInStatus;
   waitingOrder: number;
   estimatedWaitMinutes?: number | null;
+  ticketNumber?: string | null;
+  queuePosition?: number | null;
+  redisTicketId?: string | null;
   arrivedAt: string;
   calledAt?: string | null;
   startedAt?: string | null;

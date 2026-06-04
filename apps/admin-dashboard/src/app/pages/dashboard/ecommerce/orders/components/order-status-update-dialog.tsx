@@ -26,7 +26,7 @@ import {
   ORDER_STATUS_OPTIONS,
   OrderStatusValue,
 } from '@/app/pages/dashboard/ecommerce/orders/data/order-data';
-import { ORDER_STATUS_MAP } from '@/app/pages/dashboard/ecommerce/orders/components/order-status-bage';
+import { ORDER_STATUS_MAP } from './order-status-badge';
 
 interface OrderStatusUpdateDialogProps {
   open: boolean;

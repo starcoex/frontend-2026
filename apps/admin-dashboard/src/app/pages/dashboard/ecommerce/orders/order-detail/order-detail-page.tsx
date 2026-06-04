@@ -22,7 +22,7 @@ import {
   ORDER_STATUS_MAP,
   OrderStatusBadge,
   PaymentStatusBadge,
-} from '@/app/pages/dashboard/ecommerce/orders/components/order-status-bage';
+} from '../components/order-status-badge';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -108,6 +108,7 @@ export default function OrderDetailPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-4">
               <Button
+                aria-label="뒤로가기"
                 variant="outline"
                 size="icon"
                 onClick={() => navigate('/admin/orders')}
