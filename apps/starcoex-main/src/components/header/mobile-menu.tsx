@@ -185,6 +185,21 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
         <Separator />
 
+        <Link
+          to="/faq"
+          onClick={onClose}
+          className="flex items-center gap-3 px-4 py-3.5 text-sm font-medium hover:bg-accent transition-colors border-b border-border/50"
+        >
+          자주 묻는 질문
+        </Link>
+        <Link
+          to="/contact"
+          onClick={onClose}
+          className="flex items-center gap-3 px-4 py-3.5 text-sm font-medium hover:bg-accent transition-colors border-b border-border/50"
+        >
+          문의하기
+        </Link>
+
         {/* 연락처 */}
         <ContactButton
           variant="outline"

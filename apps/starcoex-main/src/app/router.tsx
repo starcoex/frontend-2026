@@ -60,6 +60,21 @@ const CareerDetailPage = lazy(() =>
     default: m.CareerDetailPage,
   }))
 );
+const ContactPage = lazy(() =>
+  import('@/app/pages/contact/contact-page').then((m) => ({
+    default: m.ContactPage,
+  }))
+);
+const FaqPage = lazy(() =>
+  import('@/app/pages/faq/faq-page').then((m) => ({ default: m.FaqPage }))
+);
+
+// ─── 약관 ────────────────────────────────────────────────────────────────────
+const TermsPage = lazy(() =>
+  import('@/app/pages/term/terms-page').then((m) => ({
+    default: m.TermsPageRoute,
+  }))
+);
 
 // ─── 인증 페이지 ─────────────────────────────────────────────────────────────
 const LoginPage = lazy(() =>
@@ -81,7 +96,7 @@ const IdentityRegisterPage = lazy(() =>
   }))
 );
 
-// ─── 보호된 페이지 ───────────────────────────────────────────────────────────
+// ─── 보호된 페이지 : 사용자 ──────────────────────────────────────────────────
 const OnboardingPage = lazy(() =>
   import('@/app/pages/onboarding/onboarding-page').then((m) => ({
     default: m.OnboardingPage,
@@ -105,14 +120,57 @@ const SettingsPage = lazy(() =>
     default: m.SettingsPage,
   }))
 );
+const NotificationsPage = lazy(() =>
+  import('@/app/pages/user/notifications.page').then((m) => ({
+    default: m.NotificationsPage,
+  }))
+);
+const BillingPage = lazy(() =>
+  import('@/app/pages/user/billing.page').then((m) => ({
+    default: m.BillingPage,
+  }))
+);
+
+// ─── 보호된 페이지 : 멤버십 ──────────────────────────────────────────────────
+const MembershipPage = lazy(() =>
+  import('@/app/pages/membership/membership-page').then((m) => ({
+    default: m.MembershipPage,
+  }))
+);
+
+// ─── 보호된 페이지 : 주문 ────────────────────────────────────────────────────
+const OrdersPage = lazy(() =>
+  import('@/app/pages/orders/orders-page').then((m) => ({
+    default: m.OrdersPage,
+  }))
+);
+const OrderDetailPage = lazy(() =>
+  import('@/app/pages/orders/order-detail-page').then((m) => ({
+    default: m.OrderDetailPage,
+  }))
+);
+
+// ─── 보호된 페이지 : 문의 ────────────────────────────────────────────────────
+const MyContactsPage = lazy(() =>
+  import('@/app/pages/contact/my-contacts-page').then((m) => ({
+    default: m.MyContactsPage,
+  }))
+);
+const MyContactDetailPage = lazy(() =>
+  import('@/app/pages/contact/my-contact-detail-page').then((m) => ({
+    default: m.MyContactDetailPage,
+  }))
+);
+
+// ─── 보호된 페이지 : 채용 지원 ───────────────────────────────────────────────
 const MyApplicationsPage = lazy(() =>
   import('@/app/pages/jobs/my-applications-page').then((m) => ({
     default: m.MyApplicationsPage,
   }))
 );
-const JobApplyPage = lazy(() =>
-  import('@/app/pages/jobs/job-apply-page').then((m) => ({
-    default: m.JobApplyPage,
+const MyApplicationDetailPage = lazy(() =>
+  import('@/app/pages/jobs/my-application-detail-page').then((m) => ({
+    default: m.MyApplicationDetailPage,
   }))
 );
 const JobApplicationEditPage = lazy(() =>
@@ -120,8 +178,13 @@ const JobApplicationEditPage = lazy(() =>
     default: m.JobApplicationEditPage,
   }))
 );
+const JobApplyPage = lazy(() =>
+  import('@/app/pages/jobs/job-apply-page').then((m) => ({
+    default: m.JobApplyPage,
+  }))
+);
 
-// ─── AppShell: BottomNav 전역 제공 (Router 컨텍스트 내부) ────────────────────
+// ─── AppShell ────────────────────────────────────────────────────────────────
 const AppShell = () => (
   <>
     <Outlet />
@@ -134,7 +197,7 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     errorElement: <ErrorBoundary />,
     children: [
-      // 🏠 공개 페이지
+      // ── 🏠 공개 페이지 ────────────────────────────────────────────────────
       {
         path: '/',
         element: <MainLayout />,
@@ -146,8 +209,18 @@ export const router = createBrowserRouter([
           { path: 'about/philosophy', element: S(PhilosophyPage) },
           { path: 'about/history', element: S(HistoryPage) },
           { path: 'about/ci', element: S(CiPage) },
+
+          // 채용 공고 (공개)
           { path: 'careers', element: S(CareersPage) },
           { path: 'careers/:id', element: S(CareerDetailPage) },
+
+          // 고객지원
+          { path: 'contacts', element: S(ContactPage) },
+          { path: 'faq', element: S(FaqPage) },
+
+          // 약관 및 정책
+          { path: 'terms', element: S(TermsPage) },
+          { path: 'privacy', element: S(TermsPage) },
 
           // 외부 앱 리다이렉트
           {
@@ -181,17 +254,38 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // 🔐 보호된 페이지 - BottomNav 자동 전환 (useAuth 기반)
+      // ── 🔐 보호된 페이지 ──────────────────────────────────────────────────
       {
         path: '/',
         element: <ProtectedLayout />,
         children: [
+          // 온보딩
           { path: 'onboarding', element: S(OnboardingPage) },
+
+          // 대시보드
           { path: 'dashboard', element: S(DashboardPage) },
+
+          // 사용자 계정
           { path: 'profile', element: S(ProfilePage) },
           { path: 'security', element: S(SecurityPage) },
           { path: 'settings', element: S(SettingsPage) },
+          { path: 'notifications', element: S(NotificationsPage) },
+          { path: 'billing', element: S(BillingPage) },
+
+          // 멤버십
+          { path: 'membership', element: S(MembershipPage) },
+
+          // 주문
+          { path: 'orders', element: S(OrdersPage) },
+          { path: 'orders/:id', element: S(OrderDetailPage) },
+
+          // 문의
+          { path: 'my-contacts', element: S(MyContactsPage) },
+          { path: 'my-contacts/:id', element: S(MyContactDetailPage) },
+
+          // 채용 지원
           { path: 'my-applications', element: S(MyApplicationsPage) },
+          { path: 'my-applications/:id', element: S(MyApplicationDetailPage) },
           {
             path: 'my-applications/:id/edit',
             element: S(JobApplicationEditPage),
@@ -200,7 +294,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // 🔑 인증 - BottomNav 숨김 (/auth 경로 감지)
+      // ── 🔑 인증 페이지 ────────────────────────────────────────────────────
       {
         path: '/auth',
         element: <AuthLayout />,
@@ -222,7 +316,7 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // 🚫 404
+      // ── 🚫 404 ────────────────────────────────────────────────────────────
       { path: '*', element: <NotFoundAnimation /> },
     ],
   },

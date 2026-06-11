@@ -97,6 +97,9 @@ const businessRegisterSchema = z
     agreePrivacy: z
       .boolean()
       .refine((val) => val === true, '개인정보 처리방침에 동의해주세요'),
+    agreeSecurityPledge: z // ★ 추가
+      .boolean()
+      .refine((val) => val === true, '개인정보보호 서약에 동의해주세요'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: '비밀번호가 일치하지 않습니다',
@@ -144,6 +147,7 @@ export function BusinessRegisterPage() {
       confirmPassword: '',
       agreeTerms: false,
       agreePrivacy: false,
+      agreeSecurityPledge: false, // ★ 추가
     },
   });
 
@@ -653,7 +657,7 @@ export function BusinessRegisterPage() {
                             className="text-sm leading-relaxed"
                           >
                             <Link
-                              to="#"
+                              to="/terms" // ★ # → /terms
                               className="text-primary underline hover:text-primary/80"
                             >
                               이용약관
@@ -687,10 +691,45 @@ export function BusinessRegisterPage() {
                             className="text-sm leading-relaxed"
                           >
                             <Link
-                              to="#"
+                              to="/privacy" // ★ # → /privacy
                               className="text-primary underline hover:text-primary/80"
                             >
                               개인정보 처리방침
+                            </Link>
+                            에 동의합니다 (필수)
+                          </FormLabel>
+                        </div>
+                      </div>
+                      <FormMessage className="!mt-1" />
+                    </FormItem>
+                  )}
+                />
+
+                {/* ★ 개인정보보호 서약 추가 — 기존 패턴 동일 */}
+                <FormField
+                  control={form.control}
+                  name="agreeSecurityPledge"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-start space-x-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="h-4 w-4 mt-1 rounded border-gray-300 text-primary focus:ring-primary"
+                            disabled={isLoading}
+                          />
+                        </FormControl>
+                        <div className="flex-1">
+                          <FormLabel
+                            htmlFor="agreeSecurityPledge"
+                            className="text-sm leading-relaxed"
+                          >
+                            <Link
+                              to="/terms?type=security" // ★ security-pledge → security
+                              className="text-primary underline hover:text-primary/80"
+                            >
+                              개인정보보호 서약
                             </Link>
                             에 동의합니다 (필수)
                           </FormLabel>

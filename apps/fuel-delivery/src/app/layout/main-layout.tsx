@@ -37,7 +37,9 @@ export const MainLayout: React.FC = () => {
           <OfflineIndicator />
           <PwaInstallBanner />
         </div>
-        <main className="flex-1">
+        {/* ★ Navbar가 fixed이므로 헤더 높이만큼 상단 패딩 추가 */}
+        <main className="flex-1 pt-16">
+          {' '}
           <Outlet />
         </main>
         <Footer />

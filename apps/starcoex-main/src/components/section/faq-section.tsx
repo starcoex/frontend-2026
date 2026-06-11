@@ -7,6 +7,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 
+// ─── FAQ 데이터 ───────────────────────────────────────────────────────────────
+
 const faqData = [
   {
     question: '가입은 어떻게 하나요?',
@@ -16,7 +18,7 @@ const faqData = [
   {
     question: '어떤 서비스들을 이용할 수 있나요?',
     answer:
-      '별표주유소, 세차 서비스, 난방유 배달, 제라게 카케어 등 4개의 전용 앱 서비스를 이용하실 수 있습니다. 모든 서비스가 하나의 계정으로 연결됩니다.',
+      '별표주유소, 손세차 서비스, 난방유 배달, 제라게 카케어 등 4개의 전용 앱 서비스를 이용하실 수 있습니다. 모든 서비스가 하나의 계정으로 연결됩니다.',
   },
   {
     question: '각 앱마다 따로 가입해야 하나요?',
@@ -36,7 +38,7 @@ const faqData = [
   {
     question: '사업자도 이용할 수 있나요?',
     answer:
-      '물론입니다! 개인 사용자뿐만 아니라 사업자도 동일하게 이용할 수 있습니다. 대량 이용 시 추가 할인 혜택도 제공되니 고객센터로 문의해주세요.',
+      '물론입니다! 개인 사용자뿐만 아니라 사업자도 동일하게 이용할 수 있습니다. 대량 이용 시 추가 혜택도 제공되니 고객센터로 문의해주세요.',
   },
   {
     question: '앱을 삭제해도 다른 서비스는 계속 쓸 수 있나요?',
@@ -50,9 +52,11 @@ const faqData = [
   },
 ];
 
+// ─── 컴포넌트 ─────────────────────────────────────────────────────────────────
+
 const FaqSection = ({ withBorders = true }: { withBorders?: boolean }) => {
   return (
-    <section className="">
+    <section>
       <div className={withBorders ? 'border-b' : ''}>
         <SectionHeader
           className={
@@ -61,9 +65,9 @@ const FaqSection = ({ withBorders = true }: { withBorders?: boolean }) => {
               : '!max-w-[480px] !border-none lg:items-center lg:text-center'
           }
           iconTitle="자주 묻는 질문"
-          title="하이브리드 서비스, 궁금한 점이 있으신가요?"
+          title="스타코엑스 서비스, 궁금한 점이 있으신가요?"
           icon={MessageCircleQuestion}
-          description="스타코엑스 이용 중 자주 묻는 질문들을 모아놨습니다"
+          description="스타코엑스 서비스 이용 중 자주 묻는 질문들을 모아놨습니다"
         />
       </div>
 
@@ -90,7 +94,7 @@ const FaqSection = ({ withBorders = true }: { withBorders?: boolean }) => {
 
       {withBorders && (
         <div className="h-8 w-full border-y md:h-12 lg:h-[112px]">
-          <div className="container h-full w-full border-x"></div>
+          <div className="container h-full w-full border-x" />
         </div>
       )}
     </section>

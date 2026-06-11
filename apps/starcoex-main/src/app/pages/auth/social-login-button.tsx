@@ -33,6 +33,13 @@ export function SocialLoginButtons({
 
         // ✅ 현재 앱의 origin을 redirect_uri로 추가
         const loginUrl = new URL(result.data.getSocialLoginUrl.loginUrl);
+
+        // ✅ 네이버만 redirect_uri 전달 (네이버는 www.starcoex.com 한 곳에서만 OAuth 처리)
+        // 카카오/구글은 각 도메인에서 직접 처리 가능하므로 불필요
+        if (provider === 'NAVER') {
+          loginUrl.searchParams.set('redirect_uri', window.location.origin);
+        }
+
         // ✅ state에 현재 앱 origin을 base64url로 인코딩하여 전달
         const statePayload = Buffer.from(
           JSON.stringify({ redirectUri: window.location.origin }),

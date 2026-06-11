@@ -23,8 +23,14 @@ import { useMedia } from '@starcoex-frontend/media';
 import { useAuth } from '@starcoex-frontend/auth';
 import { toast } from 'sonner';
 
-export function FileUploadDialog() {
-  const [open, setOpen] = React.useState(false);
+interface FileUploadDialogProps {
+  defaultOpen?: boolean;
+}
+
+export function FileUploadDialog({
+  defaultOpen = false,
+}: FileUploadDialogProps) {
+  const [open, setOpen] = React.useState(defaultOpen);
   const [files, setFiles] = React.useState<File[]>([]);
   const [dragActive, setDragActive] = React.useState(false);
 

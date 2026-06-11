@@ -28,6 +28,13 @@ export const FILE_BREADCRUMB_CONFIGS: Record<string, FileBreadcrumbConfig> = {
     showActions: false,
     showStats: false,
   },
+  UPLOAD: {
+    label: 'Upload',
+    title: '파일 업로드',
+    showActions: false, // 업로드 페이지 자체가 액션이므로 헤더 버튼 불필요
+    showStats: false,
+    showInBreadcrumb: true,
+  },
 };
 
 export const DEFAULT_FILE_BREADCRUMB_CONFIG: FileBreadcrumbConfig = {

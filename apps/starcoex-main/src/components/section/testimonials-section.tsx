@@ -85,15 +85,20 @@ const testimonials = [
   },
 ];
 
-export const TestimonialsSection = () => {
+export const TestimonialsSection = ({
+  withBorders = true,
+}: {
+  withBorders?: boolean;
+}) => {
   return (
     <section className="">
-      <div className="border-b">
+      <div className={withBorders ? 'border-b' : ''}>
         <SectionHeader
           iconTitle="고객 후기"
           title="별표주유소와 제라게 손세차, 고객들의 생생한 후기"
           icon={Handshake}
           description="빠르고 꼼꼼한 외부 손세차와 합리적인 주유 혜택을 경험한 고객들의 이야기"
+          className={withBorders ? '' : '!border-none'}
         />
       </div>
 
@@ -103,9 +108,11 @@ export const TestimonialsSection = () => {
         ))}
       </div>
 
-      <div className="mt-12 h-8 w-full border-y md:h-12 lg:h-[112px]">
-        <div className="container h-full w-full border-x"></div>
-      </div>
+      {withBorders && (
+        <div className="mt-12 h-8 w-full border-y md:h-12 lg:h-[112px]">
+          <div className="container h-full w-full border-x"></div>
+        </div>
+      )}
     </section>
   );
 };

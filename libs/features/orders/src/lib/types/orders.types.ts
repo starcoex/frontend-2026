@@ -9,6 +9,8 @@ export type OrderStatus =
   | 'PENDING'
   | 'CONFIRMED'
   | 'PREPARING'
+  | 'IN_SERVICE'
+  | 'COMPLETED'
   | 'SHIPPED'
   | 'DELIVERED'
   | 'CANCELLED'
@@ -20,6 +22,8 @@ export type OrderItemStatus =
   | 'CONFIRMED'
   | 'OUT_OF_STOCK'
   | 'PREPARING'
+  | 'IN_SERVICE'
+  | 'COMPLETED'
   | 'SHIPPED'
   | 'DELIVERED'
   | 'CANCELLED'
@@ -76,6 +80,7 @@ export interface Order {
   fulfillmentType: FulfillmentType;
   totalAmount: number;
   deliveryAmount: number;
+  discountAmount: number;
   finalAmount: number;
   userId?: number | null;
   guestEmail?: string | null;
@@ -83,9 +88,11 @@ export interface Order {
   deliveryAddress?: Record<string, any> | null;
   pickupTime?: string | null;
   deliveryMemo?: string | null;
+  onSiteMetadata?: Record<string, any> | null;
   paymentId?: number | null;
   paymentStatus: OrderPaymentStatus;
   confirmedAt?: string | null;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -135,6 +142,30 @@ export interface CreateOrderItemInput {
   selectedOptions?: Record<string, any>;
 }
 
+export interface CreateDirectOrderInput {
+  fulfillmentType?: FulfillmentType;
+  totalAmount: number;
+  deliveryAmount?: number;
+  discountAmount?: number;
+  guestEmail?: string;
+  customerInfo: Record<string, any>;
+  deliveryAddress?: Record<string, any>;
+  pickupTime?: string;
+  deliveryMemo?: string;
+  onSiteMetadata?: Record<string, any>;
+  storeId: number;
+  storeName: string;
+  productId: number;
+  serviceName: string;
+  serviceTypeCode: string;
+  price: number;
+  carNo: string;
+  bodyType: string;
+  sizeGrade: string;
+  gradeConfidence: string;
+  vehicleModelName?: string;
+}
+
 // export interface CreateOrderInput {
 //   storeId: number;
 //   storeName: string;
@@ -174,6 +205,9 @@ export interface IOrdersService {
   getOrderById(id: number): Promise<ApiResponse<Order>>;
   getMyOrders(limit?: number, offset?: number): Promise<ApiResponse<Order[]>>;
   createOrder(input: CreateOrderInput): Promise<ApiResponse<CreateOrderOutput>>;
+  createDirectOrder(
+    input: CreateDirectOrderInput
+  ): Promise<ApiResponse<CreateOrderOutput>>;
   updateOrderStatus(
     input: UpdateOrderStatusInput
   ): Promise<ApiResponse<UpdateOrderOutput>>;

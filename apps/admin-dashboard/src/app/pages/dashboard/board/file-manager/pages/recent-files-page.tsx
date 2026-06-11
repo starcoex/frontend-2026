@@ -1,20 +1,65 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useMedia } from '@starcoex-frontend/media';
-import { useAuth } from '@starcoex-frontend/auth';
 import { FileTable } from '../components/file-table';
+import { FileSearchPanel } from '../components/file-search-panel';
+import type { SearchFilesParams } from '@starcoex-frontend/media';
+import {
+  DEFAULT_PAGE_SIZE,
+  PageSizeOption,
+} from '@/app/pages/dashboard/board/file-manager/constants/pagination';
 
 export default function RecentFilesPage() {
-  const { loadUserFiles, files, isLoading, error } = useMedia();
-  const { currentUser } = useAuth();
+  const { searchFiles, files, pagination, isLoading, error } = useMedia();
 
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  // ✅ 마지막 검색 파라미터 저장 (페이지 이동 시 재사용)
+  const [lastParams, setLastParams] = useState<SearchFilesParams>({
+    orderBy: 'createdAt',
+    orderDir: 'desc',
+    limit: DEFAULT_PAGE_SIZE,
+    offset: 0,
+  });
+
+  // ✅ 초기 로드: userId 없이 전체 파일 검색
   useEffect(() => {
-    if (currentUser) {
-      loadUserFiles({ userId: currentUser.id, limit: 50 });
-    }
-  }, [currentUser, loadUserFiles]);
+    searchFiles(lastParams);
+  }, []);
+
+  const handleSearch = (params: SearchFilesParams) => {
+    setPageIndex(0);
+    setLastParams(params);
+  };
+
+  const handleClear = () => {
+    const params: SearchFilesParams = {
+      orderBy: 'createdAt',
+      orderDir: 'desc',
+      limit: pageSize,
+      offset: 0,
+    };
+    setPageIndex(0);
+    setLastParams(params);
+    searchFiles(params);
+  };
+
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+    searchFiles({
+      ...lastParams,
+      limit: pageSize,
+      offset: newPageIndex * pageSize,
+    });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize as PageSizeOption);
+    setPageIndex(0);
+    searchFiles({ ...lastParams, limit: newSize, offset: 0 });
+  };
 
   if (isLoading && files.length === 0) {
     return (
@@ -31,6 +76,14 @@ export default function RecentFilesPage() {
 
   return (
     <div className="space-y-4">
+      {/* ✅ 정렬 기준 항상 노출 + 페이지 크기 선택 */}
+      <FileSearchPanel
+        onSearch={handleSearch}
+        onClear={handleClear}
+        pageSize={pageSize}
+        onPageSizeChange={handlePageSizeChange}
+      />
+
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -40,10 +93,7 @@ export default function RecentFilesPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                currentUser &&
-                loadUserFiles({ userId: currentUser.id, limit: 50 })
-              }
+              onClick={handleClear}
               className="ml-4"
             >
               다시 시도
@@ -52,7 +102,19 @@ export default function RecentFilesPage() {
         </Alert>
       )}
 
-      {!error && <FileTable data={files} />}
+      {!error && (
+        <FileTable
+          data={files}
+          hideToolbar
+          serverPagination={{
+            totalCount: pagination.totalCount,
+            pageSize,
+            pageIndex,
+            onPageChange: handlePageChange,
+            onPageSizeChange: handlePageSizeChange,
+          }}
+        />
+      )}
     </div>
   );
 }

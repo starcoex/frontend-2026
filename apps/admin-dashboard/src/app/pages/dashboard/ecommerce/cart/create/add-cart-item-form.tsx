@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Store,
   User,
+  Zap,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '@starcoex-frontend/cart';
@@ -40,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 const FormSchema = z.object({
   productId: z
@@ -53,6 +55,7 @@ const FormSchema = z.object({
     .min(1, '수량은 1 이상이어야 합니다.')
     .max(999, '수량은 999 이하여야 합니다.'),
   appliedPromotionId: z.number().optional(),
+  isDirectCheckout: z.boolean(),
 });
 
 type FormValues = z.infer<typeof FormSchema>;
@@ -88,6 +91,7 @@ export default function AddCartItemForm() {
       storeId: undefined,
       quantity: 1,
       appliedPromotionId: undefined,
+      isDirectCheckout: false,
     },
   });
 
@@ -141,6 +145,7 @@ export default function AddCartItemForm() {
       ...(data.appliedPromotionId
         ? { appliedPromotionId: data.appliedPromotionId }
         : {}),
+      isDirectCheckout: data.isDirectCheckout,
     });
 
     if (res.success) {
@@ -420,6 +425,30 @@ export default function AddCartItemForm() {
                         프로모션 적용 시 ID를 입력하세요.
                       </FormDescription>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="isDirectCheckout"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel className="flex items-center gap-1.5 text-sm">
+                          <Zap className="h-3.5 w-3.5" />
+                          즉시 결제
+                        </FormLabel>
+                        <p className="text-muted-foreground text-xs">
+                          장바구니를 거치지 않고 바로 결제 처리합니다.
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

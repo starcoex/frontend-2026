@@ -40,16 +40,10 @@
   "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
   "references": [
     {
-      "path": "../../libs/graphql/tsconfig.lib.json"
+      "path": "../../libs/features/payments/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/pwa/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/features/auth/tsconfig.lib.json"
-    },
-    {
-      "path": "../../libs/features/common/tsconfig.lib.json"
+      "path": "../../libs/features/notifications/tsconfig.lib.json"
     },
     {
       "path": "../../libs/features/address/tsconfig.lib.json"
@@ -58,10 +52,28 @@
       "path": "../../libs/features/media/tsconfig.lib.json"
     },
     {
-      "path": "../../libs/features/jobs/tsconfig.lib.json"
+      "path": "../../libs/features/orders/tsconfig.lib.json"
     },
     {
       "path": "../../libs/features/loyalty/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/contact/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/jobs/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/pwa/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/auth/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/graphql/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/features/common/tsconfig.lib.json"
     }
   ]
 }

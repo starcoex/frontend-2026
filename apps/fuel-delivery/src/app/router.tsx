@@ -2,7 +2,6 @@ import { createBrowserRouter, Outlet } from 'react-router-dom';
 import React, { lazy, Suspense } from 'react';
 import { ErrorBoundary, NotFoundPage } from '@starcoex-frontend/common';
 import { MainLayout } from '@/app/layout/main-layout';
-import { ProtectedLayout } from '@/app/layout/protected-layout';
 import { AuthLayout } from '@/app/layout/auth-layout';
 import { BottomNav } from '@/components/button-nav/botton-nav';
 
@@ -39,6 +38,11 @@ const AboutPage = lazy(() =>
 const ContactPage = lazy(() =>
   import('@/app/pages/contact/contact-page').then((m) => ({
     default: m.ContactPage,
+  }))
+);
+const TermsPage = lazy(() =>
+  import('@/app/pages/term/terms-page').then((m) => ({
+    default: m.TermsPageRoute,
   }))
 );
 
@@ -80,8 +84,10 @@ export const router = createBrowserRouter([
           { path: 'pricing', element: S(PricingPage) },
           { path: 'about', element: S(AboutPage) },
           { path: 'contact', element: S(ContactPage) },
-          { path: 'terms', element: <div>Terms of Service</div> },
-          { path: 'privacy', element: <div>Privacy Policy</div> },
+          // 📄 약관 및 정책
+          { path: 'terms', element: S(TermsPage) },
+          { path: 'privacy', element: S(TermsPage) }, // ?type=privacy 리다이렉트는 페이지 내부 처리
+          { path: 'location-terms', element: S(TermsPage) }, // ★ 위치정보 약관 (delivery 전용)
           { path: 'emergency', element: <div>Emergency Order</div> },
           // 🚛 배송 추적 — tracking-layout 제거, 페이지에서 직접 UI 처리
           { path: 'tracking', element: <div>Tracking Page</div> },

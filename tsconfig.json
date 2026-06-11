@@ -98,6 +98,9 @@
     },
     {
       "path": "./libs/features/jobs"
+    },
+    {
+      "path": "./libs/features/contact"
     }
   ]
 }

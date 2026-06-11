@@ -9,6 +9,7 @@ import {
   UpdateFileInput,
   UpdateFileMutation,
   UpdateFileMutationVariables,
+  UPDATE_FILE,
 } from '@starcoex-frontend/graphql';
 import {
   // 생성된 타입들이라고 가정합니다.
@@ -34,6 +35,7 @@ import {
 import {
   ApiResponse,
   IMediaService,
+  SearchFilesParams,
   UploadMetadata,
   UploadResponse,
 } from '../types';
@@ -135,21 +137,11 @@ export class MediaService implements IMediaService {
   }
 
   async searchFiles(
-    fileName?: string,
-    fileType?: string,
-    usageType?: string,
-    limit?: number,
-    offset?: number
+    params: SearchFilesParams
   ): Promise<ApiResponse<SearchFilesQuery>> {
     return this.query<SearchFilesQuery, SearchFilesQueryVariables>(
       SEARCH_FILES,
-      {
-        fileName,
-        fileType,
-        usageType,
-        limit,
-        offset,
-      }
+      { ...params }
     );
   }
 
@@ -166,7 +158,7 @@ export class MediaService implements IMediaService {
     input: UpdateFileInput
   ): Promise<ApiResponse<UpdateFileMutation>> {
     return this.mutate<UpdateFileMutation, UpdateFileMutationVariables>(
-      DELETE_FILE,
+      UPDATE_FILE, // ✅ DELETE_FILE → UPDATE_FILE 로 변경
       { input }
     );
   }

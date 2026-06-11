@@ -170,6 +170,14 @@ export default function OrderDetailPage() {
               ₩{currentOrder.deliveryAmount.toLocaleString()}
             </span>
           </div>
+          {currentOrder.discountAmount > 0 && (
+            <div className="bg-muted flex flex-col gap-1 rounded-lg border p-4">
+              <span className="text-muted-foreground text-sm">할인 금액</span>
+              <span className="text-lg font-semibold text-destructive">
+                -₩{currentOrder.discountAmount.toLocaleString()}
+              </span>
+            </div>
+          )}
           <div className="bg-muted flex flex-col gap-1 rounded-lg border p-4">
             <span className="text-muted-foreground text-sm">최종 금액</span>
             <span className="text-lg font-semibold">
@@ -287,6 +295,36 @@ export default function OrderDetailPage() {
                           <TableCell>
                             {format(
                               new Date(currentOrder.pickupTime),
+                              'yyyy년 MM월 dd일 HH:mm',
+                              { locale: ko }
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {currentOrder.onSiteMetadata && (
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            현장 정보
+                          </TableCell>
+                          <TableCell>
+                            <pre className="text-xs whitespace-pre-wrap font-mono">
+                              {JSON.stringify(
+                                currentOrder.onSiteMetadata,
+                                null,
+                                2
+                              )}
+                            </pre>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                      {currentOrder.completedAt && (
+                        <TableRow>
+                          <TableCell className="font-semibold">
+                            완료 시각
+                          </TableCell>
+                          <TableCell>
+                            {format(
+                              new Date(currentOrder.completedAt),
                               'yyyy년 MM월 dd일 HH:mm',
                               { locale: ko }
                             )}

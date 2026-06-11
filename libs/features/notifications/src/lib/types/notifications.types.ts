@@ -14,6 +14,8 @@ export enum NotificationType {
   RESERVATION = 'RESERVATION',
   FUEL = 'FUEL',
   DELIVERY = 'DELIVERY',
+  CAR_WASH = 'CAR_WASH',
+  CONTACT = 'CONTACT',
 }
 
 export enum NotificationStatus {
@@ -47,6 +49,26 @@ export enum EmailPriority {
   NORMAL = 'NORMAL',
   HIGH = 'HIGH',
   URGENT = 'URGENT',
+}
+
+export enum ScheduledNotificationType {
+  DAY_BEFORE = 'DAY_BEFORE',
+  HOUR_BEFORE_2 = 'HOUR_BEFORE_2',
+  HOUR_BEFORE_1 = 'HOUR_BEFORE_1',
+  MINUTE_BEFORE_30 = 'MINUTE_BEFORE_30',
+  CUSTOM = 'CUSTOM',
+  CAR_WASH_COMPLETE = 'CAR_WASH_COMPLETE',
+  CAR_WASH_READY = 'CAR_WASH_READY',
+}
+
+// ★ ScheduleStatus — schema.prisma 기반
+export enum ScheduleStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SENT = 'SENT',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
 }
 
 // ============================================================================
@@ -101,6 +123,30 @@ export interface Notification {
   deletedAt?: string | null;
   /** Federation 연결 유저 정보 */
   notificationUser?: UserRef | null;
+}
+
+// ★ NotificationSchedule 엔티티
+export interface NotificationSchedule {
+  id: number;
+  userId: number;
+  channel: NotificationChannel;
+  type: ScheduledNotificationType;
+  title: string;
+  message: string;
+  templateName?: string | null;
+  templateData?: Record<string, unknown> | null;
+  relatedEntityType: string;
+  relatedEntityId: number;
+  scheduledAt: string;
+  sentAt?: string | null;
+  status: ScheduleStatus;
+  retryCount: number;
+  maxRetries: number;
+  failReason?: string | null;
+  metadata?: Record<string, unknown> | null;
+  expiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============================================================================

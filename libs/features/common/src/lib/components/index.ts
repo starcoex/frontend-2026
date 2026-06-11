@@ -29,5 +29,7 @@ export * from './exports';
 export * from './mobile-card';
 export * from './form-page-header';
 export * from './page-layout';
-export * from "./push-notification"
-export * from "./identity-verification"
+export * from './push-notification';
+export * from './identity-verification';
+export * from './terms';
+export * from './billing';

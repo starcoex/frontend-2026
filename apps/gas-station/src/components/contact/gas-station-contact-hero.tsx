@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const contactInfo = [
   {
     label: '일반 문의',
-    value: 'contact@starcoex.com',
+    value: 'contacts@starcoex.com',
     href: 'mailto:contact@starcoex.com',
   },
   {

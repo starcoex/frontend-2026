@@ -147,6 +147,11 @@ const CouponGiftPage = lazy(() =>
   }))
 );
 
+const TermsPage = lazy(() =>
+  import('@/app/pages/term/terms-page').then((m) => ({
+    default: m.TermsPageRoute,
+  }))
+);
 // ─── AppShell: BottomNav 전역 제공 (Router 컨텍스트 내부) ────────────────────
 const AppShell = () => (
   <>
@@ -187,6 +192,10 @@ export const router = createBrowserRouter([
           { path: 'process', element: S(ProcessPage) },
           { path: 'faq', element: S(FaqPage) },
           { path: 'contact', element: S(ContactPage) },
+
+          // 📄 약관 및 정책
+          { path: 'terms', element: S(TermsPage) },
+          { path: 'privacy', element: S(TermsPage) },
 
           // 로그인 사용자 기능
           { path: 'notifications', element: S(NotificationsPage) },

@@ -19,7 +19,11 @@ import { CompanyNavDropdown } from '@/components/header/company-nav-dropdown';
 import { MobileMenu } from '@/components/header/mobile-menu';
 import { CustomUserMenuItems } from '@/components/header/custom-user-menu-items';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  sidebarToggle?: React.ReactNode; // ★ 추가
+}
+
+export const Header: React.FC<HeaderProps> = ({ sidebarToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, isAuthenticated, isLoading, logout, checkAuthStatus } =
@@ -65,6 +69,7 @@ export const Header: React.FC = () => {
         <div className="flex h-16 items-center justify-between">
           {/* 로고 */}
           <Link to="/" className="flex items-center gap-1" onClick={closeMenu}>
+            {sidebarToggle} {/* ★ 햄버거 버튼 (로그인 시에만 전달됨) */}
             <StarLogo width={32} height={32} />
             <div className="hidden sm:block">
               <div className="text-xl font-bold">스타코엑스</div>

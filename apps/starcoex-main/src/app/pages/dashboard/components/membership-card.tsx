@@ -1,21 +1,9 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Star, Ticket, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useEffect } from 'react';
+import { Star, Ticket, Loader2, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { UserMembership } from '@starcoex-frontend/graphql';
-
-interface MembershipCardProps {
-  tier: string;
-  availableStars: number;
-  tierStars: number;
-  tierProgress: number;
-  starsToNextTier: number | null;
-  starsToNextCoupon: number;
-  couponProgress: number;
-  exchangeableCoupons: number;
-  membership: UserMembership | null;
-}
+import { useLoyalty } from '@starcoex-frontend/loyalty';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const TIER_STYLE: Record<string, { bg: string; text: string; border: string }> =
   {
@@ -36,18 +24,36 @@ const TIER_STYLE: Record<string, { bg: string; text: string; border: string }> =
     },
   };
 
-export const MembershipCard: React.FC<MembershipCardProps> = ({
-  tier,
-  availableStars,
-  tierStars,
-  tierProgress,
-  starsToNextTier,
-  starsToNextCoupon,
-  couponProgress,
-  exchangeableCoupons,
-}) => {
+export const MembershipCard: React.FC = () => {
   const navigate = useNavigate();
+  const {
+    fetchMembershipConfig,
+    currentTierDisplayName,
+    availableStars,
+    tierStars,
+    tierProgress,
+    starsToNextTier,
+    starsToNextCoupon,
+    couponProgress,
+    exchangeableCoupons,
+    membership,
+    isLoading,
+  } = useLoyalty();
+
+  useEffect(() => {
+    fetchMembershipConfig();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tier = currentTierDisplayName;
   const style = TIER_STYLE[tier] ?? TIER_STYLE['WELCOME'];
+
+  if (isLoading && !membership) {
+    return (
+      <div className="rounded-2xl border p-10 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -83,7 +89,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
           <p className="text-xs text-muted-foreground">
             이번 등급 적립 <strong>{tierStars.toLocaleString()}별</strong>
           </p>
-          {starsToNextTier !== null && (
+          {starsToNextTier !== null ? (
             <>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
@@ -96,8 +102,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
                 <strong>{starsToNextTier.toLocaleString()}별</strong> 필요
               </p>
             </>
-          )}
-          {starsToNextTier === null && (
+          ) : (
             <p className="text-xs text-primary font-medium">
               최고 등급 달성! 🎉
             </p>
@@ -127,7 +132,7 @@ export const MembershipCard: React.FC<MembershipCardProps> = ({
         <Button
           size="sm"
           className="w-full"
-          onClick={() => navigate('/membership/coupons')}
+          onClick={() => navigate('/membership')}
         >
           쿠폰 {exchangeableCoupons}장 교환하기
         </Button>

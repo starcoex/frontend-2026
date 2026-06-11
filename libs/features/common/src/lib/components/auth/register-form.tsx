@@ -24,7 +24,8 @@ export interface RegisterFormProps extends UseRegisterFormOptions {
   termsPath?: string;
   /** 개인정보 처리방침 경로 */
   privacyPath?: string;
-  /** 로그인 경로 */
+  /** 마케팅 수신 동의 경로 */
+  marketingPath?: string; // ★ 추가  /** 로그인 경로 */
   loginPath?: string;
   /** 카드 래퍼 사용 여부 */
   withCard?: boolean;
@@ -43,8 +44,9 @@ export interface RegisterFormProps extends UseRegisterFormOptions {
 export const RegisterForm: React.FC<RegisterFormProps> = ({
   redirectTo = '/auth/register',
   verifyEmailPath = '/auth/verify-email',
-  termsPath = '#',
-  privacyPath = '#',
+  termsPath = '/terms',
+  privacyPath = '/privacy',
+  marketingPath = '/terms?type=sms',
   loginPath = '/auth/login',
   withCard = true,
   showLoginLink = true,
@@ -235,7 +237,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                       />
                     </FormControl>
                     <FormLabel className="text-sm leading-relaxed text-muted-foreground">
-                      마케팅 정보 수신에 동의합니다 (선택)
+                      <Link
+                        to={marketingPath} // ★ 링크 추가
+                        className="text-sm leading-relaxed text-muted-foreground underline hover:text-primary/80"
+                      >
+                        마케팅 정보 수신
+                      </Link>
+                      에 동의합니다 (선택)
                     </FormLabel>
                   </div>
                 </FormItem>

@@ -55,6 +55,7 @@ export const ORDER_FIELDS = gql`
     fulfillmentType
     totalAmount
     deliveryAmount
+    discountAmount
     finalAmount
     userId
     guestEmail
@@ -62,9 +63,11 @@ export const ORDER_FIELDS = gql`
     deliveryAddress
     pickupTime
     deliveryMemo
+    onSiteMetadata
     paymentId
     paymentStatus
     confirmedAt
+    completedAt
     createdAt
     updatedAt
     deletedAt
@@ -138,6 +141,15 @@ export const CREATE_ORDER = gql`
   ${CREATE_ORDER_OUTPUT_FIELDS}
   mutation CreateOrder($input: CreateOrderInput!) {
     createOrder(input: $input) {
+      ...CreateOrderOutputFields
+    }
+  }
+`;
+
+export const CREATE_DIRECT_ORDER = gql`
+  ${CREATE_ORDER_OUTPUT_FIELDS}
+  mutation CreateDirectOrder($input: CreateDirectOrderInput!) {
+    createDirectOrder(input: $input) {
       ...CreateOrderOutputFields
     }
   }

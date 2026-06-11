@@ -1,24 +1,68 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ArrowLeft, Loader2, PieChart } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useMedia } from '@starcoex-frontend/media';
-import { useAuth } from '@starcoex-frontend/auth';
 import { useNavigate } from 'react-router-dom';
 import { FileTable } from '../components/file-table';
+import { FileSearchPanel } from '../components/file-search-panel';
 import { formatSize } from '@/app/utils/file-utils';
+import type { SearchFilesParams } from '@starcoex-frontend/media';
+import {
+  DEFAULT_PAGE_SIZE,
+  PageSizeOption,
+} from '@/app/pages/dashboard/board/file-manager/constants/pagination';
 
 export default function StorageAnalysisPage() {
-  const { loadUserFiles, files, initialized, isLoading, error } = useMedia();
-  const { currentUser } = useAuth();
+  const { searchFiles, files, pagination, isLoading, error } = useMedia();
   const navigate = useNavigate();
 
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  // ✅ 저장소 분석은 기본 정렬을 파일 크기 큰순으로
+  const [lastParams, setLastParams] = useState<SearchFilesParams>({
+    orderBy: 'fileSize',
+    orderDir: 'desc',
+    limit: DEFAULT_PAGE_SIZE,
+    offset: 0,
+  });
+
   useEffect(() => {
-    if (currentUser && !initialized) {
-      loadUserFiles({ userId: currentUser.id, limit: 100 });
-    }
-  }, [currentUser, loadUserFiles, initialized]);
+    searchFiles(lastParams);
+  }, []);
+
+  const handleSearch = (params: SearchFilesParams) => {
+    setPageIndex(0);
+    setLastParams(params);
+  };
+
+  const handleClear = () => {
+    const params: SearchFilesParams = {
+      orderBy: 'fileSize',
+      orderDir: 'desc',
+      limit: pageSize,
+      offset: 0,
+    };
+    setPageIndex(0);
+    setLastParams(params);
+    searchFiles(params);
+  };
+
+  const handlePageChange = (newPageIndex: number) => {
+    setPageIndex(newPageIndex);
+    searchFiles({
+      ...lastParams,
+      limit: pageSize,
+      offset: newPageIndex * pageSize,
+    });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize as PageSizeOption);
+    setPageIndex(0);
+    searchFiles({ ...lastParams, limit: newSize, offset: 0 });
+  };
 
   const totalSize = useMemo(
     () => files.reduce((acc, f) => acc + (f.fileSize ?? 0), 0),
@@ -31,7 +75,7 @@ export default function StorageAnalysisPage() {
     [files]
   );
 
-  if (isLoading && !initialized) {
+  if (isLoading && files.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -51,11 +95,9 @@ export default function StorageAnalysisPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Storage Analysis
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">저장소 분석</h1>
           <p className="text-muted-foreground">
-            Identify files taking up the most space.
+            가장 많은 공간을 차지하는 파일을 확인하세요.
           </p>
         </div>
       </div>
@@ -69,10 +111,7 @@ export default function StorageAnalysisPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>
-                currentUser &&
-                loadUserFiles({ userId: currentUser.id, limit: 100 })
-              }
+              onClick={handleClear}
               className="ml-4"
             >
               다시 시도
@@ -85,7 +124,7 @@ export default function StorageAnalysisPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-muted-foreground text-sm font-medium">
-              Total Used Space
+              총 사용 용량
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -95,17 +134,20 @@ export default function StorageAnalysisPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-muted-foreground text-sm font-medium">
-              Total Files
+              전체 파일 수
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{files.length}</div>
+            {/* ✅ 서버의 totalCount 사용 (현재 페이지 데이터가 아닌 전체 수) */}
+            <div className="text-2xl font-bold">
+              {pagination.totalCount.toLocaleString()}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-muted-foreground text-sm font-medium">
-              Largest File
+              최대 파일 크기
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -121,11 +163,27 @@ export default function StorageAnalysisPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="text-primary h-5 w-5" />
-              All Files
+              전체 파일 목록
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <FileTable data={files} />
+          <CardContent className="space-y-4">
+            <FileSearchPanel
+              onSearch={handleSearch}
+              onClear={handleClear}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+            />
+            <FileTable
+              data={files}
+              hideToolbar
+              serverPagination={{
+                totalCount: pagination.totalCount,
+                pageSize,
+                pageIndex,
+                onPageChange: handlePageChange,
+                onPageSizeChange: handlePageSizeChange,
+              }}
+            />
           </CardContent>
         </Card>
       )}

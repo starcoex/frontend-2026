@@ -7,6 +7,7 @@ import {
   IconCalendar,
   IconCar,
   IconCarCrane,
+  IconCarGarage,
   IconCategory,
   IconChartLine,
   IconChecklist,
@@ -18,11 +19,13 @@ import {
   IconLayoutDashboard,
   IconMapPin,
   IconMessage,
+  IconMessageCircle,
   IconNotification,
   IconPackage,
   IconPhoto,
   IconReportAnalytics,
   IconSettings,
+  IconShieldSearch,
   IconShoppingCart,
   IconSpeakerphone,
   IconStar,
@@ -109,9 +112,7 @@ export const baseSidebarData = {
 export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
   const teamSpecificGroups: Record<string, NavGroup[]> = {
     // =========================================================================
-    // StarcoexMain
-    // 역할: 전사 크로스커팅 관심사만 담당
-    //       (각 서비스 세부 관리는 팀 스위치로 해당 팀에서 처리)
+    // StarcoexMain — 전사 크로스커팅 관심사 담당
     // =========================================================================
     StarcoexMain: [
       // 1. 건의사항 통합
@@ -134,7 +135,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         ],
       },
 
-      // 2. 전사 통합 관리 (사용자·권한·로열티·분석·알림)
+      // 2. 전사 통합 관리
       {
         title: '통합 관리',
         items: [
@@ -189,17 +190,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '지원자 관리', url: '/admin/jobs/applications' },
             ],
           },
-          // {
-          //   title: '시스템 분석',
-          //   url: '/admin/analytics',
-          //   icon: IconReportAnalytics,
-          //   items: [
-          //     { title: '통합 대시보드', url: '/admin/analytics' },
-          //     { title: '매출 분석', url: '/admin/analytics/revenue' },
-          //     { title: '사용자 분석', url: '/admin/analytics/users' },
-          //     { title: '서비스 성능', url: '/admin/analytics/performance' },
-          //   ],
-          // },
           {
             title: '알림 관리',
             url: '/admin/notifications',
@@ -210,10 +200,23 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '이메일 관리', url: '/admin/notifications/emails' },
             ],
           },
+          {
+            title: 'Apick 차량 조회',
+            url: '/admin/apick/flood',
+            icon: IconShieldSearch,
+            items: [
+              { title: '침수차 조회', url: '/admin/apick/flood' },
+              { title: '폐차사고처리 조회', url: '/admin/apick/scrap' },
+              { title: '매매용 차량 조회', url: '/admin/apick/sale' },
+              { title: '통합 검색', url: '/admin/apick/search' },
+              { title: '통계', url: '/admin/apick/stats' },
+              { title: '계정 정보', url: '/admin/apick/account' },
+            ],
+          },
         ],
       },
 
-      // 3. 커머스 관리 (전사 공통 커머스 인프라)
+      // 3. 커머스 관리
       {
         title: '커머스 관리',
         items: [
@@ -264,7 +267,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconChecklist,
             items: [
               { title: '대기열 목록', url: '/admin/queue' },
-              { title: '대기 수기 등록', url: '/admin/queue/create' }, // ✅ 추가
+              { title: '대기 수기 등록', url: '/admin/queue/create' },
               { title: '대기열 통계', url: '/admin/queue/stats' },
             ],
           },
@@ -316,7 +319,8 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
-      // 4. 예약 & 워크인 — ✅ StarcoexMain에서 전체 현황 조회 목적으로 추가
+
+      // 4. 예약 & 워크인
       {
         title: '예약 & 워크인',
         items: [
@@ -344,7 +348,22 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         ],
       },
 
-      // 5. 배송 관리 — ✅ 전사 배송 현황 모니터링 목적
+      {
+        title: '고객 문의',
+        items: [
+          {
+            title: '문의 관리',
+            url: '/admin/contacts',
+            icon: IconMessageCircle,
+            items: [
+              { title: '문의 목록', url: '/admin/contacts' },
+              { title: '문의 통계', url: '/admin/contacts/stats' },
+            ],
+          },
+        ],
+      },
+
+      // 5. 배송 관리
       {
         title: '배송 관리',
         items: [
@@ -407,7 +426,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
         ],
       },
 
-      // 5. 미디어 & 자산
+      // 7. 미디어 & 자산
       {
         title: '미디어 & 자산',
         items: [
@@ -417,6 +436,7 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
             icon: IconPhoto,
             items: [
               { title: '파일 관리자', url: '/admin/media' },
+              { title: '파일 업로드', url: '/admin/media/upload' }, // ✅ 추가
               { title: '최근 파일', url: '/admin/media/recent' },
               { title: '저장소 분석', url: '/admin/media/analysis' },
             ],
@@ -427,7 +447,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
 
     // =========================================================================
     // StarOil — 주유소 전담
-    // 예약·워크인 포함 (주유소 특화)
     // =========================================================================
     StarOil: [
       {
@@ -474,11 +493,15 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
           {
             title: '차량 관리',
-            url: '/vehicles',
+            url: '/admin/vehicles',
             icon: IconCar,
             items: [
-              { title: '등록 차량', url: '/vehicles' },
-              { title: '차량 히스토리', url: '/vehicles/history' },
+              { title: '전체 차량', url: '/admin/vehicles' },
+              { title: '검토 대기', url: '/admin/vehicles/pending-review' },
+              { title: '낮은 신뢰도', url: '/admin/vehicles/low-confidence' },
+              { title: '브랜드 관리', url: '/admin/vehicles/brands' },
+              { title: '차량 모델', url: '/admin/vehicles/models' },
+              { title: '치수 등급 룰', url: '/admin/vehicles/dimension-rules' },
             ],
           },
           {
@@ -542,7 +565,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
 
     // =========================================================================
     // Zeragae — 카케어 전담
-    // 예약·서비스·프로모션 포함
     // =========================================================================
     Zeragae: [
       {
@@ -575,6 +597,30 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
               { title: '매장 추가', url: '/admin/stores/create' },
               { title: '브랜드 목록', url: '/admin/stores/brands' },
               { title: '매장 설정', url: '/admin/stores/settings' },
+            ],
+          },
+          {
+            title: '차량 등급 관리',
+            url: '/admin/vehicles',
+            icon: IconCarGarage,
+            items: [
+              { title: '전체 차량', url: '/admin/vehicles' },
+              { title: '검토 대기', url: '/admin/vehicles/pending-review' },
+              { title: '낮은 신뢰도', url: '/admin/vehicles/low-confidence' },
+            ],
+          },
+          {
+            title: '세차 가격 정책',
+            url: '/admin/car-care/prices',
+            icon: IconTags,
+            items: [
+              { title: '가격 목록', url: '/admin/car-care/prices' },
+              { title: '가격 추가', url: '/admin/car-care/prices/create' },
+              { title: '추가금 정책', url: '/admin/car-care/surcharges' },
+              {
+                title: '추가금 추가',
+                url: '/admin/car-care/surcharges/create',
+              },
             ],
           },
           {
@@ -632,7 +678,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
 
     // =========================================================================
     // Delivery — 배달 전담
-    // 기사/관리자 역할 분리 구조 유지
     // =========================================================================
     Delivery: [
       {
@@ -678,7 +723,6 @@ export const getNavGroupsByTeam = (teamName: TeamName): NavGroup[] => {
           },
         ],
       },
-      // ADMIN / SUPER_ADMIN 전용 — filterMenuByRole에서 DELIVERY 역할 제거
       {
         title: '배달 관리',
         items: [

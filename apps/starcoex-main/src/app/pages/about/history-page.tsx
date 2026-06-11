@@ -80,6 +80,18 @@ const HISTORY_DATA = [
     label: '스타코엑스 APP 출시',
     category: '디지털',
   },
+  {
+    year: 2026,
+    month: '06월',
+    label: '스타코엑스 통합 웹 플랫폼 오픈',
+    category: '디지털',
+  },
+  {
+    year: 2026,
+    month: '하반기',
+    label: '스타코엑스 통합 앱 출시 예정',
+    category: '예정',
+  },
 ] as const;
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -88,6 +100,7 @@ const CATEGORY_STYLES: Record<string, string> = {
   서비스: 'bg-green-500/10 text-green-600 border-green-500/20',
   파트너십: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
   디지털: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+  예정: 'bg-rose-500/10 text-rose-500 border-rose-500/20 border-dashed',
 };
 
 // ── 무한 스크롤 컬럼 ────────────────────────────────────────────────────────────

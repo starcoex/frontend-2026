@@ -205,6 +205,7 @@ export default defineConfig(() => ({
       '@starcoex-frontend/pwa': `${LIBS}/pwa/src/index.ts`,
       '@starcoex-frontend/queue': `${LIBS}/features/queue/src/index.ts`,
       '@starcoex-frontend/jobs': `${LIBS}/features/jobs/src/index.ts`,
+      '@starcoex-frontend/contact': `${LIBS}/features/contact/src/index.ts`,
     },
   },
   // Uncomment this if you are using workers.

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Youtube, Phone, Mail } from 'lucide-react';
-import { StarOilLogo } from '@starcoex-frontend/common';
+import { COMPANY_STAROIL, StarOilLogo } from '@starcoex-frontend/common';
 import { Separator } from '@/components/ui/separator';
 
 const navigation = [
@@ -19,7 +19,7 @@ const navigation = [
       { name: '고객센터', href: '/support' },
       { name: '자주 묻는 질문', href: '/faq' },
       { name: '채용 정보', href: '/about#careers' },
-      { name: '제휴 문의', href: '/contact' },
+      { name: '제휴 문의', href: '/contacts' },
     ],
   },
   {
@@ -27,7 +27,7 @@ const navigation = [
     links: [
       { name: '회사 소개', href: '/about' },
       { name: '오시는 길', href: '/location' },
-      { name: '연락처', href: '/contact' },
+      { name: '연락처', href: '/contacts' },
       { name: '공지사항', href: '/news' },
     ],
   },
@@ -44,7 +44,6 @@ const socialLinks = [
 const legal = [
   { name: '이용약관', href: '/terms' },
   { name: '개인정보처리방침', href: '/privacy' },
-  { name: '사업자정보', href: '/business-info' },
 ];
 
 export const Footer = () => {
@@ -116,29 +115,30 @@ export const Footer = () => {
         <Separator className="my-12" />
 
         {/* 하단: 법적 고지 및 저작권 */}
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-4 text-xs text-muted-foreground">
-            <div className="flex flex-col gap-1 md:flex-row md:gap-4">
-              <span>대표: 김현진</span>
-              <span className="hidden md:inline">|</span>
-              <span>사업자등록번호: 123-45-67890</span>
-              <span className="hidden md:inline">|</span>
-              <span>주소: 제주특별자치도 연삼로 12</span>
-            </div>
-            <p>© 2025 별표주유소. All rights reserved.</p>
+        <div className="space-y-4 text-xs text-muted-foreground">
+          <div className="flex flex-col gap-1 md:flex-row md:gap-4">
+            <span>대표: {COMPANY_STAROIL.ceo}</span>
+            <span className="hidden md:inline">|</span>
+            <span>사업자등록번호: {COMPANY_STAROIL.bizNumber}</span>
+            <span className="hidden md:inline">|</span>
+            <span>주소: {COMPANY_STAROIL.address}</span>
           </div>
+          <p>
+            © {new Date().getFullYear()} {COMPANY_STAROIL.name}. All rights
+            reserved.
+          </p>
+        </div>
 
-          <div className="flex gap-6 text-xs text-muted-foreground">
-            {legal.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className="hover:text-foreground transition-colors underline underline-offset-4"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
+        <div className="flex gap-6 text-xs text-muted-foreground">
+          {legal.map((link) => (
+            <Link
+              key={link.name}
+              to={link.href}
+              className="hover:text-foreground transition-colors underline underline-offset-4"
+            >
+              {link.name}
+            </Link>
+          ))}
         </div>
       </div>
     </footer>

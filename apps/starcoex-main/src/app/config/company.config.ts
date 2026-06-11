@@ -29,12 +29,12 @@ export const COMPANY_INFO = {
       description:
         '믿을 수 있는 별표주유소와 제라게 카케어의 외부 손세차\n주유 3만원 이상 또는 세차전용카드로 더 큰 혜택을 받으세요',
       primaryButton: {
-        text: '서비스 둘러보기',
-        action: 'services',
+        text: '별표주유소 바로가기',
+        action: 'staroil',
       },
       secondaryButton: {
-        text: '간편 가입하기',
-        action: 'register',
+        text: '제라게 카케어 바로가기',
+        action: 'zeragae',
       },
       backgroundImage: 'main',
     },
@@ -45,12 +45,12 @@ export const COMPANY_INFO = {
       description:
         '버블분사 · 휠세척 · 온수고압세척까지 꼼꼼하게\n승용차 25,000원부터 / 타이어 드레싱 포함',
       primaryButton: {
-        text: '세차 가격표 보기',
-        action: 'car-wash',
+        text: '가격표 보기',
+        action: 'zeragae-pricing',
       },
       secondaryButton: {
         text: '서비스 소개',
-        action: 'service-info',
+        action: 'zeragae-about',
       },
       backgroundImage: 'hero-carwash',
     },
@@ -61,13 +61,10 @@ export const COMPANY_INFO = {
       description:
         '세차전용카드 이용 시 5만원 결제하면 59,000원 적립!\n주유와 세차를 한 번에, 더 큰 혜택으로 만나보세요',
       primaryButton: {
-        text: '카드 혜택 보기',
-        action: 'services',
+        text: '시공 영상 보기',
+        action: 'media-video',
       },
-      secondaryButton: {
-        text: '카카오 간편가입',
-        action: 'kakao-login',
-      },
+      secondaryButton: null,
       backgroundImage: 'hero-event1',
     },
     {
@@ -78,11 +75,11 @@ export const COMPANY_INFO = {
         '추운 겨울, 따뜻한 우리 집을 위한 난방유\n전화 한 통으로 빠르고 안전하게 배달해드립니다',
       primaryButton: {
         text: '난방유 주문 문의',
-        action: 'phone',
+        action: 'delivery-order',
       },
       secondaryButton: {
         text: '서비스 소개',
-        action: 'services',
+        action: 'delivery-about',
       },
       backgroundImage: 'hero-fuel',
     },
@@ -140,9 +137,9 @@ export const COMPANY_INFO = {
   },
 
   social: {
-    facebook: '',
+    facebook: 'https://facebook.com/starcoex',
     instagram: 'https://instagram.com/jeju_secha',
     youtube: '',
-    blog: '',
+    blog: 'https://blog.naver.com/starcoex',
   },
 } as const;

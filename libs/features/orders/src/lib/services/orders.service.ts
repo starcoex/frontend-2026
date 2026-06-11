@@ -10,6 +10,7 @@ import {
   DELETE_ORDER,
   DELETE_ORDERS,
   CreateOrderInput,
+  CREATE_DIRECT_ORDER,
 } from '@starcoex-frontend/graphql';
 import {
   apiErrorFromGraphQLErrors,
@@ -17,7 +18,7 @@ import {
   apiErrorFromUnknown,
   createErrorResponse,
 } from '../errors';
-import type { ApiResponse } from '../types';
+import type { ApiResponse, CreateDirectOrderInput } from '../types';
 import type {
   IOrdersService,
   Order,
@@ -147,6 +148,19 @@ export class OrdersService implements IOrdersService {
     );
     if (res.success && res.data?.createOrder) {
       return { success: true, data: res.data.createOrder };
+    }
+    return res as unknown as ApiResponse<CreateOrderOutput>;
+  }
+
+  async createDirectOrder(
+    input: CreateDirectOrderInput
+  ): Promise<ApiResponse<CreateOrderOutput>> {
+    const res = await this.mutate<{ createDirectOrder: CreateOrderOutput }>(
+      CREATE_DIRECT_ORDER,
+      { input }
+    );
+    if (res.success && res.data?.createDirectOrder) {
+      return { success: true, data: res.data.createDirectOrder };
     }
     return res as unknown as ApiResponse<CreateOrderOutput>;
   }

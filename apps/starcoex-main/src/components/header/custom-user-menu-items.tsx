@@ -79,7 +79,13 @@ export const CustomUserMenuItems: React.FC<CustomUserMenuItemsProps> = ({
   );
   if (isAdmin() || isSuperAdmin()) {
     items.push(
-      <UserMenuItem key="admin" icon={Shield} href="/auth/dashboard">
+      // <UserMenuItem key="admin" icon={Shield} href="/auth/dashboard">
+      <UserMenuItem
+        key="admin-panel"
+        icon={Shield}
+        onClick={() => window.open('https://admin.starcoex.com', '_blank')}
+        className="text-primary"
+      >
         관리자 패널
       </UserMenuItem>
     );

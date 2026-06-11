@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import type { ApiResponse } from '../types';
+import type { ApiResponse, CreateDirectOrderInput } from '../types';
 import { useOrdersContext } from '../context';
 import { getOrdersService } from '../services';
 import type {
@@ -102,6 +102,19 @@ export const useOrders = () => {
         }
         return res;
       }, '주문 생성에 실패했습니다.'),
+    [withLoading, addOrder]
+  );
+
+  const createDirectOrder = useCallback(
+    async (input: CreateDirectOrderInput) =>
+      withLoading(async () => {
+        const service = getOrdersService();
+        const res = await service.createDirectOrder(input);
+        if (res.success && res.data?.order) {
+          addOrder(res.data.order);
+        }
+        return res;
+      }, '즉시 주문 생성에 실패했습니다.'),
     [withLoading, addOrder]
   );
 
@@ -237,6 +250,7 @@ export const useOrders = () => {
 
     // Mutations
     createOrder,
+    createDirectOrder,
     updateOrderStatus,
     updateOrderItemStatus,
     attachPaymentToOrder,

@@ -26,3 +26,6 @@ export * from './avatar';
 export * from './aspect-ratio';
 export * from './breadcrumb';
 export * from './switch';
+export * from './collapsible';
+export * from './scroll-area';
+export * from './radio-group';

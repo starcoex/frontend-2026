@@ -103,7 +103,7 @@ export const APP_CONFIG = {
     // 정보
     about: '/about',
     faq: '/faq',
-    contact: '/contact',
+    contact: '/contacts',
     notifications: '/notifications',
     terms: '/terms',
     privacy: '/privacy',

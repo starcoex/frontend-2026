@@ -15,7 +15,7 @@ export const MainLayout: React.FC = () => {
         <PwaInstallBanner />
       </div>
       {/* 메인 콘텐츠 */}
-      <main className="flex-1">
+      <main className="flex-1 pt-16">
         <Outlet />
       </main>
       <Footer />

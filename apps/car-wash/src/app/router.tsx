@@ -55,6 +55,12 @@ const PrivacyPage = lazy(() =>
     default: m.PrivacyPage,
   }))
 );
+const TermsPageCarWash = lazy(() =>
+  // ★ 추가
+  import('@/app/pages/legal/terms-page').then((m) => ({
+    default: m.TermsPageCarWash,
+  }))
+);
 const AboutPage = lazy(() =>
   import('@/app/pages/about/about-page').then((m) => ({ default: m.AboutPage }))
 );
@@ -84,6 +90,12 @@ const PersonalRegisterPage = lazy(() =>
   }))
 );
 
+// const TermsPage = lazy(() =>
+//   import('@/app/pages/term/terms-page').then((m) => ({
+//     default: m.TermsPageRoute,
+//   }))
+// );
+
 // ─── 대시보드 (인증 필요) ────────────────────────────────────────────────────
 // const ProfilePage = lazy(() =>
 //   import('@/app/pages/dashboard/profile-page').then((m) => ({ default: m.ProfilePage }))
@@ -109,7 +121,11 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: S(HomePage) },
           { path: APP_CONFIG.routes.privacy, element: S(PrivacyPage) },
+          { path: 'terms', element: S(TermsPageCarWash) }, // ★ 추가
           { path: APP_CONFIG.routes.about, element: S(AboutPage) },
+          // 📄 약관 및 정책
+          // { path: 'terms', element: S(TermsPage) },
+          // { path: 'privacy', element: S(TermsPage) },
           { path: APP_CONFIG.routes.pricing, element: S(PricingPage) },
           { path: 'changelog', element: S(ChangelogPage) },
 

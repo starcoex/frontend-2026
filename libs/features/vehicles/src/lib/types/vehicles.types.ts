@@ -45,6 +45,4 @@ export interface IVehiclesService {
     input: SearchStationInput
   ): Promise<ApiResponse<GasStation[]>>;
   getGasStationDetail(stationId: string): Promise<ApiResponse<GasStation>>;
-
-  // Vehicles
 }

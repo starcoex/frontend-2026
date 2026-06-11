@@ -5,12 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useMedia } from '@starcoex-frontend/media';
 import { useAuth } from '@starcoex-frontend/auth';
 import { useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { FolderListCards } from '@/app/pages/dashboard/board/file-manager/components/folder-list-cards';
 import { StorageStatusCard } from '@/app/pages/dashboard/board/file-manager/components/storage-status-card';
 import { ChartFileTransfer } from '@/app/pages/dashboard/board/file-manager/components/chart-file-transfer';
 import { TableRecentFiles } from '@/app/pages/dashboard/board/file-manager/components/table-recent-files';
+import { FileSearchPanel } from '@/app/pages/dashboard/board/file-manager/components/file-search-panel';
 
 export const FileManagerPage = () => {
   const {
@@ -19,33 +18,16 @@ export const FileManagerPage = () => {
     files: allFiles,
     isLoading,
     error,
-    searchFiles,
   } = useMedia();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (currentUser && !initialized) {
       loadUserFiles({ userId: currentUser.id, limit: 100 });
     }
   }, [currentUser, loadUserFiles, initialized]);
-
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
-      if (currentUser) loadUserFiles({ userId: currentUser.id, limit: 100 });
-      return;
-    }
-    await searchFiles(searchQuery);
-  };
-
-  const clearSearch = () => {
-    setSearchQuery('');
-    if (currentUser) loadUserFiles({ userId: currentUser.id, limit: 100 });
-  };
 
   const filteredFiles = useMemo(() => {
     if (!activeFilter) return allFiles;
@@ -112,37 +94,19 @@ export const FileManagerPage = () => {
         </Alert>
       )}
 
-      {/* 검색 바 */}
-      <div className="flex items-center justify-between">
+      {/* ✅ 서버 사이드 검색 패널 (기존 인라인 검색 대체) */}
+      <div className="flex items-center justify-between gap-4">
         <h2 className="hidden text-lg font-semibold tracking-tight md:block">
           Quick Access
         </h2>
-        <form
-          onSubmit={handleSearch}
-          className="relative flex w-full max-w-sm flex-1 gap-2 md:w-auto md:flex-none"
-        >
-          <div className="relative w-full">
-            <Search className="text-muted-foreground absolute left-2 top-2.5 h-4 w-4" />
-            <Input
-              placeholder="Search files..."
-              className="pl-8 pr-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="text-muted-foreground hover:text-foreground absolute right-2 top-2.5"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          <Button type="submit" variant="secondary">
-            Search
-          </Button>
-        </form>
+        <div className="w-full max-w-xl">
+          <FileSearchPanel
+            onClear={() =>
+              currentUser &&
+              loadUserFiles({ userId: currentUser.id, limit: 100 })
+            }
+          />
+        </div>
       </div>
 
       {/* 폴더 필터 + 스토리지 상태 */}

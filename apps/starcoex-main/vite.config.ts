@@ -162,6 +162,7 @@ export default defineConfig(() => ({
       '@starcoex-frontend/pwa': `${LIBS}/pwa/src/index.ts`,
       '@starcoex-frontend/queue': `${LIBS}/features/queue/src/index.ts`,
       '@starcoex-frontend/jobs': `${LIBS}/features/jobs/src/index.ts`,
+      '@starcoex-frontend/contact': `${LIBS}/features/contact/src/index.ts`,
       '@starcoex-frontend/media': `${LIBS}/features/media/src/index.ts`,
     },
   },
@@ -180,26 +181,14 @@ export default defineConfig(() => ({
           if (id.includes('node_modules/html2canvas'))
             return 'vendor-html2canvas';
 
-          // ✅ Apollo + graphql + common 계열 전체 통합
-          //    lib-graphql ↔ lib-common 코드 레벨 순환참조로 인해
-          //    manualChunks 분리 불가 → 단일 청크로 통합
+          // ✅ libs 전체를 단일 청크로 통합
+          //    graphql ↔ features 간 코드 레벨 순환참조로 인해
+          //    청크 분리 시 Circular chunk 경고 불가피 → 단일 통합
           if (id.includes('node_modules/@apollo')) return 'lib-core';
-          if (id.includes('libs/graphql')) return 'lib-core';
-          if (id.includes('libs/features/auth')) return 'lib-core';
-          if (id.includes('libs/features/common')) return 'lib-core';
-          if (id.includes('libs/features/loyalty')) return 'lib-core';
-          if (id.includes('libs/features/address')) return 'lib-core';
-          if (id.includes('libs/features/cart')) return 'lib-core';
-          if (id.includes('libs/features/notifications')) return 'lib-core';
-          if (id.includes('libs/features/products')) return 'lib-core';
+          if (id.includes('node_modules/graphql')) return 'lib-core';
+          if (id.includes('/libs/')) return 'lib-core';
 
-          // ✅ 독립 libs
-          if (id.includes('libs/features/stores')) return 'lib-stores';
-          if (id.includes('libs/features/orders')) return 'lib-orders';
-          if (id.includes('libs/features/payments')) return 'lib-payments';
-          if (id.includes('libs/features/reviews')) return 'lib-reviews';
-          if (id.includes('libs/features/promotions')) return 'lib-promotions';
-          if (id.includes('libs/features/notices')) return 'lib-notices';
+          // ✅ 독립 vendor
           if (id.includes('libs/pwa')) return 'lib-pwa';
 
           return undefined;

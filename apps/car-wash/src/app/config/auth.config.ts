@@ -25,7 +25,7 @@ export const carWashAuthConfig: Partial<AppConfigContextType> = {
     verifySocial: APP_CONFIG.routes.verifySocial,
     verifySocialCode: APP_CONFIG.routes.verifySocialCode,
     // AppConfigContextType 필수 필드 — 필요 시 실제 경로로 교체
-    terms: '/terms',
+    terms: '/term',
     privacy: '/privacy',
   },
 };

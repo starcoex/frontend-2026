@@ -18,6 +18,9 @@ export const CART_ITEM_FIELDS = gql`
     storeId
     quantity
     appliedPromotionId
+    serviceMetadata
+    isDirectCheckout
+    addedAt
     product {
       id
     }

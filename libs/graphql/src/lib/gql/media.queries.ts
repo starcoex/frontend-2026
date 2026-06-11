@@ -24,6 +24,8 @@ export const FILE_INFO_FIELDS = gql`
     extension
     fileType
     status
+    thumbnailUrl
+    description
   }
 `;
 
@@ -31,6 +33,7 @@ export const FILE_WITH_URL_FIELDS = gql`
   fragment FileWithUrlFields on FileWithUrl {
     id
     originalName
+    description
     fileName
     fileUrl
     fileSize
@@ -45,7 +48,6 @@ export const FILE_WITH_URL_FIELDS = gql`
 
 // ===== Queries =====
 
-// 단일 파일 조회
 export const GET_FILE = gql`
   ${MEDIA_ERROR_INFO_FIELDS}
   ${FILE_INFO_FIELDS}
@@ -64,7 +66,6 @@ export const GET_FILE = gql`
   }
 `;
 
-// 사용자 파일 목록 조회
 export const GET_USER_FILES = gql`
   ${MEDIA_ERROR_INFO_FIELDS}
   ${FILE_WITH_URL_FIELDS}
@@ -83,26 +84,53 @@ export const GET_USER_FILES = gql`
   }
 `;
 
-// 파일 시스템 통계 정보 조회 (관리자용, 문자열 반환)
 export const GET_FILE_STATS = gql`
   query GetFileStats {
     getFileStats
   }
 `;
 
-// 파일 검색 (서버에서 JSON/string으로 반환)
+// ✅ Schema의 모든 파라미터를 지원하도록 확장
 export const SEARCH_FILES = gql`
   query SearchFiles(
     $fileName: String
     $fileType: String
+    $mimeType: String
+    $extension: String
+    $description: String
     $usageType: String
+    $entityId: String
+    $storageType: String
+    $status: String
+    $minFileSize: Float
+    $maxFileSize: Float
+    $startDate: String
+    $endDate: String
+    $hasVideoMetadata: Boolean
+    $hasThumbnail: Boolean
+    $orderBy: String
+    $orderDir: String
     $limit: Float
     $offset: Float
   ) {
     searchFiles(
       fileName: $fileName
       fileType: $fileType
+      mimeType: $mimeType
+      extension: $extension
+      description: $description
       usageType: $usageType
+      entityId: $entityId
+      storageType: $storageType
+      status: $status
+      minFileSize: $minFileSize
+      maxFileSize: $maxFileSize
+      startDate: $startDate
+      endDate: $endDate
+      hasVideoMetadata: $hasVideoMetadata
+      hasThumbnail: $hasThumbnail
+      orderBy: $orderBy
+      orderDir: $orderDir
       limit: $limit
       offset: $offset
     )
@@ -111,7 +139,6 @@ export const SEARCH_FILES = gql`
 
 // ===== Mutations =====
 
-// 파일 삭제
 export const DELETE_FILE = gql`
   ${MEDIA_ERROR_INFO_FIELDS}
   mutation DeleteFile($input: DeleteFileInput!) {
@@ -127,7 +154,6 @@ export const DELETE_FILE = gql`
   }
 `;
 
-// 파일 정보 수정
 export const UPDATE_FILE = gql`
   ${MEDIA_ERROR_INFO_FIELDS}
   mutation UpdateFile($input: UpdateFileInput!) {
@@ -146,6 +172,7 @@ export const UPDATE_FILE = gql`
         originalName
         updatedAt
         usageType
+        description
       }
       error {
         ...MediaErrorInfoFields

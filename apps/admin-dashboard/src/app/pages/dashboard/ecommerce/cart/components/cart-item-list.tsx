@@ -222,6 +222,15 @@ export const CartItemList = ({ items }: CartItemListProps) => {
                   #{item.storeId}
                 </TableCell>
                 <TableCell className="text-center">
+                  {item.isDirectCheckout ? (
+                    <Badge variant="secondary" className="text-[10px]">
+                      즉시 결제
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center">
                   {isEditingItem(item) ? (
                     <div className="flex items-center justify-center gap-1">
                       <Button

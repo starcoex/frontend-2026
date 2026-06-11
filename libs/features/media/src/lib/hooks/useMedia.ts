@@ -6,7 +6,12 @@ import {
   FileWithUrl,
   UpdateFileInput,
 } from '@starcoex-frontend/graphql';
-import type { ApiResponse, UploadMetadata, UploadResponse } from '../types';
+import type {
+  ApiResponse,
+  SearchFilesParams,
+  UploadMetadata,
+  UploadResponse,
+} from '../types';
 import { useMediaContext } from '../context';
 import { getMediaService } from '../services';
 
@@ -133,52 +138,27 @@ export const useMedia = () => {
     [withLoading, updateFileInList]
   );
 
-  // 파일 검색 (결과를 상태에 반영하도록 수정)
+  // ✅ 파라미터 객체 방식으로 변경 + 서버 결과 상태 반영
   const searchFiles = useCallback(
-    async (
-      fileName?: string,
-      fileType?: string,
-      usageType?: string,
-      limit?: number,
-      offset?: number
-    ) =>
+    async (params: SearchFilesParams) =>
       withLoading(async () => {
         const service = getMediaService();
-        const res = await service.searchFiles(
-          fileName,
-          fileType,
-          usageType,
-          limit,
-          offset
-        );
+        const res = await service.searchFiles(params);
 
-        // ✅ [수정] 검색 성공 시, 현재 파일 목록 상태(files)를 검색 결과로 교체
         if (res.success && res.data?.searchFiles) {
-          // 백엔드가 JSON String으로 주는지, 객체로 주는지 확인 필요
-          // media-queries.ts를 보면 String으로 반환한다고 되어 있음. 파싱 필요.
           try {
             const parsed =
               typeof res.data.searchFiles === 'string'
                 ? JSON.parse(res.data.searchFiles)
                 : res.data.searchFiles;
 
-            // parsed 구조: { files: [...], total: number, ... }
-            if (parsed.files) {
-              // ✅ [보정] 사용자가 입력한 검색어(fileName)가 있다면,
-              // originalName에 그 검색어가 포함된 파일만 필터링하여 보여줌
-              let resultFiles = parsed.files;
-              if (fileName) {
-                resultFiles = resultFiles.filter((f: any) =>
-                  f.originalName.toLowerCase().includes(fileName.toLowerCase())
-                );
-              }
-              setFiles(resultFiles);
-              // 페이지네이션 정보도 업데이트하면 좋음
+            if (Array.isArray(parsed?.files)) {
+              setFiles(parsed.files as FileWithUrl[]);
               setPagination({
-                totalCount: parsed.total,
-                hasNext: parsed.hasMore,
-                limit: limit || 20,
-                offset: offset || 0,
+                totalCount: parsed.total ?? parsed.files.length,
+                hasNext: parsed.hasMore ?? false,
+                limit: params.limit ?? 20,
+                offset: params.offset ?? 0,
               });
             }
           } catch (e) {

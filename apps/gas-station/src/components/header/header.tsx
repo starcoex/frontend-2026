@@ -118,7 +118,7 @@ export const Header: React.FC = () => {
     },
     {
       title: '연락처',
-      href: '/contact',
+      href: '/contacts',
       icon: Phone,
       description: '문의사항 및 고객지원',
     },

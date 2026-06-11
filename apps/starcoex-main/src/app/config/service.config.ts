@@ -66,7 +66,7 @@ export const SERVICES_CONFIG: ServiceConfig[] = [
       '주유 이력 자동 관리',
     ],
     appImage:
-      'https://images.unsplash.com/photo-1545262810-77515befe149?w=400&h=300&fit=crop&auto=format',
+      'https://media.starcoex.com/starcoex-media/2026/06/files/hk/66a852ef-4311-4546-87ae-8c82998159da.jpg',
   },
   {
     id: 'fuel-delivery',
@@ -105,7 +105,7 @@ export const SERVICES_CONFIG: ServiceConfig[] = [
       '날씨 알림과 배송 추천',
     ],
     appImage:
-      'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&h=300&fit=crop&auto=format',
+      'https://media.starcoex.com/starcoex-media/2026/06/files/ko/2107fa55-5f7e-49e8-8d40-48be60f72156.jpeg',
   },
   {
     id: 'car-wash',
@@ -144,7 +144,7 @@ export const SERVICES_CONFIG: ServiceConfig[] = [
       '예약 변경 및 취소 자유',
     ],
     appImage:
-      'https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=400&h=300&fit=crop&auto=format',
+      'https://media.starcoex.com/starcoex-media/2026/06/files/zp/f4d95172-6424-47d4-99ab-d2d3675c7c68.jpg',
   },
   {
     id: 'zeragae-care',
@@ -178,7 +178,7 @@ export const SERVICES_CONFIG: ServiceConfig[] = [
       '전문가 1:1 상담',
     ],
     appImage:
-      'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&h=300&fit=crop&auto=format',
+      'https://media.starcoex.com/starcoex-media/2026/06/files/qr/0ea207fb-6d32-49f5-bc77-87bfa987831c.jpg',
   },
 ];
 

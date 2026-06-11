@@ -53,7 +53,7 @@ const defaultConfig: AppConfigContextType = {
     verifyPhone: '/auth/verify-phone',
     verifySocial: '/auth/verify-social',
     verifySocialCode: '/auth/verify-social-code',
-    terms: '/terms',
+    terms: '/term',
     privacy: '/privacy',
   },
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Truck, Facebook, Instagram, Youtube } from 'lucide-react';
+import { COMPANY_STAROIL } from '@starcoex-frontend/common';
 
 const COLUMNS = [
   {
@@ -18,16 +19,16 @@ const COLUMNS = [
       { name: '회사 소개', href: '/about' },
       { name: '서비스 소개', href: '/features' },
       { name: '공지사항', href: '/blog' },
-      { name: '고객센터', href: '/contact' },
+      { name: '고객센터', href: '/contacts' },
     ],
   },
   {
     title: '약관 및 정책',
     links: [
-      { name: '이용약관', href: '/terms' },
-      { name: '개인정보처리방침', href: '/privacy' },
+      { name: '이용약관', href: '/terms?type=service' },
+      { name: '개인정보처리방침', href: '/terms?type=privacy' },
+      { name: '개인위치정보 처리방침', href: '/terms?type=location' }, // ★ 추가
       { name: '회원가입', href: '/auth/register' },
-      { name: '로그인', href: '/auth/login' },
     ],
   },
 ];
@@ -105,9 +106,9 @@ export const Footer: React.FC = () => {
         {/* 하단 바 */}
         <div className="mt-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <p className="text-primary-foreground/50 text-sm font-normal">
-            © {new Date().getFullYear()} 별표주유소. All rights reserved.
+            © {new Date().getFullYear()} {COMPANY_STAROIL.legalName}. All rights
+            reserved.
           </p>
-
           {/* 소셜 링크 */}
           <div className="flex items-center gap-4">
             {SOCIALS.map(({ Icon, href, label }) => (

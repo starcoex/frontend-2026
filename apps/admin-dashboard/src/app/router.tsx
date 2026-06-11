@@ -22,6 +22,12 @@ const S = (Component: React.LazyExoticComponent<React.ComponentType<any>>) => (
   </Suspense>
 );
 
+const TermsPageRoute = lazy(() =>
+  import('@/app/pages/term/terms-page').then((m) => ({
+    default: m.TermsPageRoute,
+  }))
+);
+
 // ─── 인증 ──────────────────────────────────────────────────────────────────────
 const LoginPage = lazy(() =>
   import('@/app/pages/auth/login-page').then((m) => ({
@@ -240,6 +246,33 @@ const OrderStatsPage = lazy(
   () =>
     import(
       '@/app/pages/dashboard/ecommerce/orders/order-stats/order-stats-page'
+    )
+);
+
+// ─── 문의 ──────────────────────────────────────────────────────────────────────
+const ContactsWithProvider = lazy(() =>
+  // ★ 추가
+  import(
+    '@/app/pages/dashboard/ecommerce/contacts/contacts-with-provider'
+  ).then((m) => ({ default: m.ContactsWithProvider }))
+);
+const ContactsPage = lazy(
+  () =>
+    // ★ 추가
+    import('@/app/pages/dashboard/ecommerce/contacts/contacts-page')
+);
+const ContactDetailPage = lazy(
+  () =>
+    // ★ 추가
+    import(
+      '@/app/pages/dashboard/ecommerce/contacts/contacts-detail/contacts-detail-page'
+    )
+);
+const ContactStatsPage = lazy(
+  () =>
+    // ★ 추가
+    import(
+      '@/app/pages/dashboard/ecommerce/contacts/contacts-stats/contacts-stats-page'
     )
 );
 
@@ -772,6 +805,10 @@ const StorageAnalysisPage = lazy(
       '@/app/pages/dashboard/board/file-manager/pages/storage-analysis-page'
     )
 );
+const FileUploadPage = lazy(
+  () =>
+    import('@/app/pages/dashboard/board/file-manager/pages/file-upload-page')
+);
 
 // ─── 배달기사 ──────────────────────────────────────────────────────────────────
 const DriverWithProvider = lazy(() =>
@@ -800,6 +837,138 @@ const DriverSettlementsPage = lazy(
       '@/app/pages/teams/delivery/driver/settlements/driver-settlements-page'
     )
 );
+// ─── 차량 관리 ──────────────────────────────────────────────────────────────────
+const VehiclesWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/vehicles/vehicles-with-provider'
+  ).then((m) => ({ default: m.VehiclesWithProvider }))
+);
+const VehiclesPage = lazy(
+  () => import('@/app/pages/dashboard/ecommerce/vehicles/vehicles-page')
+);
+const VehicleDetailPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/vehicle-detail/vehicle-detail-page'
+    )
+);
+const VehicleBrandsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/vehicle/vehicle-brands-page'
+    )
+);
+const VehicleModelsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/vehicle/vehicle-models-page'
+    )
+);
+const VehicleDimensionRulesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/vehicle/vehicle-dimension-rules-page'
+    )
+);
+const VehiclePendingReviewPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/vehicle/vehicle-pending-review-page'
+    )
+);
+const VehicleLowConfidencePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/vehicle/vehicle-low-confidence-page'
+    )
+);
+
+// ─── 카케어 ─────────────────────────────────────────────────────────────────────
+const CarCareWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/vehicles/car-care/car-care-with-provider'
+  ).then((m) => ({ default: m.CarCareWithProvider }))
+);
+const CarCarePricesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/car-care/prices/car-care-prices-page'
+    )
+);
+const CarCarePriceCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/car-care/create/car-care-price-create-page'
+    )
+);
+const CarCareSurchargesPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/car-care/surcharges/car-care-surcharges-page'
+    )
+);
+const CarCareSurchargeCreatePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/car-care/create/car-care-surcharge-create-page'
+    )
+);
+const CarCarePriceEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/car-care//edit/car-care-price-edit-page'
+    )
+);
+const CarCareSurchargeEditPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/car-care/edit/car-care-surcharge-edit-page'
+    )
+);
+// ─── Apick ──────────────────────────────────────────────────────────────────────
+const ApickWithProvider = lazy(() =>
+  import(
+    '@/app/pages/dashboard/ecommerce/vehicles/apick/apick-with-provider'
+  ).then((m) => ({
+    default: m.ApickWithProvider,
+  }))
+);
+const ApickFloodPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/apick/flood/apick-flood-page'
+    )
+);
+const ApickScrapPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/apick/scrap/apick-scrap-page'
+    )
+);
+const ApickSalePage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/apick/sale/apick-sale-page'
+    )
+);
+const ApickSearchPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/apick/search/apick-search-page'
+    )
+);
+const ApickStatsPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/apick/stats/apick-stats-page'
+    )
+);
+const ApickAccountPage = lazy(
+  () =>
+    import(
+      '@/app/pages/dashboard/ecommerce/vehicles/apick/account/apick-account-page'
+    )
+);
 
 const router = createBrowserRouter([
   // ───  메인 ──────────────────────────────────────────────────────────────
@@ -807,7 +976,12 @@ const router = createBrowserRouter([
     path: '/',
     element: <MainLayout />,
     errorElement: <ErrorBoundary />,
-    children: [{ index: true, element: S(HomePage) }],
+    children: [
+      { index: true, element: S(HomePage) },
+      // 📄 약관 및 정책 (auth 페이지에서 새 탭 없이 접근 가능)
+      { path: 'terms', element: S(TermsPageRoute) },
+      { path: 'privacy', element: S(TermsPageRoute) },
+    ],
   },
 
   // ───  인증 ──────────────────────────────────────────────────────────────
@@ -1025,6 +1199,58 @@ const router = createBrowserRouter([
           { path: ':id/edit', element: S(OrderEditPage) },
         ],
       },
+      // ─── 문의 ────────────────────────────────────────────────────────────
+      {
+        path: 'contacts', // ★ 추가
+        element: S(ContactsWithProvider),
+        children: [
+          { index: true, element: S(ContactsPage) },
+          { path: 'stats', element: S(ContactStatsPage) },
+          { path: ':id', element: S(ContactDetailPage) },
+        ],
+      },
+      // ─── 차량 관리 ────────────────────────────────────────────────────────
+      {
+        path: 'vehicles',
+        element: S(VehiclesWithProvider),
+        children: [
+          { index: true, element: S(VehiclesPage) },
+          { path: 'brands', element: S(VehicleBrandsPage) },
+          { path: 'models', element: S(VehicleModelsPage) },
+          { path: 'dimension-rules', element: S(VehicleDimensionRulesPage) },
+          { path: 'pending-review', element: S(VehiclePendingReviewPage) },
+          { path: 'low-confidence', element: S(VehicleLowConfidencePage) },
+          { path: ':id', element: S(VehicleDetailPage) },
+        ],
+      },
+      // ─── 카케어 ───────────────────────────────────────────────────────────
+      {
+        path: 'car-care',
+        element: S(CarCareWithProvider),
+        children: [
+          { index: true, element: S(CarCarePricesPage) },
+          { path: 'prices', element: S(CarCarePricesPage) },
+          { path: 'prices/create', element: S(CarCarePriceCreatePage) },
+          { path: 'prices/:id/edit', element: S(CarCarePriceEditPage) },
+          { path: 'surcharges', element: S(CarCareSurchargesPage) },
+          { path: 'surcharges/create', element: S(CarCareSurchargeCreatePage) },
+          { path: 'surcharges/:id/edit', element: S(CarCareSurchargeEditPage) },
+        ],
+      },
+      // ─── Apick ────────────────────────────────────────────────────────────
+      {
+        path: 'apick',
+        element: S(ApickWithProvider),
+        children: [
+          { index: true, element: S(ApickFloodPage) },
+          { path: 'flood', element: S(ApickFloodPage) },
+          { path: 'scrap', element: S(ApickScrapPage) },
+          { path: 'sale', element: S(ApickSalePage) },
+          { path: 'search', element: S(ApickSearchPage) },
+          { path: 'stats', element: S(ApickStatsPage) },
+          { path: 'account', element: S(ApickAccountPage) },
+        ],
+      },
       // ─── 대기열 ──────────────────────────────────────────────────────────
       {
         path: 'queue',
@@ -1142,6 +1368,7 @@ const router = createBrowserRouter([
           { index: true, element: S(FileManagerPage) },
           { path: 'recent', element: S(RecentFilesPage) },
           { path: 'analysis', element: S(StorageAnalysisPage) },
+          { path: 'upload', element: S(FileUploadPage) }, // ✅ 추가
         ],
       },
       // ─── 설정 ────────────────────────────────────────────────────────────
@@ -1289,20 +1516,6 @@ const router = createBrowserRouter([
       { path: 'equipment', element: S(SuggestionsPage) },
       { path: 'customer-service', element: S(SuggestionsPage) },
       { path: ':id', element: S(SuggestionDetailPage) },
-    ],
-  },
-  {
-    path: '/terms',
-    element: <AuthLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [{ index: true, element: <div>이용약관 (구현 예정)</div> }],
-  },
-  {
-    path: '/privacy',
-    element: <AuthLayout />,
-    errorElement: <ErrorBoundary />,
-    children: [
-      { index: true, element: <div>개인정보처리방침 (구현 예정)</div> },
     ],
   },
   {

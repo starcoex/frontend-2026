@@ -4,36 +4,115 @@ import { AboutLayout } from '@/app/pages/about/components/about-layout';
 import {
   Droplets,
   MapPin,
-  Sparkles,
   TrendingUp,
   Users,
   Wrench,
+  Sparkles,
+  ShoppingBag,
+  Car,
 } from 'lucide-react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation, A11y } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 
+// ✅ ImageSlide: 이미지 로드 성공/실패를 state로 분기 — fallback이 이미지를 덮지 않음
+const ImageSlide: React.FC<{ src: string; alt: string }> = ({ src, alt }) => {
+  const [error, setError] = React.useState(false);
+
+  return (
+    <div
+      style={{ width: '100%', height: '100%' }}
+      className="bg-muted flex items-center justify-center"
+    >
+      {error ? (
+        <span className="text-muted-foreground text-sm">{alt}</span>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          onError={() => setError(true)}
+        />
+      )}
+    </div>
+  );
+};
+
+const GenghisKhanImage: React.FC<{ src: string }> = ({ src }) => {
+  const [error, setError] = React.useState(false);
+
+  return error ? (
+    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs text-center px-2">
+      징기스칸
+    </div>
+  ) : (
+    <img
+      src={src}
+      alt="징기스칸"
+      className="w-full h-full object-cover"
+      style={{ colorScheme: 'light' }} // 브라우저 다크모드 자동 필터 방지
+      onError={() => setError(true)}
+    />
+  );
+};
+
+// 주유소 전경 이미지 목록 — URL 방식으로 교체 시 src만 변경하면 됩니다
+const GALLERY_IMAGES = [
+  {
+    src: 'https://media.starcoex.com/starcoex-media/2026/06/files/hk/66a852ef-4311-4546-87ae-8c82998159da.jpg',
+    alt: '별표주유소 전경 1',
+  },
+  {
+    src: 'https://media.starcoex.com/starcoex-media/2026/06/files/6z/891f61da-cb62-42bd-9aab-8406613deabb.jpg',
+    alt: '별표주유소 전경 2',
+  },
+  {
+    src: 'https://media.starcoex.com/starcoex-media/2026/06/files/bd/7e984c0f-949c-49ba-bf5c-2d45897817bf.jpg',
+    alt: '별표주유소 전경 3',
+  },
+  {
+    src: 'https://media.starcoex.com/starcoex-media/2026/06/files/5a/26367d1c-82fb-4165-8d39-68e4723a62c2.jpg',
+    alt: '별표주유소 전경 4',
+  },
+  {
+    src: 'https://media.starcoex.com/starcoex-media/2026/06/files/h5/7a8bf671-a68b-420d-b15e-dba593731e3f.jpg',
+    alt: '별표주유소 전경 5',
+  },
+] as const;
+
+// terms-data.ts 기반 실제 사업 영역
 const BUSINESS_AREAS = [
   {
     icon: Droplets,
-    title: '주유 서비스',
+    title: '주유 서비스 — 별표주유소',
     description:
-      '무연휘발유, 경유, 등유 등 고품질 연료를 합리적인 가격으로 제공합니다. 빠르고 친절한 서비스로 제주도민의 일상을 함께합니다.',
+      'SK 엔크린 공식 주유소로, 무연휘발유·경유·등유를 합리적인 가격에 제공합니다. 빠르고 친절한 주유원 서비스로 제주도민의 일상을 함께합니다.',
   },
   {
     icon: Sparkles,
-    title: '프리미엄 세차',
+    title: '세차 서비스',
     description:
-      '5단계 자동세차 시스템으로 차량의 외관을 완벽하게 관리합니다. 세라믹 코팅부터 실내 디테일링까지 전문적인 케어를 제공합니다.',
+      '풍성버블세차(7,000원), 아주 쎈 고압세차(7,000원), 전문가의 10분 완성 빠른 외부손세차(15,000원) 등 다양한 세차 옵션을 운영합니다.',
+  },
+  {
+    icon: Car,
+    title: '제라게카케어',
+    description:
+      '전문 카케어 브랜드 제라게카케어를 통해 세라믹 코팅, 유리막 코팅, 실내 디테일링 등 프리미엄 차량 관리 서비스를 제공합니다.',
+  },
+  {
+    icon: ShoppingBag,
+    title: '배달 서비스',
+    description:
+      '스타코엑스 배달 플랫폼을 통해 제주 지역 내 편의 상품을 신속하게 배달합니다. 위치 기반 실시간 배달 가능 여부를 확인할 수 있습니다.',
   },
   {
     icon: Wrench,
-    title: '차량 관리',
+    title: '10분 완성 빠른 외부 손세차 서비스',
     description:
-      '엔진오일 교환, 타이어 점검, 소모품 교체 등 기본적인 차량 유지관리 서비스를 원스톱으로 제공합니다.',
-  },
-  {
-    icon: TrendingUp,
-    title: '멤버십 혜택',
-    description:
-      '정기 이용 고객을 위한 멤버십 프로그램으로 포인트 적립, 할인 쿠폰, 우선 서비스 등 다양한 혜택을 누리실 수 있습니다.',
+      '빠르게. 깨끗하게. 제라게. 전문 손세차 인력이 10분 안에 차량 외부를 깔끔하게 마무리합니다. 바쁜 일상 속에서도 내 차를 제대로 관리할 수 있습니다.',
   },
 ] as const;
 
@@ -42,86 +121,92 @@ export const AboutPage: React.FC = () => {
     <AboutLayout title="회사소개" subtitle="스타코엑스를 소개합니다">
       <div className="space-y-16">
         {/* 히어로 섹션 */}
-        <section className="border-y">
-          <div className="flex flex-col max-lg:divide-y lg:flex-row">
-            {/* 왼쪽: 메인 타이틀 + 회사 소개 이미지 */}
-            <div className="flex-1 lg:border-l">
-              <div className="lg:border-b lg:pr-8 lg:pb-5 lg:pl-2">
-                <h2 className="text-[2rem] leading-[1.2] tracking-[-1.6px] md:text-[2.75rem] md:tracking-[-2px] font-bold">
-                  제주의 길 위에서
-                  <br />
-                  <span className="text-primary">20년을 함께</span>했습니다
-                </h2>
-                <p className="text-muted-foreground mt-4 leading-relaxed tracking-[-0.32px]">
-                  2003년 <strong className="text-foreground">"별표"</strong>{' '}
-                  석유를 시작으로, 제주도민의 일상과 함께 달려왔습니다. 끊임없는
-                  도전과 혁신으로 2019년 주식회사 스타코엑스를 설립,
-                  주유·세차·차량관리를 아우르는 종합 모빌리티 서비스 기업으로
-                  성장하였습니다.
-                </p>
-              </div>
-              <div className="relative mt-8 aspect-[4/3] overflow-hidden lg:mr-8 lg:mb-8 lg:ml-2 rounded-xl bg-muted">
-                <img
-                  src="/images/about/company.jpg"
-                  alt="스타코엑스 회사 전경"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground text-sm">
-                  회사 전경 이미지
-                </div>
-              </div>
-            </div>
+        <section className="border-b pb-10">
+          <h2 className="text-[2rem] leading-[1.2] tracking-[-1.6px] md:text-[2.75rem] md:tracking-[-2px] font-bold">
+            제주의 길 위에서
+            <br />
+            <span className="text-primary">20년을 함께</span>했습니다
+          </h2>
+          <p className="text-muted-foreground mt-4 leading-relaxed tracking-[-0.32px]">
+            2003년 <strong className="text-foreground">"별표"</strong> 석유를
+            시작으로, 제주도민의 일상과 함께 달려왔습니다. 끊임없는 도전과
+            혁신으로 2019년 주식회사 스타코엑스를 설립, 주유·세차·차량관리를
+            아우르는 종합 모빌리티 서비스 기업으로 성장하였습니다.
+          </p>
+        </section>
 
-            {/* 오른쪽: 징기스칸 인용 + 이미지 */}
-            <div className="lg:border-x lg:px-8 lg:py-5 flex flex-col justify-between gap-8 py-8">
-              <div className="flex justify-center gap-6">
-                <div className="relative aspect-[3/4] w-[180px] lg:w-[220px] overflow-hidden rounded-xl bg-muted shrink-0">
-                  <img
-                    src="/images/about/genghis-khan.jpg"
-                    alt="징기스칸"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground text-xs text-center px-2">
-                    징기스칸 이미지
-                  </div>
-                </div>
-              </div>
+        {/* 주유소 전경 슬라이드 */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5" />
+            <span>별표주유소 전경</span>
+          </div>
+          <div className="relative w-full overflow-hidden rounded-xl">
+            <Swiper
+              modules={[Autoplay, Pagination, Navigation, A11y]}
+              spaceBetween={0}
+              slidesPerView={1}
+              loop={true}
+              autoplay={{
+                delay: 3500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              pagination={{ clickable: true }}
+              navigation={true}
+              a11y={{ enabled: true }}
+              style={
+                {
+                  width: '100%',
+                  aspectRatio: '16/9',
+                  '--swiper-navigation-size': '20px',
+                  '--swiper-navigation-color': '#ffffff',
+                  '--swiper-pagination-color': '#ffffff', // 활성 점 흰색
+                  '--swiper-pagination-bullet-inactive-color': '#ffffff', // 비활성 점도 흰색
+                  '--swiper-pagination-bullet-inactive-opacity': '0.4', // 비활성은 반투명
+                } as React.CSSProperties
+              }
+            >
+              {GALLERY_IMAGES.map((img, i) => (
+                <SwiperSlide key={i} style={{ height: '100%' }}>
+                  <ImageSlide src={img.src} alt={img.alt} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </section>
 
-              <blockquote className="border-l-4 border-primary pl-5 py-2 space-y-1.5 text-muted-foreground italic">
-                <p className="text-sm leading-relaxed">
-                  집안이 나쁘다고 탓하지 마라.
-                </p>
-                <p className="text-sm leading-relaxed">
-                  가난하다고 말하지 말라.
-                </p>
-                <p className="text-sm leading-relaxed">
-                  작은 나라에서 태어났다고 말하지 말라.
-                </p>
-                <p className="text-sm leading-relaxed">
-                  배운게 없다고 힘이 없다고 탓하지 말라.
-                </p>
-                <p className="text-sm leading-relaxed">
-                  너무 막막하다고, 그래서 포기해야겠다고 말하지 말라.
-                </p>
-                <p className="font-semibold text-foreground not-italic text-base mt-3">
-                  나는 나를 극복하는 순간 칭기즈칸이 되어 있었다.
-                </p>
-                <footer className="text-xs text-muted-foreground/70 not-italic mt-2">
-                  — 징기스칸 명언
-                </footer>
-              </blockquote>
-
-              <p className="text-muted-foreground text-sm leading-relaxed tracking-[-0.32px]">
-                이 말을 항상 가슴에 간직하고 실천하는 기업인이 되도록 열심히
-                노력하겠습니다.
+        {/* 징기스칸 섹션 */}
+        <section className="flex flex-col sm:flex-row gap-8 items-start border rounded-xl p-6 bg-card">
+          <div className="relative aspect-[3/4] w-[140px] sm:w-[160px] overflow-hidden rounded-xl bg-white shrink-0">
+            <GenghisKhanImage src="https://media.starcoex.com/starcoex-media/2026/06/files/uf/0be8191c-c8c3-462d-b0a8-2420cd1423d9.png" />
+          </div>
+          <div className="flex flex-col gap-4">
+            <blockquote className="border-l-4 border-primary pl-5 py-2 space-y-1.5 text-muted-foreground italic">
+              <p className="text-sm leading-relaxed">
+                집안이 나쁘다고 탓하지 마라.
               </p>
-            </div>
+              <p className="text-sm leading-relaxed">가난하다고 말하지 말라.</p>
+              <p className="text-sm leading-relaxed">
+                작은 나라에서 태어났다고 말하지 말라.
+              </p>
+              <p className="text-sm leading-relaxed">
+                배운게 없다고 힘이 없다고 탓하지 말라.
+              </p>
+              <p className="text-sm leading-relaxed">
+                너무 막막하다고, 그래서 포기해야겠다고 말하지 말라.
+              </p>
+              <p className="font-semibold text-foreground not-italic text-base mt-3">
+                나는 나를 극복하는 순간 칭기즈칸이 되어 있었다.
+              </p>
+              <footer className="text-xs text-muted-foreground/70 not-italic mt-2">
+                — 징기스칸 명언
+              </footer>
+            </blockquote>
+            <p className="text-muted-foreground text-sm leading-relaxed tracking-[-0.32px]">
+              이 말을 항상 가슴에 간직하고 실천하는 기업인이 되도록 열심히
+              노력하겠습니다.
+            </p>
           </div>
         </section>
 
@@ -191,7 +276,7 @@ export const AboutPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 오시는 길 + 기본 정보 */}
+        {/* 기본 정보 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-muted-foreground" />

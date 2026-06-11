@@ -5,6 +5,8 @@ export const ORDER_STATUS_OPTIONS = [
   { value: 'PENDING', label: '주문 접수', variant: 'secondary' },
   { value: 'CONFIRMED', label: '주문 확인', variant: 'default' },
   { value: 'PREPARING', label: '상품 준비중', variant: 'warning' },
+  { value: 'IN_SERVICE', label: '서비스 중', variant: 'warning' },
+  { value: 'COMPLETED', label: '완료', variant: 'success' },
   { value: 'SHIPPED', label: '배송 시작', variant: 'default' },
   { value: 'DELIVERED', label: '배송 완료', variant: 'success' },
   { value: 'CANCELLED', label: '주문 취소', variant: 'destructive' },
@@ -58,6 +60,8 @@ export const ORDER_TAB_OPTIONS = [
   { value: 'PENDING', label: '주문 접수' },
   { value: 'CONFIRMED', label: '주문 확인' },
   { value: 'PREPARING', label: '준비중' },
+  { value: 'IN_SERVICE', label: '서비스 중' },
+  { value: 'COMPLETED', label: '완료' },
   { value: 'SHIPPED', label: '배송중' },
   { value: 'DELIVERED', label: '배송완료' },
   { value: 'CANCELLED', label: '취소' },
@@ -67,12 +71,14 @@ export type OrderTabValue = (typeof ORDER_TAB_OPTIONS)[number]['value'];
 
 // ─── 상태 전이 맵 ─────────────────────────────────────────────────────────────
 export const NEXT_STATUS_MAP: Record<OrderStatusValue, OrderStatusValue[]> = {
-  PENDING: ['CONFIRMED', 'PREPARING', 'SHIPPED', 'CANCELLED'], // ✅ 스킵 허용
-  CONFIRMED: ['PREPARING', 'SHIPPED', 'CANCELLED'], // ✅ 스킵 허용
-  PREPARING: ['SHIPPED', 'CANCELLED'],
+  PENDING: ['CONFIRMED', 'PREPARING', 'IN_SERVICE', 'SHIPPED', 'CANCELLED'],
+  CONFIRMED: ['PREPARING', 'IN_SERVICE', 'SHIPPED', 'CANCELLED'],
+  PREPARING: ['IN_SERVICE', 'SHIPPED', 'CANCELLED'],
+  IN_SERVICE: ['COMPLETED', 'CANCELLED'],
+  COMPLETED: ['REFUNDED', 'RETURNED'],
   SHIPPED: ['DELIVERED', 'CANCELLED'],
   DELIVERED: ['REFUNDED', 'RETURNED'],
-  CANCELLED: ['REFUNDED'], // ✅ 취소 후 환불 가능
+  CANCELLED: ['REFUNDED'],
   REFUNDED: [],
   RETURNED: [],
 };

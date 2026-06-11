@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { label: '배송 추적', href: '/tracking' }, // 핵심 장점
   { label: '회사 소개', href: '/about' },
   { label: '요금 안내', href: '/pricing' },
-  { label: '고객센터', href: '/contact' },
+  { label: '고객센터', href: '/contacts' },
 ];
 
 export const Navbar: React.FC = () => {

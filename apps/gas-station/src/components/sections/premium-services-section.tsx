@@ -8,48 +8,50 @@ import {
   type CarouselApi,
 } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 // 데이터는 기존 유지
 const services = [
   {
-    id: 'premium-wash',
-    title: 'PREMIUM WASH',
-    subtitle: '프리미엄 자동세차',
-    image:
-      'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=600&auto=format&fit=crop',
-    link: '/services/wash',
+    id: 'basic-hand-wash',
+    title: '기본 외부 손세차',
+    subtitle: '① BASIC HAND WASH',
+    description: '작업시간 8–9분',
+    image: '/images/services/basic-hand-wash.jpg',
+    link: '/services/basic-hand-wash',
   },
   {
-    id: 'detailing',
-    title: 'DETAILING',
-    subtitle: '디테일링 & 광택',
-    image:
-      'https://images.unsplash.com/photo-1605515298946-d063f2e92d2d?q=80&w=600&auto=format&fit=crop',
-    link: '/services/detailing',
+    id: 'star-hand-wash',
+    title: '별표 외부 손세차',
+    subtitle: '② STAR HAND WASH',
+    description: '작업시간 12분',
+    image: '/images/services/star-hand-wash.jpg',
+    link: '/services/star-hand-wash',
   },
   {
-    id: 'high-pressure',
-    title: 'HIGH PRESSURE',
-    subtitle: '초고압 하부세차',
-    image:
-      'https://images.unsplash.com/photo-1520340356584-7c9948871d62?q=80&w=600&auto=format&fit=crop',
-    link: '/services/underbody',
+    id: 'shiny-hand-wash',
+    title: '반짝반짝 외부 손세차',
+    subtitle: '③ SHINY HAND WASH',
+    description: '작업시간 15분',
+    image: '/images/services/shiny-hand-wash.jpg',
+    link: '/services/shiny-hand-wash',
   },
   {
-    id: 'interior',
-    title: 'INTERIOR',
-    subtitle: '실내 클리닝',
-    image:
-      'https://images.unsplash.com/photo-1583203187768-36c82a59c9e3?q=80&w=600&auto=format&fit=crop',
-    link: '/services/interior',
+    id: 'bubble-wash',
+    title: '풍성풍성 버블 세차',
+    subtitle: 'BUBBLE WASH',
+    description:
+      '버블 도포 후 약품으로 오염물 분해 → 고압 초벌 헹굼 → 자동 세차',
+    image: '/images/services/bubble-wash.jpg',
+    link: '/services/bubble-wash',
   },
   {
-    id: 'coating',
-    title: 'COATING',
-    subtitle: '유리막 코팅',
-    image:
-      'https://images.unsplash.com/photo-1507136566006-cfc505b114fc?q=80&w=600&auto=format&fit=crop',
-    link: '/services/coating',
+    id: 'high-pressure-wash',
+    title: '아주 센 고압 세차',
+    subtitle: 'HIGH PRESSURE WASH',
+    description: '아주 센 고압세척기로 초벌 헹굼 후 자동 세차',
+    image: '/images/services/high-pressure-wash.jpg',
+    link: '/services/high-pressure-wash',
   },
 ];
 
@@ -75,14 +77,13 @@ export const PremiumServicesSection: React.FC = () => {
     carouselApi.on('reInit', updateScrollState);
   }, [carouselApi]);
 
-  const title = '별표주유소 프리미엄 카케어';
+  const title = '별표주유소 10분 완성 카케어';
   const description =
     '단순한 주유소를 넘어, 당신의 차를 가장 완벽하게 관리하는 프로페셔널 서비스를 만나보세요.';
 
   return (
     <section className="bg-obsidian overflow-hidden px-2.5 lg:px-0">
       <div className="bg-jet container overflow-hidden py-12 md:py-32">
-        {/* 헤더 영역: 기존 타이틀 유지, 상단 화살표 제거 */}
         <div className="mb-8 flex flex-col gap-4 md:mb-14 lg:mb-16">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight">
             {title}
@@ -113,8 +114,8 @@ export const PremiumServicesSection: React.FC = () => {
                     index === 0 ? '!pl-0' : 'pl-[20px]'
                   )}
                 >
-                  <a
-                    href={item.link}
+                  <Link
+                    to={item.link}
                     className="group/card rounded-xl block h-full"
                   >
                     <div className="aspect-[3/4] relative h-full min-h-[24rem] w-full overflow-hidden rounded-xl bg-muted">
@@ -128,16 +129,18 @@ export const PremiumServicesSection: React.FC = () => {
 
                       {/* 텍스트 컨텐츠 */}
                       <div className="absolute inset-x-0 bottom-0 flex flex-col items-start p-6 md:p-8 text-white">
-                        <div className="mb-2 text-xl font-bold tracking-wide md:mb-3">
+                        <div className="mb-1 text-xl font-bold tracking-wide md:mb-2">
                           {item.title}
                         </div>
-                        <div className="text-sm font-medium text-gray-300 uppercase tracking-wider">
+                        <div className="text-xs font-medium text-gray-300 uppercase tracking-wider mb-2">
                           {item.subtitle}
                         </div>
-                        {/* Read More 삭제됨 */}
+                        <div className="text-xs text-gray-400 leading-snug">
+                          {item.description}
+                        </div>
                       </div>
                     </div>
-                  </a>
+                  </Link>
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -172,7 +175,6 @@ export const PremiumServicesSection: React.FC = () => {
 
         {/* 하단 인디케이터 및 전체 보기 버튼 */}
         <div className="container mt-8 md:mt-12">
-          {/* 슬라이드 인디케이터 (모바일 등에서 유용) */}
           <div className="mb-8 flex justify-center gap-2">
             {services.map((_, index) => (
               <button
@@ -189,7 +191,6 @@ export const PremiumServicesSection: React.FC = () => {
             ))}
           </div>
 
-          {/* 맨 하단 전체 보기 버튼 */}
           <div className="flex justify-center">
             <Button
               variant="outline"

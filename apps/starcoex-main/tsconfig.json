@@ -3,16 +3,10 @@
   "include": [],
   "references": [
     {
-      "path": "../../libs/graphql"
+      "path": "../../libs/features/payments"
     },
     {
-      "path": "../../libs/pwa"
-    },
-    {
-      "path": "../../libs/features/auth"
-    },
-    {
-      "path": "../../libs/features/common"
+      "path": "../../libs/features/notifications"
     },
     {
       "path": "../../libs/features/address"
@@ -21,10 +15,28 @@
       "path": "../../libs/features/media"
     },
     {
-      "path": "../../libs/features/jobs"
+      "path": "../../libs/features/orders"
     },
     {
       "path": "../../libs/features/loyalty"
+    },
+    {
+      "path": "../../libs/features/contact"
+    },
+    {
+      "path": "../../libs/features/jobs"
+    },
+    {
+      "path": "../../libs/pwa"
+    },
+    {
+      "path": "../../libs/features/auth"
+    },
+    {
+      "path": "../../libs/graphql"
+    },
+    {
+      "path": "../../libs/features/common"
     },
     {
       "path": "./tsconfig.app.json"

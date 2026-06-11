@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, MapPin } from 'lucide-react';
 import { APP_CONFIG } from '@/app/config/app.config';
-import { ZeragaeLogo } from '@starcoex-frontend/common';
+import { COMPANY_ZERAGAE, ZeragaeLogo } from '@starcoex-frontend/common';
 
 // ─── 데이터 ───────────────────────────────────────────────────────────────────
 
@@ -182,14 +182,17 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* ── 하단 Copyright — 샘플 패턴 */}
         <div className="mt-12 border-t border-dashed pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col gap-0.5">
             <span className="text-muted-foreground font-mono text-[0.625rem]">
-              대표: 김현진 &nbsp;|&nbsp; 사업자등록번호: 123-45-67890
+              대표: {COMPANY_ZERAGAE.ceo} &nbsp;|&nbsp; 사업자등록번호:{' '}
+              {COMPANY_ZERAGAE.bizNumber}
             </span>
             <span className="text-muted-foreground font-mono text-[0.625rem]">
-              &copy; {new Date().getFullYear()} 제라게 카케어 · 별표주유소. All
+              주소: {COMPANY_ZERAGAE.address}
+            </span>
+            <span className="text-muted-foreground font-mono text-[0.625rem]">
+              &copy; {new Date().getFullYear()} {COMPANY_ZERAGAE.name}. All
               rights reserved.
             </span>
           </div>

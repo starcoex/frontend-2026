@@ -1,12 +1,13 @@
 import { motion } from 'motion/react';
 import { Shield, Lock, Eye, Trash2, Phone } from 'lucide-react';
-import { PageHead } from '@starcoex-frontend/common';
+import { COMPANY_ZERAGAE, PageHead } from '@starcoex-frontend/common';
 import { APP_CONFIG } from '@/app/config/app.config';
+import { useState } from 'react';
 
 // ─── 데이터 ───────────────────────────────────────────────────────────────────
 
 const LAST_UPDATED = '2026년 1월 1일';
-const COMPANY_NAME = '제라게 카케어 (별표주유소)';
+const COMPANY_NAME = `${COMPANY_ZERAGAE.name}`; // ★ 하드코딩 제거
 
 const PRIVACY_SECTIONS = [
   {
@@ -134,9 +135,9 @@ const PRIVACY_SECTIONS = [
         subtitle: '개인정보 보호 책임자',
         items: [
           `업체명: ${COMPANY_NAME}`,
-          '이메일: privacy@zeragae.com',
-          '전화: 064-000-0000',
-          '주소: 제주특별자치도 제주시 (상세 주소)',
+          `이메일: ${COMPANY_ZERAGAE.email}`,
+          `전화: ${COMPANY_ZERAGAE.phone}`,
+          `주소: ${COMPANY_ZERAGAE.address}`,
         ],
       },
       {
@@ -329,6 +330,8 @@ export function PrivacyPage() {
                   </p>
                   <p className="text-muted-foreground font-mono text-xs mt-3">
                     시행일: {LAST_UPDATED} &nbsp;·&nbsp; {COMPANY_NAME}
+                    &nbsp;·&nbsp; &copy; {new Date().getFullYear()}{' '}
+                    {COMPANY_ZERAGAE.name}. All rights reserved.{' '}
                   </p>
                 </div>
               </div>
@@ -339,6 +342,3 @@ export function PrivacyPage() {
     </>
   );
 }
-
-// useState import 추가 필요
-import { useState } from 'react';

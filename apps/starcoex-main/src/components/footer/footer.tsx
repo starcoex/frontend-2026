@@ -8,8 +8,14 @@ import {
 } from 'lucide-react';
 import { SERVICES_CONFIG } from '@/app/config/service.config';
 import { COMPANY_INFO } from '@/app/config/company.config';
-import { StarLogo } from '@starcoex-frontend/common';
+import { COMPANY_STARCOEX, StarLogo } from '@starcoex-frontend/common';
 import { CardDescription, CardTitle } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const sections = [
   {
@@ -24,7 +30,7 @@ const sections = [
   {
     title: '고객지원',
     links: [
-      { name: '고객센터', href: '/support', isExternal: false },
+      { name: '문의하기', href: '/contacts', isExternal: false },
       { name: '자주 묻는 질문', href: '/faq', isExternal: false },
     ],
   },
@@ -39,7 +45,7 @@ const sections = [
 
 export const Footer = () => {
   return (
-    <footer className="border-t">
+    <footer className="border-t mt-10">
       <div className="container flex justify-between gap-8 border-x py-4 max-lg:flex-col lg:py-8">
         {/* 왼쪽: 로고 및 회사 정보 */}
         <div className="mb-8 flex-1">
@@ -133,10 +139,7 @@ export const Footer = () => {
             </CardTitle>
             <div className="text-muted-foreground-subtle flex gap-2 lg:gap-3">
               <Link
-                to={
-                  COMPANY_INFO.social.instagram ||
-                  'https://instagram.com/starcoex'
-                }
+                to={COMPANY_INFO.social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -144,19 +147,31 @@ export const Footer = () => {
               >
                 <Instagram size={18} className="lg:w-5 lg:h-5" />
               </Link>
+
+              {/* YouTube — 준비중 */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="cursor-not-allowed opacity-40">
+                      <Youtube size={18} className="lg:w-5 lg:h-5" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>준비중입니다</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {/*<Link*/}
+              {/*  to={COMPANY_INFO.social.youtube}*/}
+              {/*  target="_blank"*/}
+              {/*  rel="noopener noreferrer"*/}
+              {/*  aria-label="YouTube"*/}
+              {/*  className="hover:text-primary transition-colors"*/}
+              {/*>*/}
+              {/*  <Youtube size={18} className="lg:w-5 lg:h-5" />*/}
+              {/*</Link>*/}
               <Link
-                to={
-                  COMPANY_INFO.social.youtube || 'https://youtube.com/@starcoex'
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-                className="hover:text-primary transition-colors"
-              >
-                <Youtube size={18} className="lg:w-5 lg:h-5" />
-              </Link>
-              <Link
-                to="https://blog.naver.com/starcoex"
+                to={COMPANY_INFO.social.blog}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="네이버 블로그"
@@ -165,10 +180,7 @@ export const Footer = () => {
                 <FileText size={18} className="lg:w-5 lg:h-5" />
               </Link>
               <Link
-                to={
-                  COMPANY_INFO.social.facebook ||
-                  'https://facebook.com/starcoex'
-                }
+                to={COMPANY_INFO.social.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -192,14 +204,15 @@ export const Footer = () => {
       {/* 사업자 정보 */}
       <div className="container border-x border-b py-4 lg:py-6">
         <div className="text-muted-foreground text-xs leading-relaxed space-y-1">
-          <p className="font-medium text-sm">{COMPANY_INFO.legalName}</p>
+          <p className="font-medium text-sm">{COMPANY_STARCOEX.legalName}</p>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span>대표 : {COMPANY_INFO.representative}</span>
-            <span>사업자등록번호 : {COMPANY_INFO.businessNumber}</span>
+            <span>대표 : {COMPANY_STARCOEX.ceo}</span>
+            <span>사업자등록번호 : {COMPANY_STARCOEX.bizNumber}</span>
+            <span>법인등록번호 : {COMPANY_STARCOEX.corpRegNumber}</span>
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span>이메일 : {COMPANY_INFO.email}</span>
-            <span>주소 : {COMPANY_INFO.address}</span>
+            <span>이메일 : {COMPANY_STARCOEX.email}</span>
+            <span>주소 : {COMPANY_STARCOEX.address}</span>
           </div>
         </div>
       </div>

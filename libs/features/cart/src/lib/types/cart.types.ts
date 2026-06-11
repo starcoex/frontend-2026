@@ -11,6 +11,9 @@ export interface CartItem {
   storeId: number;
   quantity: number;
   appliedPromotionId?: number | null;
+  serviceMetadata?: Record<string, unknown> | null;
+  isDirectCheckout: boolean;
+  addedAt: string;
   product?: { id: number } | null;
   store?: { id: number } | null;
   subtotal?: number | null;
@@ -45,11 +48,22 @@ export interface Cart {
 // Input 타입
 // ============================================================================
 
+export interface CarWashServiceMetadataInput {
+  carNo: string;
+  bodyType: string;
+  sizeGrade: string;
+  gradeConfidence?: string;
+  vehicleModelName?: string;
+  serviceTypeCode: string;
+}
+
 export interface AddToCartInput {
   productId: number;
   storeId: number;
   quantity: number;
   appliedPromotionId?: number;
+  serviceMetadata?: CarWashServiceMetadataInput;
+  isDirectCheckout?: boolean;
 }
 
 export interface UpdateCartItemInput {
