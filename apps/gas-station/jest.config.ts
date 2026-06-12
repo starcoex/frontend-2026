@@ -1,0 +1,10 @@
+export default {
+  displayName: '@starcoex-frontend/gas-station',
+  preset: '../../jest.preset.cjs',
+  transform: {
+    '^(?!.*\\.(js|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
+    '^.+\\.[tj]sx?$': ['babel-jest', { presets: ['@nx/react/babel'] }],
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: 'test-output/jest/coverage',
+};
